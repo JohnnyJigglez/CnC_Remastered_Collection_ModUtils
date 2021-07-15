@@ -243,6 +243,12 @@ AircraftClass::AircraftClass(AircraftType classid, HousesType house) :
 	IsSecondShot = !Class->Is_Two_Shooter();
 	House->Tracking_Add(this);
 	Ammo = Class->MaxAmmo;
+	if (Class->PrimaryWeapon != NULL) {
+			BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
+	}
+	if (Class->SecondaryWeapon != NULL) {
+			BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	}
 	Height = FLIGHT_LEVEL;
 	Strength = Class->MaxStrength;
 	NavCom = TARGET_NONE;
@@ -1544,7 +1550,7 @@ BulletClass * AircraftClass::Fire_At(TARGET target, int which)
 		}
 		
 		Ammo = 0;
-		Arm = Rearm_Delay(IsSecondShot);
+		Arm = Rearm_Delay();
 		return(0);
 	}
 

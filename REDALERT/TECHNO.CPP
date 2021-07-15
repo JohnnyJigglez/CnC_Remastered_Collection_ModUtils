@@ -3274,12 +3274,20 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 		}
 
 		if (tclass.Is_Two_Shooter()){
-			//Is this specifically a unit that has both of its hardpoints set to the same weapon and no burst set in the ini?
-			if ((weapon->Burst == 1) && (weapon == tclass.PrimaryWeapon)) {
-				//alternating fire mode as is vanilla
-				Arm = Rearm_Delay(IsSecondShot, which);
+			if (tclass.SecondaryWeapon == tclass.PrimaryWeapon) {
+				//Is this specifically a unit that has both of its hardpoints set to the same weapon and no burst set in the ini?
+				if (weapon->Burst == 1){
+					//alternating fire mode as is vanilla
+					Arm = Rearm_Delay(IsSecondShot, which);
+				}
+				//Is this a "two shooter" with both weapons the same and the burst > 1
+				if (weapon->Burst > 1) {
+					//alternating fire mode as is vanilla, using only the primary burst shot store.
+					Arm = Rearm_Delay(BurstShotsRemaining[0] == 1, which);
+				}
+
 			}
-			else {
+			else{
 				//vanilla behavior but now we handle burst > 2 on a per-weapon basis.
 				//I believe there is one Arm timer per techno, not sure yet, need more time in the code.
 				//if this is the case then we delay firing for the entire techno based upon the last shot fired
@@ -3367,9 +3375,11 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 		if (Ammo > 0) {
 			Ammo--;
 		}
-		BurstShotsRemaining[which]--;
-		if (BurstShotsRemaining[which] == 0) {
-			BurstShotsRemaining[which] = weapon->Burst;
+		if (weapon->Burst > 1) {
+			BurstShotsRemaining[which]--;
+			if (BurstShotsRemaining[which] <= 0) {
+				BurstShotsRemaining[which] = weapon->Burst;
+			}
 		}
 
 		/*

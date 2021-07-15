@@ -106,6 +106,12 @@ VesselClass::VesselClass(VesselType classid, HousesType house) :
 	**	what is desired for non two shooters.
 	*/
 	IsSecondShot = !Class->Is_Two_Shooter();
+	if (Class->PrimaryWeapon != NULL) {
+		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
+	}
+	if (Class->SecondaryWeapon != NULL) {
+		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	}
 	Strength = Class->MaxStrength;
 
 	/*

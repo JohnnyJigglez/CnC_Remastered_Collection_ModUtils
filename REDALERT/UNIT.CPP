@@ -322,6 +322,12 @@ UnitClass::UnitClass(UnitType classid, HousesType house) :
 	Reload = 0;
 	House->Tracking_Add(this);
 	Ammo = Class->MaxAmmo;
+	if (Class->PrimaryWeapon != NULL) {
+		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
+	}
+	if (Class->SecondaryWeapon != NULL) {
+		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	}
 	IsCloakable = Class->IsCloakable;
 	if (Class->IsAnimating) Set_Rate(Options.Normalize_Delay(3));
 

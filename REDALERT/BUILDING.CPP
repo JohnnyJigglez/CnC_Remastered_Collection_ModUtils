@@ -1632,7 +1632,12 @@ BuildingClass::BuildingClass(StructType type, HousesType house) :
 	IsSecondShot = !Class->Is_Two_Shooter();
 	Strength = Class->MaxStrength;
 	Ammo = Class->MaxAmmo;
-
+	if (Class->PrimaryWeapon != NULL) {
+		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
+	}
+	if (Class->SecondaryWeapon != NULL) {
+		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	}
 	/*
 	**	If the building could never be built, then it can never be sold either. This
 	**	is due to the lack of buildup animation.

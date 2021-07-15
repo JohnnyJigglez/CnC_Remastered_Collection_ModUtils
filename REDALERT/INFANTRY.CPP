@@ -203,6 +203,12 @@ InfantryClass::InfantryClass(InfantryType classid, HousesType house) :
 	} else {
 		IsSecondShot = true;
 	}
+	if (Class->PrimaryWeapon != NULL) {
+		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
+	}
+	if (Class->SecondaryWeapon != NULL) {
+		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	}
 	Strength = Class->MaxStrength;
 
 	/*

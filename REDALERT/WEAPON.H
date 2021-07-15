@@ -107,6 +107,12 @@ class WeaponTypeClass
 		int Burst;
 
 		/*
+		**	This is the delay in Game Frames between each shot in the Burst.
+		**	The default value is 3 to coincide with logic in Techno.cpp
+		*/
+		int BurstDelay;
+
+		/*
 		**	This is the unit class of the projectile fired. A subset of the unit types
 		**	represent projectiles. It is one of these classes that is specified here.
 		**	If this object does not fire anything, then this value will be BULLET_NONE.

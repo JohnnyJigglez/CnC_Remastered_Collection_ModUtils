@@ -913,7 +913,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 				}
 				NavCom = TARGET_NONE;
 				Do_Uncloak();
-				Arm = Rearm_Delay(true);
+				Arm = Rearm_Delay();
 				Scatter(building->Center_Coord(), true, true);	// RUN AWAY!
 				BEnd(BENCH_PCP);
 				return;

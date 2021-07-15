@@ -1839,7 +1839,7 @@ void UnitClass::Per_Cell_Process(PCPType why)
 		*/
 		if (!Target_Legal(NavCom) && Path[0] == FACING_NONE) {
 			if (Class->IsNoFireWhileMoving) {
-				Arm = Rearm_Delay(true)/4;
+				Arm = Rearm_Delay()/4;  /* Well this is certainly arbitrary af -JJ */
 			}
 		}
 

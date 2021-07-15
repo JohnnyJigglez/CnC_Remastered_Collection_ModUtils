@@ -73,6 +73,7 @@ WeaponTypeClass::WeaponTypeClass(char const * name) :
 	IsCamera(false),
 	IsElectric(false),
 	Burst(1),
+	BurstDelay(3),
 	Bullet(NULL),
 	Attack(0),
 	MaxSpeed(MPH_IMMOBILE),
@@ -196,13 +197,19 @@ WeaponTypeClass * WeaponTypeClass::As_Pointer(WeaponType weapon)
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   07/19/1996 JLB : Created.                                                                 *
+ *   07/19/1996 JLB : Created.																   *
+ *   07/13/2021 JJ  : Added BurstDelay.														   *
  *=============================================================================================*/
 bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ini.Is_Present(Name())) {
 		IsSupressed = ini.Get_Bool(Name(), "Supress", IsSupressed);
 		Burst = ini.Get_Int(Name(), "Burst", Burst);
+		BurstDelay = ini.Get_Int(Name(), "BurstDelay", BurstDelay);
+		/* Normalize BurstDelay to the minimum value found in Techno.cpp firing logic */
+		if (Burst > 1 && BurstDelay < 1) {
+			BurstDelay = 1;
+		}
 		Attack = ini.Get_Int(Name(), "Damage", Attack);
 		MaxSpeed = ini.Get_MPHType(Name(), "Speed", MaxSpeed);
 		ROF = ini.Get_Int(Name(), "ROF", ROF);

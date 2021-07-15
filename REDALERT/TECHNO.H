@@ -225,6 +225,12 @@ class TechnoClass :	public RadioClass,
 		int Ammo;
 
 		/*
+		**	The number of bullets this object can fire before depleting a burst/salvo.
+		**  There is one index per weapon hardpoint (Primary, Secondary)
+		*/
+		int BurstShotsRemaining[2];
+
+		/*
 		**	Used by the tesla to handle electric zap
 		*/
 		int ElectricZapDelay;
@@ -295,7 +301,7 @@ class TechnoClass :	public RadioClass,
 		virtual bool Is_Weapon_Equipped(void) const;
 		virtual fixed Tiberium_Load(void) const;
 		virtual int Pip_Count(void) const;
-		virtual int Rearm_Delay(bool second=true, int which=0) const;
+		virtual int Rearm_Delay(bool finalshot=true, int which=0) const;
 		virtual int Refund_Amount(void) const;
 		virtual int Risk(void) const;
 		virtual int Threat_Range(int control) const;

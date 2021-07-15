@@ -640,6 +640,7 @@ TechnoClass::TechnoClass(RTTIType rtti, int id, HousesType house) :
 	PrimaryFacing(DIR_N),
 	Arm(0),
 	Ammo(-1),
+	BurstShotsRemaining{1,1},
 	ElectricZapDelay(-1),
 	ElectricZapTarget(0),
 	ElectricZapWhich(0),
@@ -2984,20 +2985,21 @@ void TechnoClass::Assign_Target(TARGET target)
  *                                                                                             *
  *    This function calculates the delay between shots. It determines this from the standard   *
  *    rate of fire (ROF) of the base class and modifies it according to game speed and         *
- *    whether this is the first or second shot. All single shot attackers consider their       *
- *    shots to be "second" since the second shot is the one handled normally. The first shot   *
- *    usually gets assigned a much shorter delay time before the next shot can fire.           *
+ *    whether this is an intermediary or final shot. All single shot attackers consider their  *
+ *    shots to be "final" since the final shot is the one handled normally. The prior shots    *
+ *    usually get assigned a much shorter delay time before the next shot can fire.            *
  *                                                                                             *
- * INPUT:   second   -- bool; Is this the second of a two shot salvo?                          *
+ * INPUT:   finalshot   -- bool; Is this the final shot of a salvo?                            *
  *                                                                                             *
  * OUTPUT:  Returns with the number of game frames to delay before the next shot may fire.     *
  *                                                                                             *
  * WARNINGS:   none                                                                            *
  *                                                                                             *
- * HISTORY:                                                                                    *
+ * HISTORY:																					   *
  *   12/26/1994 JLB : Created.                                                                 *
+ *   07/13/2021 JJ  : Added handling of customized BurstDelay from ini.                        *
  *=============================================================================================*/
-int TechnoClass::Rearm_Delay(bool second, int which) const
+int TechnoClass::Rearm_Delay(bool finalshot, int which) const
 {
 	assert(IsActive);
 
@@ -3006,8 +3008,13 @@ int TechnoClass::Rearm_Delay(bool second, int which) const
 	}
 
 	WeaponTypeClass const * weapon = (which == 0) ? Techno_Type_Class()->PrimaryWeapon : Techno_Type_Class()->SecondaryWeapon;
-	if (second && weapon != NULL) {
-		return(weapon->ROF * House->ROFBias);
+	if (weapon != NULL) {
+		if (finalshot) {
+			return(weapon->ROF * House->ROFBias);
+		}
+		else {
+			return(Max(weapon->BurstDelay,1));
+		}
 	}
 	return(3);
 }
@@ -3168,6 +3175,7 @@ bool TechnoClass::Electric_Zap(COORDINATE target_coord, int which, WindowNumberT
  *   12/26/1994 JLB : Created.                                                                 *
  *   07/03/1995 JLB : Moving platforms fire inaccurate projectiles.                            *
  *   02/22/1996 JLB : Handles camera "weapon" case.                                            *
+ *   07/13/2021 JJ  : Handles burst delay and burst fire                                       *
  *=============================================================================================*/
 BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 {
@@ -3265,9 +3273,36 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			Mark(MARK_CHANGE_REDRAW);
 		}
 
-		Arm = Rearm_Delay(IsSecondShot, which);
-		if (tclass.Is_Two_Shooter()) {
+		if (tclass.Is_Two_Shooter()){
+			//Is this specifically a unit that has both of its hardpoints set to the same weapon and no burst set in the ini?
+			if ((weapon->Burst == 1) && (weapon == tclass.PrimaryWeapon)) {
+				//alternating fire mode as is vanilla
+				Arm = Rearm_Delay(IsSecondShot, which);
+			}
+			else {
+				//vanilla behavior but now we handle burst > 2 on a per-weapon basis.
+				//I believe there is one Arm timer per techno, not sure yet, need more time in the code.
+				//if this is the case then we delay firing for the entire techno based upon the last shot fired
+				//which implies that it's not possible to fire both primary and secondary weapons at the same time.
+				//need more time in the code.
+				Arm = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
+			}
+			//this is a relay that tells other logic we're alternating between 2 barrels, because Is_Two_Shooter == true...
 			IsSecondShot = (IsSecondShot == false);
+		}
+		else {
+			/* now Handle burst fire of a secondary weapon successfully, where the primary weapon has burst == 1
+			* 
+			* With the logic of Is_Two_Shooter: all techno that exclusively do not burst on the primary hardpoint but do on the secondary
+			* are *NOT* considered 2 shooters/barrel. we lose alternating fire, this is the desired vanilla behaviour.
+			* The logic below does not deviate, but for the first time the modder can now properly see burst fire from a secondary hardpoint.
+			* In Vanilla:  
+			*   - Burst fire from a secondary weapon is not handled at all when
+			*     the secondary weapon did not match the primary weapon
+			*   - Burst fire > 2 from either is not handled correctly.
+			*    Example:  on a 3 shot burst, after the 2 shot the reArm delay would be the ROF with mods.
+			*/
+			Arm = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
 		}
 
 		/*
@@ -3331,6 +3366,10 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 		*/
 		if (Ammo > 0) {
 			Ammo--;
+		}
+		BurstShotsRemaining[which]--;
+		if (BurstShotsRemaining[which] == 0) {
+			BurstShotsRemaining[which] = weapon->Burst;
 		}
 
 		/*
@@ -6681,6 +6720,15 @@ int TechnoTypeClass::Repair_Step(void) const
  *=============================================================================================*/
 bool TechnoTypeClass::Is_Two_Shooter(void) const
 {
+	/* TODO: Add a hint to the rules.ini on a per-techno basis because this is a headache.
+	* Could just add a flag to the techno that indicates if the unit or weapon hardpoint is 
+	* 2 barrel... - JJ
+	* This logic does not consider the Secondary Weapon or its burst when it is different from
+	* the Primary Weapon 
+	* What if I want a 3 barrel Primary Weapon?  NOPE.... TODOs abound.
+	* 
+	*/
+
 	if (PrimaryWeapon != NULL && (PrimaryWeapon == SecondaryWeapon || PrimaryWeapon->Burst > 1)) {
 		return(true);
 	}

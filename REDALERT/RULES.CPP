@@ -651,6 +651,11 @@ bool RulesClass::Heap_Maximums(CCINIClass & ini)
 #endif
 
 	Weapons.Set_Heap(WeaponMax);
+	if (ini.Is_Present("Weapons")) {
+		for (int x = 0; x < ini.Entry_Count("Weapons"); x++) {
+			new WeaponTypeClass(ini.Get_Entry("Weapons", x));
+		}
+	}
 	new WeaponTypeClass("Colt45");
 	new WeaponTypeClass("ZSU-23");
 	new WeaponTypeClass("Vulcan");
@@ -821,6 +826,33 @@ bool RulesClass::Powerups(CCINIClass & ini)
 	}
 	return(false);
 }
+
+/***********************************************************************************************
+ * RulesClass::Weapons -- Process any new weapons added from the database.                     *
+ *                                                                                             *
+ *    This will examine the database and initialize the new weapons accordingly.               *
+ *                                                                                             *
+ * INPUT:   ini   -- Reference to the INI database where the weapons are to be                 *
+ *                   initialized from.                                                         *
+ *                                                                                             *
+ * OUTPUT:  bool; Was the new weapons section found and processed?                             *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   07/15/2021 JJ  : Created.                                                                 *
+ *=============================================================================================
+bool RulesClass::Weapons(CCINIClass& ini)
+{
+	static char const* const WEAPONS = "Weapons";
+	if (ini.Is_Present(WEAPONS)) {
+		for (int x = 0; x < ini.Line_Count(WEAPONS); x++) {
+			new WeaponTypeClass(ini.Get_Entry(WEAPONS, x));
+		}
+		return(true);
+	}
+	return(false);
+}*/
 
 
 /***********************************************************************************************

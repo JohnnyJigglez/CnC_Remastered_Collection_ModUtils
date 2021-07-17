@@ -638,13 +638,14 @@ TechnoClass::TechnoClass(RTTIType rtti, int id, HousesType house) :
 	TarCom(TARGET_NONE),
 	SuspendedTarCom(TARGET_NONE),
 	PrimaryFacing(DIR_N),
-	Arm(0),
+	Arm{ 0,0 },
 	Ammo(-1),
-	BurstShotsRemaining{1,1},
+	BurstShotsRemaining{ 1,1 },
 	ElectricZapDelay(-1),
 	ElectricZapTarget(0),
 	ElectricZapWhich(0),
-	PurchasePrice(0)
+	PurchasePrice(0),
+	IsIndependentFire(false)
 {
 	//IsOwnedByPlayer = (PlayerPtr == House);
 	// Added for multiplayer changes. ST - 4/24/2019 10:40AM
@@ -2712,8 +2713,12 @@ bool TechnoClass::Is_Ready_To_Cloak(void) const
 
 	/*
 	**	If the object is currently rearming, then don't begin to recloak.
+	* maybe make a function for checking this state
 	*/
-	if (Arm != 0) {
+	if (Arm[0] != 0) {
+		return(false);
+	}
+	if (IsIndependentFire == true && (Arm[1] != 0)) {
 		return(false);
 	}
 
@@ -2866,8 +2871,8 @@ FireErrorType TechnoClass::Can_Fire(TARGET target, int which) const
 	/*
 	**	Don't allow firing if still rearming.
 	*/
-	if (Arm != 0) return(FIRE_REARM);
-
+	if (Arm[0] != 0) return(FIRE_REARM);
+	if (Arm[1] != 0 && IsIndependentFire == true) return(FIRE_REARM);
 	/*
 	**	The target must be within range in order to allow firing.
 	*/
@@ -3278,12 +3283,12 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 				//Is this specifically a unit that has both of its hardpoints set to the same weapon and no burst set in the ini?
 				if (weapon->Burst == 1){
 					//alternating fire mode as is vanilla
-					Arm = Rearm_Delay(IsSecondShot, which);
+					Arm[0] = Rearm_Delay(IsSecondShot, which);
 				}
 				//Is this a "two shooter" with both weapons the same and the burst > 1
 				if (weapon->Burst > 1) {
 					//alternating fire mode as is vanilla, using only the primary burst shot store.
-					Arm = Rearm_Delay(BurstShotsRemaining[0] == 1, which);
+					Arm[0] = Rearm_Delay(BurstShotsRemaining[0] == 1, which);
 				}
 
 			}
@@ -3293,7 +3298,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 				//if this is the case then we delay firing for the entire techno based upon the last shot fired
 				//which implies that it's not possible to fire both primary and secondary weapons at the same time.
 				//need more time in the code.
-				Arm = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
+					Arm[(IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
 			}
 			//this is a relay that tells other logic we're alternating between 2 barrels, because Is_Two_Shooter == true...
 			IsSecondShot = (IsSecondShot == false);
@@ -3310,7 +3315,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			*   - Burst fire > 2 from either is not handled correctly.
 			*    Example:  on a 3 shot burst, after the 2 shot the reArm delay would be the ROF with mods.
 			*/
-			Arm = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
+			Arm[(IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
 		}
 
 		/*
@@ -6450,7 +6455,8 @@ TechnoTypeClass::TechnoTypeClass(
 	PrimaryLateral(primarylateral),
 	SecondaryOffset(secondaryoffset),
 	SecondaryLateral(secondarylateral),
-	Points(0)
+	Points(0),
+    IsIndependentFire(false)
 {
 }
 
@@ -6847,6 +6853,7 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		IsSelfHealing = ini.Get_Bool(Name(), "SelfHealing", IsSelfHealing);
 		ROT = ini.Get_Int(Name(), "ROT", ROT);
 		MaxPassengers = ini.Get_Int(Name(), "Passengers", MaxPassengers);
+		IsIndependentFire = ini.Get_Bool(Name(), "IndependentFire", IsIndependentFire);
 //Mono_Printf("before image=: %s\n",GraphicName);
 		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
 //Mono_Printf("after image=: %s\n",GraphicName);if(Random_Pick(0,4)) Keyboard->Get();

@@ -119,6 +119,7 @@ VesselClass::VesselClass(VesselType classid, HousesType house) :
 	**	class cloakability flag.
 	*/
 	IsCloakable = Class->IsCloakable;
+	IsIndependentFire = Class->IsIndependentFire;
 
 	/*
 	** Keep count of the number of units created.
@@ -1047,7 +1048,7 @@ FireErrorType VesselClass::Can_Fire(TARGET target, int which) const
 
 #ifdef FIXIT_CARRIER	//	checked - ajw 9/28/98
 	if (*this == VESSEL_CARRIER) {
-		if(!How_Many() || Arm) {
+		if(!How_Many() || Arm[(IsIndependentFire) ? which:0]) {
 			return(FIRE_REARM);
 		} else {
 			return(FIRE_OK);
@@ -2436,7 +2437,7 @@ BulletClass * VesselClass::Fire_At(TARGET target, int which)
 	assert(IsActive);
 
 	if (*this == VESSEL_CARRIER) {
-		Arm = CarrierLaunchDelay;
+		Arm[0] = CarrierLaunchDelay;
 		FootClass * passenger = Detach_Object();
 		if (passenger != NULL) {
 			ScenarioInit++;

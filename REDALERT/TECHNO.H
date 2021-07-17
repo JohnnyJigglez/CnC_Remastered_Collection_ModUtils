@@ -79,6 +79,13 @@ class TechnoClass :	public RadioClass,
 		unsigned IsCloakable:1;
 
 		/*
+		**	If this object has the ability to fire its primary and secondary weapons independently,
+		**	then this bit will be set to true.
+		*/
+		unsigned IsIndependentFire:1;
+		
+
+		/*
 		**	If this object is designated as special then this flag will be true. For
 		**	buildings, this means that it is the primary factory. For units, it means
 		**	that the unit is the team leader.
@@ -215,7 +222,7 @@ class TechnoClass :	public RadioClass,
 		**	This is the arming countdown. It represents the time necessary
 		**	to reload the weapon.
 		*/
-		CDTimerClass<FrameTimerClass> Arm;
+		CDTimerClass<FrameTimerClass> Arm[2];
 
 		/*
 		**	The number of shot this object can fire before running out of ammo. If this
@@ -260,7 +267,7 @@ class TechnoClass :	public RadioClass,
 		*/
 		TechnoClass(RTTIType rtti, int id, HousesType house=HOUSE_NONE);
 #ifdef FIXIT_MULTI_SAVE
-		TechnoClass(NoInitClass const & x) : RadioClass(x), FlasherClass(x), StageClass(x), CargoClass(x), DoorClass(x), IdleTimer(x), IronCurtainCountDown(x), House(x), Crew(x), CloakDelay(x), PrimaryFacing(x), Arm(x) {};
+		TechnoClass(NoInitClass const& x) : RadioClass(x), FlasherClass(x), StageClass(x), CargoClass(x), DoorClass(x), IdleTimer(x), IronCurtainCountDown(x), House(x), Crew(x), CloakDelay(x), PrimaryFacing(x), Arm{ x,x } {};
 #else
 		TechnoClass(NoInitClass const & x) : RadioClass(x), FlasherClass(x), StageClass(x), CargoClass(x), DoorClass(x), IronCurtainCountDown(x), House(x), Crew(x), CloakDelay(x), PrimaryFacing(x), Arm(x) {};
 #endif

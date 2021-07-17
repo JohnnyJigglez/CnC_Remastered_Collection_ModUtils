@@ -399,6 +399,12 @@ class TechnoTypeClass : public ObjectTypeClass
 		unsigned IsCloakable:1;
 
 		/*
+		**	If this object has the ability to fire its primary and secondary weapons independently,
+		**	then this bit will be set to true.
+		*/
+		unsigned IsIndependentFire:1;
+
+		/*
 		**	Can this object self heal up to half strength? Mammoth tanks from C&C had this
 		**	feature.
 		*/

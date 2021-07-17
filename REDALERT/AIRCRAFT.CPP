@@ -249,6 +249,7 @@ AircraftClass::AircraftClass(AircraftType classid, HousesType house) :
 	if (Class->SecondaryWeapon != NULL) {
 			BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
 	}
+	IsIndependentFire = Class->IsIndependentFire;
 	Height = FLIGHT_LEVEL;
 	Strength = Class->MaxStrength;
 	NavCom = TARGET_NONE;
@@ -787,7 +788,7 @@ int AircraftClass::Mission_Hunt(void)
 						if (Class->Is_Two_Shooter()) {
 							Fire_At(targ, 0);
 						}
-						return(Arm);
+						return(Arm[0]);
 
 					case FIRE_RANGE:
 					case FIRE_FACING:
@@ -1486,10 +1487,10 @@ int AircraftClass::Paradrop_Cargo(void)
 				}
 			}
 //			Arm = Rearm_Delay(IsSecondShot);
-			Arm = 0;
+			Arm[0] = 0;
 		}
 	}
-	return(Arm);
+	return(Arm[0]);
 }
 
 
@@ -1550,7 +1551,7 @@ BulletClass * AircraftClass::Fire_At(TARGET target, int which)
 		}
 		
 		Ammo = 0;
-		Arm = Rearm_Delay();
+		Arm[0] = Rearm_Delay();
 		return(0);
 	}
 
@@ -4029,7 +4030,7 @@ FireErrorType AircraftClass::Can_Fire(TARGET target, int which) const
 	**	aircraft is generally clear.
 	*/
 	if (camera || (fudge && Passenger && Is_Something_Attached()))  {
-		if (Arm != 0) return(FIRE_REARM);
+		if (Arm[0] != 0) return(FIRE_REARM);
 
 		if (Distance(target) < (camera ? 0x0380 : 0x0200) && Map.In_Radar(Coord_Cell(Center_Coord()))) {
 //		if (Distance(target) < (camera ? 0x0380 : 0x0280) && Map.In_Radar(Coord_Cell(Center_Coord()))) {

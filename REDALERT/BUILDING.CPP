@@ -1002,9 +1002,9 @@ void BuildingClass::AI(void)
 	** to un-jam if the power has just dropped off.
 	*/
 	if (*this == STRUCT_GAP) {
-		if (Arm == 0) {
+		if (Arm[0] == 0) {
 			IsJamming = false;
-			Arm = TICKS_PER_MINUTE * Rule.GapRegenInterval + Random_Pick(1, TICKS_PER_SECOND);
+			Arm[0] = TICKS_PER_MINUTE * Rule.GapRegenInterval + Random_Pick(1, TICKS_PER_SECOND);
 		}
 
 		if (!IsJamming) {
@@ -1631,6 +1631,7 @@ BuildingClass::BuildingClass(StructType type, HousesType house) :
 	House->Tracking_Add(this);
 	IsSecondShot = !Class->Is_Two_Shooter();
 	Strength = Class->MaxStrength;
+	IsIndependentFire = Class->IsIndependentFire;
 	Ammo = Class->MaxAmmo;
 	if (Class->PrimaryWeapon != NULL) {
 		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
@@ -3203,7 +3204,7 @@ bool BuildingClass::Captured(HouseClass * newowner)
 		if (*this == STRUCT_GAP) {
 			Remove_Gap_Effect();
 			IsJamming = false;
-			Arm = 0;
+			Arm[0] = 0;
 		}
 
 		/*
@@ -4012,7 +4013,7 @@ int BuildingClass::Mission_Attack(void)
 
 		case FIRE_REARM:
 			PrimaryFacing.Set_Desired(Direction(TarCom));
-			return(Arm);
+			return(Arm[(IsIndependentFire) ? primary : 0]);
 
 		case FIRE_BUSY:
 			return(1);
@@ -5727,7 +5728,7 @@ void BuildingClass::Charging_AI(void)
 							Set_Rate(0);
 						}
 //					}
-				} else if (!Arm) {
+				} else if (!Arm[0]) {
 					IsCharged = false;
 					IsCharging = true;
 					Set_Stage(0);
@@ -6045,7 +6046,7 @@ void BuildingClass::Remove_Gap_Effect(void)
 		BuildingClass *obj = Buildings.Ptr(index);
 		if (obj && !obj->IsInLimbo && obj->House == House && *obj == STRUCT_GAP && obj!=this) {
 			obj->IsJamming = false;
-			obj->Arm = 0;
+			obj->Arm[0] = 0;
 //			Map.Jam_From(Coord_Cell(obj->Center_Coord()), Rule.GapShroudRadius, PlayerPtr);
 		}
 	}

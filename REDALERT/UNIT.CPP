@@ -329,6 +329,7 @@ UnitClass::UnitClass(UnitType classid, HousesType house) :
 		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
 	}
 	IsCloakable = Class->IsCloakable;
+	IsIndependentFire = Class->IsIndependentFire;
 	if (Class->IsAnimating) Set_Rate(Options.Normalize_Delay(3));
 
 	/*
@@ -1845,7 +1846,10 @@ void UnitClass::Per_Cell_Process(PCPType why)
 		*/
 		if (!Target_Legal(NavCom) && Path[0] == FACING_NONE) {
 			if (Class->IsNoFireWhileMoving) {
-				Arm = Rearm_Delay()/4;  /* Well this is certainly arbitrary af -JJ */
+				Arm[0] = Rearm_Delay()/4;  /* Well this is certainly arbitrary af -JJ */
+				if (IsIndependentFire) {
+					Arm[1] = Rearm_Delay(true,1)/4;
+				}
 			}
 		}
 
@@ -2014,7 +2018,7 @@ int UnitClass::Shape_Number(void) const
 			/*
 			**	If in combat, then do combat anims.
 			*/
-			if (Arm > 0)  {
+			if (Arm[0] > 0)  {
 				shapenum = 8 + 64 + (shapenum * 4) + ((::Frame+ID)/2) % 4;
 			}
 		}
@@ -2792,7 +2796,7 @@ int UnitClass::Mission_Unload(void)
 			if (!Gems && !IsDumping) {
 				Gems = 1;
 				Gold = 0;
-				Arm = QuakeDelay * House->ROFBias;
+				Arm[0] = QuakeDelay * House->ROFBias;
 #ifdef ENGLISH
 				Speak(VOX_MADTANK_DEPLOYED);	// this voice only exists in English
 #else
@@ -2825,7 +2829,7 @@ int UnitClass::Mission_Unload(void)
 #endif
 			}
 
-			if ( (Arm && !Gold) || IronCurtainCountDown) {
+			if ( (Arm[0] && !Gold) || IronCurtainCountDown) {
 				Set_Stage(Fetch_Stage() & 1);
 				return(1);
 			}

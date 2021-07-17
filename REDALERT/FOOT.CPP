@@ -640,7 +640,7 @@ int FootClass::Mission_Guard(void)
 		}
 	}
 
-	return((Arm != 0) ? (int)Arm : (dtime+Random_Pick(0, 2)));
+	return((Arm[0] != 0) ? (int)Arm[0]: (dtime + Random_Pick(0, 2)));
 }
 
 

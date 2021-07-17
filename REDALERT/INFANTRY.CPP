@@ -210,6 +210,7 @@ InfantryClass::InfantryClass(InfantryType classid, HousesType house) :
 		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
 	}
 	Strength = Class->MaxStrength;
+	IsIndependentFire = Class->IsIndependentFire;
 
 	/*
 	**	Civilians carry much less ammo than soldiers do.
@@ -919,7 +920,11 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 				}
 				NavCom = TARGET_NONE;
 				Do_Uncloak();
-				Arm = Rearm_Delay();
+				//TODO: add robustness later, we use the primary weapon's ROF to set this delay...
+				//when it would make logical sense to use the weapon data from the slot of the C4.
+				//this is important because a commando that uses C4 must wait to fire the rifle and defend itself
+				//from the survivors...
+				Arm[0] = Rearm_Delay();
 				Scatter(building->Center_Coord(), true, true);	// RUN AWAY!
 				BEnd(BENCH_PCP);
 				return;

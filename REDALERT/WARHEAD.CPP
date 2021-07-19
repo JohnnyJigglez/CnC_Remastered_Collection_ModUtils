@@ -79,6 +79,35 @@ WarheadTypeClass::WarheadTypeClass(char const * name) :
 	}
 }
 
+/***********************************************************************************************
+ * Warhead_From_Name -- Conver ASCII name to warhead type ID number.                           *
+ *                                                                                             *
+ *    This will find the warhead whos name matches that specified and then it will return the  *
+ *    warhead ID number associated with it.                                                    *
+ *                                                                                             *
+ * INPUT:   name  -- Pointer to the ASCII name of the warhead type.                            *
+ *                                                                                             *
+ * OUTPUT:  Returns with the warhead type ID number that matches the name specified. If no     *
+ *          match could be found, then WARHEAD_NONE is returned.                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   07/16/2021 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+WarheadType Warhead_From_Name(char const* name)
+{
+	if (!name) return(WARHEAD_NONE);
+
+	for (int index = 0; index < Warheads.Count(); index++) {
+		if (stricmp(Warheads.Ptr(index)->Name(), name) == 0) {
+			return(WarheadType(Warheads.Ptr(index)->ID));
+		}
+	}
+
+	return(WARHEAD_NONE);
+}
+
 
 /***********************************************************************************************
  * WarheadTypeClass::operator new -- Allocate a warhead object from the special heap.          *

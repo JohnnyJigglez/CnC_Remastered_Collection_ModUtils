@@ -649,13 +649,22 @@ bool RulesClass::Heap_Maximums(CCINIClass & ini)
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 	new WarheadTypeClass("Mechanical");
 #endif
-
-	Weapons.Set_Heap(WeaponMax);
-	if (ini.Is_Present("Weapons")) {
-		for (int x = 0; x < ini.Entry_Count("Weapons"); x++) {
-			new WeaponTypeClass(ini.Get_Entry("Weapons", x));
+	if (ini.Is_Present("Warheads")) {
+		for (int x = 0; x < ini.Entry_Count("Warheads"); x++) {
+			new WarheadTypeClass(ini.Get_Entry("Warheads", x));
 		}
 	}
+
+	//BulletTypes.Set_Heap(ProjectileMax);
+	//BulletTypeClass::Init_Heap();
+	/*
+	if (ini.Is_Present("Projectiles")) {
+		for (int x = 0; x < ini.Entry_Count("Projectiles"); x++) {
+			new BulletTypeClass(ini.Get_Entry("Projectiles", x));
+		}
+	}*/
+
+	Weapons.Set_Heap(WeaponMax);
 	new WeaponTypeClass("Colt45");
 	new WeaponTypeClass("ZSU-23");
 	new WeaponTypeClass("Vulcan");
@@ -707,6 +716,11 @@ bool RulesClass::Heap_Maximums(CCINIClass & ini)
 #ifdef FIXIT_CARRIER	//	checked - ajw 9/28/98
 	new WeaponTypeClass("AirAssault");
 #endif
+	if (ini.Is_Present("Weapons")) {
+		for (int x = 0; x < ini.Entry_Count("Weapons"); x++) {
+			new WeaponTypeClass(ini.Get_Entry("Weapons", x));
+		}
+	}
 
 	return(true);
 }

@@ -997,6 +997,16 @@ int Terrain_Cost(CELL cell, FacingType facing);
 char const * Version_Name(void);
 
 /*
+**	BBDATA.CPP
+*/
+BulletType Bullet_From_Name(char const* name);
+
+/*
+**	WARHEAD.CPP
+*/
+WarheadType Warhead_From_Name(char const* name);
+
+/*
 **	WEAPON.CPP
 */
 WeaponType Weapon_From_Name(char const * name);

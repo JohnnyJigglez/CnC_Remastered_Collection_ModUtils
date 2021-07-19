@@ -720,18 +720,21 @@ bool CCINIClass::Put_WeaponType(char const * section, char const * entry, Weapon
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   07/03/1996 JLB : Created.                                                                 *
+ *   07/03/1996 JLB : Created.
+ *   07/17/2021 JJ  : Updated to use same lookup logics as get_WeaponType
  *=============================================================================================*/
 WarheadType CCINIClass::Get_WarheadType(char const * section, char const * entry, WarheadType defvalue) const
 {
 	char buffer[128];
-
-	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		for (WarheadType wh = WARHEAD_FIRST; wh < WARHEAD_COUNT; wh++) {
-			if (stricmp(WarheadTypeClass::As_Pointer(wh)->Name(), buffer) == 0) {
-				return(wh);
+	/*if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+		for (int index = 0 ; index < Warheads.Count(); index++) {
+			if (stricmp(Warheads.Ptr(index)->Name(), buffer) == 0) {
+				return(WarheadType(Warheads.Ptr(index)->ID));
 			}
 		}
+	}*/
+	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+		return(Warhead_From_Name(buffer));
 	}
 	return(defvalue);
 }
@@ -851,6 +854,10 @@ BulletType CCINIClass::Get_BulletType(char const * section, char const * entry, 
 			}
 		}
 	}
+	/*
+	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+		return(Bullet_From_Name(buffer));
+	}*/
 	return(defvalue);
 }
 

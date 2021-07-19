@@ -219,15 +219,16 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		IsCamera = ini.Get_Bool(Name(), "Camera", IsCamera);
 		IsElectric = ini.Get_Bool(Name(), "Charges", IsElectric);
 		IsTurboBoosted = ini.Get_Bool(Name(), "TurboBoost", IsTurboBoosted);
-
-		WarheadType wtype = (WarheadPtr != NULL) ? WarheadType(WarheadPtr->ID) : WARHEAD_NONE;
+		WarheadPtr = WarheadTypeClass::As_Pointer(ini.Get_WarheadType(Name(), "Warhead", WarheadPtr != NULL ? (WarheadType)(WarheadPtr->ID) : WARHEAD_NONE));
+		//Bullet = WarheadTypeClass::As_Pointer(ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon != NULL ? (WeaponType)(SecondaryWeapon->ID) : WEAPON_NONE));
+		/*WarheadType wtype = (WarheadPtr != NULL) ? WarheadType(WarheadPtr->ID) : WARHEAD_NONE;
 		wtype = ini.Get_WarheadType(Name(), "Warhead", wtype);
 		if (wtype != WARHEAD_NONE) {
 			WarheadPtr = WarheadTypeClass::As_Pointer(wtype);
 //			WarheadPtr = &Warheads[wtype];
 		} else {
 			WarheadPtr = NULL;
-		}
+		}*/
 
 		BulletType btype = (Bullet != NULL) ? BulletType(Bullet->ID) : BULLET_NONE;
 		btype = ini.Get_BulletType(Name(), "Projectile", btype);

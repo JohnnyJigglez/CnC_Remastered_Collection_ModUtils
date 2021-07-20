@@ -198,7 +198,8 @@ WeaponTypeClass * WeaponTypeClass::As_Pointer(WeaponType weapon)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/19/1996 JLB : Created.																   *
- *   07/13/2021 JJ  : Added BurstDelay.														   *
+ *   07/13/2021 JJ  : Added BurstDelay.
+ *   07/18/2021 JJ  : warhead and projectiles are now parsed like Weapons.
  *=============================================================================================*/
 bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 {
@@ -220,23 +221,8 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		IsElectric = ini.Get_Bool(Name(), "Charges", IsElectric);
 		IsTurboBoosted = ini.Get_Bool(Name(), "TurboBoost", IsTurboBoosted);
 		WarheadPtr = WarheadTypeClass::As_Pointer(ini.Get_WarheadType(Name(), "Warhead", WarheadPtr != NULL ? (WarheadType)(WarheadPtr->ID) : WARHEAD_NONE));
-		//Bullet = WarheadTypeClass::As_Pointer(ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon != NULL ? (WeaponType)(SecondaryWeapon->ID) : WEAPON_NONE));
-		/*WarheadType wtype = (WarheadPtr != NULL) ? WarheadType(WarheadPtr->ID) : WARHEAD_NONE;
-		wtype = ini.Get_WarheadType(Name(), "Warhead", wtype);
-		if (wtype != WARHEAD_NONE) {
-			WarheadPtr = WarheadTypeClass::As_Pointer(wtype);
-//			WarheadPtr = &Warheads[wtype];
-		} else {
-			WarheadPtr = NULL;
-		}*/
+		Bullet = BulletTypeClass::As_Pointer(ini.Get_BulletType(Name(), "Projectile", Bullet != NULL ? (BulletType)(Bullet->ID) : BULLET_NONE));
 
-		BulletType btype = (Bullet != NULL) ? BulletType(Bullet->ID) : BULLET_NONE;
-		btype = ini.Get_BulletType(Name(), "Projectile", btype);
-		if (btype != BULLET_NONE) {
-			Bullet = &BulletTypeClass::As_Reference(btype);
-		} else {
-			Bullet = NULL;
-		}
 
 		return(true);
 	}

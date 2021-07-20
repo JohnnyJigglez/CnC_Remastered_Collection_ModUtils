@@ -2530,11 +2530,12 @@ void AnimTypeClass::Init_Heap(void)
  * WARNINGS:   This routine should be called ONLY once.                                        *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   06/02/1994 JLB : Created.                                                                 *
+ *   06/02/1994 JLB : Created.
+ *   07/18/2021 JJ  : Updated to use a non-static HEAP size
  *=============================================================================================*/
 void AnimTypeClass::One_Time(void)
 {
-	for (int index = ANIM_FIRST; index < ANIM_COUNT; index++) {
+	for (int index = 0; index < AnimTypes.Count(); index++) {
 		char fullname[_MAX_FNAME+_MAX_EXT];
 
 		AnimTypeClass const & anim = As_Reference((AnimType)index);
@@ -2571,12 +2572,13 @@ void AnimTypeClass::One_Time(void)
  * WARNINGS:   Call this routine when the theater changes.                                     *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   07/06/1996 JLB : Created.                                                                 *
+ *   07/06/1996 JLB : Created.
+ *   07/18/2021 JJ  : Updated to use a non-static HEAP size*
  *=============================================================================================*/
 void AnimTypeClass::Init(TheaterType theater)
 {
 	if (theater != LastTheater) {
-		for (int index = ANIM_FIRST; index < ANIM_COUNT; index++) {
+		for (int index = 0; index < AnimTypes.Count(); index++) {
 			AnimTypeClass const & anim = As_Reference((AnimType)index);
 
 			if (anim.IsTheater) {

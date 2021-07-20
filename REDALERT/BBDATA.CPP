@@ -199,29 +199,29 @@ void BulletTypeClass::Init_Heap(void)
  *             only be called once.                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   05/28/1994 JLB : Created.                                                                 *
+ *   05/28/1994 JLB : Created. 
+ *   07/17/2021 JJ  : Updated to use non-static HEAP size and more efficient logics.
  *=============================================================================================*/
 void BulletTypeClass::One_Time(void)
 {
 	/*
 	**	Load the bullet shapes.
 	*/
-	for (int index = BULLET_FIRST; index < BULLET_COUNT; index++) {
-		BulletTypeClass const & bullet = As_Reference((BulletType)index);
-		char	fullname[_MAX_FNAME+_MAX_EXT];
-
-		if (!bullet.IsInvisible) {
-			_makepath(fullname, NULL, NULL, bullet.GraphicName, ".SHP");
-
+	BulletTypeClass* btc = NULL;
+	for (int index = 0; index < BulletTypes.Count(); index++) {
+		btc = (BulletTypes.Ptr(index));
+		if (!(btc->IsInvisible)) {
+			char	fullname[_MAX_FNAME + _MAX_EXT];
+			_makepath(fullname, NULL, NULL, btc->GraphicName, ".SHP");
 			#ifdef NDEBUG
-				((void const *&)bullet.ImageData) =	MFCD::Retrieve(fullname);
+			    ((void const*&)btc->ImageData) = MFCD::Retrieve(fullname);
 			#else
 				RawFileClass file(fullname);
 
 				if (file.Is_Available()) {
-					((void const *&)bullet.ImageData) = Load_Alloc_Data(file);
+					((void const *&)btc->ImageData) = Load_Alloc_Data(file);
 				} else {
-					((void const *&)bullet.ImageData) =	MFCD::Retrieve(fullname);
+					((void const *&)btc->ImageData) =	MFCD::Retrieve(fullname);
 				}
 			#endif
 		}
@@ -230,7 +230,8 @@ void BulletTypeClass::One_Time(void)
 
 
 /***********************************************************************************************
- * BulletTypeClass::As_Reference -- Returns with a reference to the bullet type object specifi *
+ * BulletTypeClass::As_Reference -- Returns with a reference to the bullet type object         *
+ *                                  specified.											       *
  *                                                                                             *
  *    Given a bullet type identifier, this routine will return a reference to the bullet type  *
  *    object it refers to.                                                                     *
@@ -248,6 +249,29 @@ void BulletTypeClass::One_Time(void)
 BulletTypeClass & BulletTypeClass::As_Reference(BulletType type)
 {
 	return(*BulletTypes.Ptr(type));
+}
+
+/***********************************************************************************************
+ * BulletTypeClass::As_Pointer -- Convert a bullet type number into a pointer.                 *
+ *                                                                                             *
+ *    This will locate the warhead type specified and return a pointer to it.                  *
+ *                                                                                             *
+ * INPUT:   bullet  -- The bullet to convert into a pointer.                                   *
+ *                                                                                             *
+ * OUTPUT:  Returns with a pointer to the bullet type object that is represented by the        *
+ *          bullet type number specified.                                                      *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   07/17/2021 JJ : Created.                                                                  *
+ *=============================================================================================*/
+BulletTypeClass* BulletTypeClass::As_Pointer(BulletType bullet)
+{
+	if (bullet != BULLET_NONE) {
+		return(BulletTypes.Ptr(bullet));
+	}
+	return(NULL);
 }
 
 
@@ -294,4 +318,33 @@ bool BulletTypeClass::Read_INI(CCINIClass & ini)
 		return(true);
 	}
 	return(false);
+}
+
+/***********************************************************************************************
+ * Bullet_From_Name -- Convert ASCII name to bullet type ID number.                            *
+ *                                                                                             *
+ *    This will find the bullet whos name matches that specified and then it will return the   *
+ *    bullet ID number associated with it.                                                     *
+ *                                                                                             *
+ * INPUT:   name  -- Pointer to the ASCII name of the bullet type.                             *
+ *                                                                                             *
+ * OUTPUT:  Returns with the bullet type ID number that matches the name specified. If no      *
+ *          match could be found, then BULLET_NONE is returned.                                *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   07/16/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+BulletType Bullet_From_Name(char const* name)
+{
+	if (!name) return(BULLET_NONE);
+
+	for (int index = 0; index < BulletTypes.Count(); index++) {
+		if (stricmp(BulletTypes.Ptr(index)->Name(), name) == 0) {
+			return(BulletType(BulletTypes.Ptr(index)->ID));
+		}
+	}
+
+	return(BULLET_NONE);
 }

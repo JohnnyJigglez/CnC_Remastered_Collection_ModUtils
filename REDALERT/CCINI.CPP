@@ -726,13 +726,6 @@ bool CCINIClass::Put_WeaponType(char const * section, char const * entry, Weapon
 WarheadType CCINIClass::Get_WarheadType(char const * section, char const * entry, WarheadType defvalue) const
 {
 	char buffer[128];
-	/*if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		for (int index = 0 ; index < Warheads.Count(); index++) {
-			if (stricmp(Warheads.Ptr(index)->Name(), buffer) == 0) {
-				return(WarheadType(Warheads.Ptr(index)->ID));
-			}
-		}
-	}*/
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
 		return(Warhead_From_Name(buffer));
 	}
@@ -840,24 +833,16 @@ bool CCINIClass::Put_OverlayType(char const * section, char const * entry, Overl
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   07/03/1996 JLB : Created.                                                                 *
+ *   07/03/1996 JLB : Created.
+ *   07/18/2021 JJ  : Updated how this function functions to match the logics of warheads
  *=============================================================================================*/
 BulletType CCINIClass::Get_BulletType(char const * section, char const * entry, BulletType defvalue) const
 {
 	char buffer[128];
-
-	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		for (BulletType proj = BULLET_FIRST; proj < BULLET_COUNT; proj++) {
-			if (stricmp(BulletTypeClass::As_Reference(proj).Name(), buffer) == 0) {
-//			if (stricmp(ProjectileNames[proj], buffer) == 0) {
-				return(proj);
-			}
-		}
-	}
-	/*
+	
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
 		return(Bullet_From_Name(buffer));
-	}*/
+	}
 	return(defvalue);
 }
 

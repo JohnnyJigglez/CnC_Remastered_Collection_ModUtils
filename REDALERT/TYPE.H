@@ -1524,6 +1524,7 @@ class BulletTypeClass : public ObjectTypeClass
 
 		static void Init_Heap(void);
 		static BulletTypeClass & As_Reference(BulletType type);
+		static BulletTypeClass* As_Pointer(BulletType bullet);
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 

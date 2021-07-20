@@ -597,7 +597,9 @@ bool RulesClass::Recharge(CCINIClass & ini)
  *             modified. This should only be processed during the game initialization stage.   *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   08/08/1996 JLB : Created.                                                                 *
+ *   08/08/1996 JLB : Created. 
+ *   07/13/2021 JJ  : Added Support for new weapons via ini.
+ *   07/17/2021 JJ  : Added Support for new warheads via ini.
  *=============================================================================================*/
 bool RulesClass::Heap_Maximums(CCINIClass & ini)
 {
@@ -654,16 +656,12 @@ bool RulesClass::Heap_Maximums(CCINIClass & ini)
 			new WarheadTypeClass(ini.Get_Entry("Warheads", x));
 		}
 	}
-
-	//BulletTypes.Set_Heap(ProjectileMax);
-	//BulletTypeClass::Init_Heap();
-	/*
+	/* This code does not function correctly, sadly.
 	if (ini.Is_Present("Projectiles")) {
 		for (int x = 0; x < ini.Entry_Count("Projectiles"); x++) {
 			new BulletTypeClass(ini.Get_Entry("Projectiles", x));
 		}
 	}*/
-
 	Weapons.Set_Heap(WeaponMax);
 	new WeaponTypeClass("Colt45");
 	new WeaponTypeClass("ZSU-23");

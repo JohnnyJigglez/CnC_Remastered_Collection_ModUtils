@@ -201,6 +201,7 @@ void BulletTypeClass::Init_Heap(void)
  * HISTORY:                                                                                    *
  *   05/28/1994 JLB : Created. 
  *   07/17/2021 JJ  : Updated to use non-static HEAP size and more efficient logics.
+ *   07/20/2021 JJ  : Added more data checks.
  *=============================================================================================*/
 void BulletTypeClass::One_Time(void)
 {
@@ -208,22 +209,31 @@ void BulletTypeClass::One_Time(void)
 	**	Load the bullet shapes.
 	*/
 	BulletTypeClass* btc = NULL;
-	for (int index = 0; index < BulletTypes.Count(); index++) {
-		btc = (BulletTypes.Ptr(index));
-		if (!(btc->IsInvisible)) {
-			char	fullname[_MAX_FNAME + _MAX_EXT];
-			_makepath(fullname, NULL, NULL, btc->GraphicName, ".SHP");
-			#ifdef NDEBUG
-			    ((void const*&)btc->ImageData) = MFCD::Retrieve(fullname);
-			#else
-				RawFileClass file(fullname);
+	/*
+	* Verify there are active pointers in the heap
+	*/
+	if (BulletTypes.Count()) {
+		for (int index = 0; index < BulletTypes.Count(); index++) {
+			btc = (BulletTypes.Ptr(index));
+				/*
+	*Verify the pointer is not NULL and only precache imagedata for projectiles that are NOT invisible.
+	*/
+				if (btc != NULL && !(btc->IsInvisible)) {
+					char	fullname[_MAX_FNAME + _MAX_EXT];
+						_makepath(fullname, NULL, NULL, btc->GraphicName, ".SHP");
+#ifdef NDEBUG
+						((void const*&)btc->ImageData) = MFCD::Retrieve(fullname);
+#else
+						RawFileClass file(fullname);
 
-				if (file.Is_Available()) {
-					((void const *&)btc->ImageData) = Load_Alloc_Data(file);
-				} else {
-					((void const *&)btc->ImageData) =	MFCD::Retrieve(fullname);
+						if (file.Is_Available()) {
+							((void const*&)btc->ImageData) = Load_Alloc_Data(file);
+						}
+						else {
+							((void const*&)btc->ImageData) = MFCD::Retrieve(fullname);
+						}
+#endif
 				}
-			#endif
 		}
 	}
 }

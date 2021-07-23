@@ -1499,7 +1499,7 @@ ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadType wa
 			*/
 			if (*this != STRUCT_SAM && *this != STRUCT_AAGUN &&
 				!House->Is_Ally(source) &&
-				Class->PrimaryWeapon != NULL &&
+				Class->Armaments[0] != NULL &&
 				(!Target_Legal(TarCom) || !In_Range(TarCom))) {
 
 				if (source->What_Am_I() != RTTI_AIRCRAFT && (!House->IsHuman || Rule.IsSmartDefense)) {
@@ -1631,13 +1631,11 @@ BuildingClass::BuildingClass(StructType type, HousesType house) :
 	House->Tracking_Add(this);
 	IsSecondShot = !Class->Is_Two_Shooter();
 	Strength = Class->MaxStrength;
-	IsIndependentFire = Class->IsIndependentFire;
 	Ammo = Class->MaxAmmo;
-	if (Class->PrimaryWeapon != NULL) {
-		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
-	}
-	if (Class->SecondaryWeapon != NULL) {
-		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	for (int x = 0;x < Class->NumArmaments;x++)
+	{
+		if (Class->Armaments[x] != NULL)
+			BurstShotsRemaining[x] = Class->Armaments[x]->Burst;
 	}
 	/*
 	**	If the building could never be built, then it can never be sold either. This
@@ -2500,29 +2498,30 @@ DirType BuildingClass::Turret_Facing(void) const
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   01/01/1995 JLB : Created.                                                                 *
+ *   01/01/1995 JLB : Created.
+ *   07/21/2021 JJ  : Updated to support all the weapons (multiple allowed)
  *=============================================================================================*/
 TARGET BuildingClass::Greatest_Threat(ThreatType threat) const
 {
 	assert(Buildings.ID(this) == ID);
 	assert(IsActive);
 
-	if (Class->PrimaryWeapon != NULL) {
-		threat = threat | Class->PrimaryWeapon->Allowed_Threats();
-	}
-	if (Class->SecondaryWeapon != NULL) {
-		threat = threat | Class->SecondaryWeapon->Allowed_Threats();
+	for (int x = 0; x < Class->NumArmaments; x++) {
+		if (Class->Armaments[x] != NULL)
+		{
+			threat = threat | Class->Armaments[x]->Allowed_Threats();
+		}
 	}
 	if (House->IsHuman) {
 		threat = threat & ~THREAT_BUILDINGS;
 	}
 	threat = threat | THREAT_RANGE;
 
-//	if (Class->PrimaryWeapon != NULL) {
-//		if (Class->PrimaryWeapon->Bullet->IsAntiAircraft) {
+//	if (Class->Armaments[0] != NULL) {
+//		if (Class->Armaments[0]->Bullet->IsAntiAircraft) {
 //			threat = threat | THREAT_AIR;
 //		}
-//		if (Class->PrimaryWeapon->Bullet->IsAntiGround) {
+//		if (Class->Armaments[0]->Bullet->IsAntiGround) {
 //			threat = threat | THREAT_BUILDINGS|THREAT_INFANTRY|THREAT_BOATS|THREAT_VEHICLES;
 //		}
 //		threat = threat | THREAT_RANGE;
@@ -2885,7 +2884,8 @@ ActionType BuildingClass::What_Action(ObjectClass const * object) const
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   01/18/1995 JLB : Created.                                                                 *
+ *   01/18/1995 JLB : Created.
+ *   07/21/2021 JJ  : Updated to handle new multiple weapons data store
  *=============================================================================================*/
 ActionType BuildingClass::What_Action(CELL cell) const
 {
@@ -2902,7 +2902,7 @@ ActionType BuildingClass::What_Action(CELL cell) const
 	**	Don't allow targeting of SAM sites, even if the CTRL key
 	**	is held down.
 	*/
-	if (action == ACTION_ATTACK && Class->PrimaryWeapon != NULL && !Class->PrimaryWeapon->Bullet->IsAntiGround) {
+	if (action == ACTION_ATTACK && Class->Armaments[0] != NULL && !Class->Armaments[0]->Bullet->IsAntiGround) {
 //	if (action == ACTION_ATTACK && (*this == STRUCT_SAM || *this == STRUCT_AAGUN)) {
 		action = ACTION_NONE;
 	}
@@ -3063,7 +3063,7 @@ FireErrorType BuildingClass::Can_Fire(TARGET target, int which) const
 		/*
 		** If an obelisk can fire, check the state of charge.
 		*/
-		if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsElectric && !IsCharged) {
+		if (Class->Armaments[0] != NULL && Class->Armaments[0]->IsElectric && !IsCharged) {
 			return(FIRE_BUSY);
 		}
 	}
@@ -3919,7 +3919,8 @@ int BuildingClass::Mission_Deconstruction(void)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   06/25/1995 JLB : Created.                                                                 *
- *   02/22/1996 JLB : SAM doesn't lower back into ground.                                      *
+ *   02/22/1996 JLB : SAM doesn't lower back into ground.
+ *   07/21/2021 JJ  : Support new independent fire attribute on weapon
  *=============================================================================================*/
 int BuildingClass::Mission_Attack(void)
 {
@@ -4013,7 +4014,7 @@ int BuildingClass::Mission_Attack(void)
 
 		case FIRE_REARM:
 			PrimaryFacing.Set_Desired(Direction(TarCom));
-			return(Arm[(IsIndependentFire) ? primary : 0]);
+			return(Arm[(Class->IsIndependentFire) ? primary : 0]);
 
 		case FIRE_BUSY:
 			return(1);
@@ -5716,7 +5717,7 @@ void BuildingClass::Rotation_AI(void)
  *=============================================================================================*/
 void BuildingClass::Charging_AI(void)
 {
-	if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsElectric && BState != BSTATE_CONSTRUCTION) {
+	if (Class->Armaments[0] != NULL && Class->Armaments[0]->IsElectric && BState != BSTATE_CONSTRUCTION) {
 		if (Target_Legal(TarCom) && House->Power_Fraction() >= 1) {
 			if (!IsCharged) {
 				if (IsCharging) {

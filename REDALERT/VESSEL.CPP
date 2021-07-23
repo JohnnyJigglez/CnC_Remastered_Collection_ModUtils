@@ -106,11 +106,10 @@ VesselClass::VesselClass(VesselType classid, HousesType house) :
 	**	what is desired for non two shooters.
 	*/
 	IsSecondShot = !Class->Is_Two_Shooter();
-	if (Class->PrimaryWeapon != NULL) {
-		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
-	}
-	if (Class->SecondaryWeapon != NULL) {
-		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	for (int x = 0;x < Class->NumArmaments;x++)
+	{
+		if (Class->Armaments[x] != NULL)
+			BurstShotsRemaining[x] = Class->Armaments[x]->Burst;
 	}
 	Strength = Class->MaxStrength;
 
@@ -119,7 +118,6 @@ VesselClass::VesselClass(VesselType classid, HousesType house) :
 	**	class cloakability flag.
 	*/
 	IsCloakable = Class->IsCloakable;
-	IsIndependentFire = Class->IsIndependentFire;
 
 	/*
 	** Keep count of the number of units created.
@@ -1036,7 +1034,8 @@ ResultType VesselClass::Take_Damage(int & damage, int distance, WarheadType warh
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   05/13/1996 JLB : Created.                                                                 *
+ *   05/13/1996 JLB : Created. 
+ *   07/17/2021 JJ  : Added handling of new IsIndependentFire attribute                        *
  *=============================================================================================*/
 FireErrorType VesselClass::Can_Fire(TARGET target, int which) const
 {
@@ -1048,7 +1047,7 @@ FireErrorType VesselClass::Can_Fire(TARGET target, int which) const
 
 #ifdef FIXIT_CARRIER	//	checked - ajw 9/28/98
 	if (*this == VESSEL_CARRIER) {
-		if(!How_Many() || Arm[(IsIndependentFire) ? which:0]) {
+		if(!How_Many() || Arm[(Class->IsIndependentFire) ? which : 0]) {
 			return(FIRE_REARM);
 		} else {
 			return(FIRE_OK);
@@ -1060,7 +1059,7 @@ if(*this==VESSEL_DD) {
 Mono_Set_Cursor(0,0);
 }
 	if (fire == FIRE_OK || fire == FIRE_CLOAKED) {
-		WeaponTypeClass const * weapon = (which == 0) ? Class->PrimaryWeapon : Class->SecondaryWeapon;
+		WeaponTypeClass const * weapon = Class->Armaments[which];
 
 		/*
 		**	Ensure that a torpedo will never be fired upon a non naval target.
@@ -1292,12 +1291,11 @@ TARGET VesselClass::Greatest_Threat(ThreatType threat) const
 		threat = threat | THREAT_FACTORIES;
 	} else {
 		if ((threat & (THREAT_GROUND|THREAT_POWER|THREAT_FACTORIES|THREAT_TIBERIUM|THREAT_BASE_DEFENSE|THREAT_BOATS)) == 0) {
-			if (Class->PrimaryWeapon != NULL) {
-				threat = threat | Class->PrimaryWeapon->Allowed_Threats();
-			}
-
-			if (Class->SecondaryWeapon != NULL) {
-				threat = threat | Class->SecondaryWeapon->Allowed_Threats();
+			for (int x = 0; x < Class->NumArmaments; x++) {
+				if (Class->Armaments[x] != NULL)
+				{
+					threat = threat | Class->Armaments[x]->Allowed_Threats();
+				}
 			}
 
 //			threat = threat | THREAT_GROUND | THREAT_BOATS;
@@ -1354,7 +1352,7 @@ void VesselClass::Enter_Idle_Mode(bool )
 		order = MISSION_MOVE;
 	} else {
 
-		if (Class->PrimaryWeapon == NULL) {
+		if (Class->Armaments[0] == NULL) {
 			if (IsALoaner && Class->Max_Passengers() > 0 && Is_Something_Attached() && !Team) {
 				order = MISSION_UNLOAD;
 			} else {
@@ -2239,7 +2237,7 @@ ActionType VesselClass::What_Action(CELL cell) const
 		return(ACTION_MOVE);
 	}
 
-	if (action == ACTION_NOMOVE && Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->Bullet->IsSubSurface && Map[cell].Is_Bridge_Here()) {
+	if (action == ACTION_NOMOVE && Is_SubWeapon_Equipped() && Map[cell].Is_Bridge_Here()) {
 		return(ACTION_ATTACK);
 	}
 	return(action);

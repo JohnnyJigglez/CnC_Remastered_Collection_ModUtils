@@ -203,14 +203,12 @@ InfantryClass::InfantryClass(InfantryType classid, HousesType house) :
 	} else {
 		IsSecondShot = true;
 	}
-	if (Class->PrimaryWeapon != NULL) {
-		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
-	}
-	if (Class->SecondaryWeapon != NULL) {
-		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	for (int x = 0;x < Class->NumArmaments;x++)
+	{
+		if (Class->Armaments[x] != NULL)
+			BurstShotsRemaining[x] = Class->Armaments[x]->Burst;
 	}
 	Strength = Class->MaxStrength;
-	IsIndependentFire = Class->IsIndependentFire;
 
 	/*
 	**	Civilians carry much less ammo than soldiers do.
@@ -920,7 +918,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 				}
 				NavCom = TARGET_NONE;
 				Do_Uncloak();
-				//TODO: add robustness later, we use the primary weapon's ROF to set this delay...
+				//TODO: add robustness later, vanilla code uses the primary weapon's ROF to set this delay...
 				//when it would make logical sense to use the weapon data from the slot of the C4.
 				//this is important because a commando that uses C4 must wait to fire the rifle and defend itself
 				//from the survivors...
@@ -1388,7 +1386,7 @@ MoveType InfantryClass::Can_Enter_Cell(CELL cell, FacingType ) const
 				**	If the wall can be destroyed, then return this fact instead of
 				**	a complete failure to enter.
 				*/
-				if (Is_Weapon_Equipped() && Class->PrimaryWeapon->Is_Wall_Destroyer()) {
+				if (Is_Weapon_Equipped() && Class->Armaments[0]->Is_Wall_Destroyer()) {
 					return(MOVE_DESTROYABLE);
 				}
 				return(MOVE_NO);
@@ -1520,7 +1518,7 @@ MoveType InfantryClass::Can_Enter_Cell(CELL cell, FacingType ) const
 							case RTTI_TERRAIN:
 #ifdef OBSOLETE
 								if (((TerrainClass *)obj)->Class->Armor == ARMOR_WOOD &&
-										Class->PrimaryWeapon->WarheadPtr->IsWoodDestroyer) {
+										Class->Armaments[0]->WarheadPtr->IsWoodDestroyer) {
 
 									if (retval < MOVE_DESTROYABLE) retval = MOVE_DESTROYABLE;
 								} else {
@@ -1760,7 +1758,8 @@ FireErrorType InfantryClass::Can_Fire(TARGET target, int which) const
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   11/12/2019 SKY : Created.                                                                 *
+ *   11/12/2019 SKY : Created.
+ *   07/21/2021 JJ  : Updated to support multiple weapons
  *=============================================================================================*/
 COORDINATE InfantryClass::Fire_Coord(int which) const
 {
@@ -1772,7 +1771,7 @@ COORDINATE InfantryClass::Fire_Coord(int which) const
 	*/
 	if (IsProne) {
 		TechnoTypeClass const & tclass = *Techno_Type_Class();
-		WeaponTypeClass const * weapon = (which == 0) ? tclass.PrimaryWeapon : tclass.SecondaryWeapon;
+		WeaponTypeClass const * weapon = tclass.Armaments[which];
 		if (weapon && weapon->IsElectric) {
 			coord = Coord_Add(coord, XY_Coord(0, 48));
 		}
@@ -2438,7 +2437,8 @@ bool InfantryClass::Unlimbo(COORDINATE coord, DirType facing)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   01/01/1995 JLB : Created.                                                                 *
- *   09/28/1995 JLB : Engineers try to recapture buildings first.                              *
+ *   09/28/1995 JLB : Engineers try to recapture buildings first.
+ *   07/21/2021 JJ  : Added support for multiple weapons
  *=============================================================================================*/
 TARGET InfantryClass::Greatest_Threat(ThreatType threat) const
 {
@@ -2471,18 +2471,18 @@ TARGET InfantryClass::Greatest_Threat(ThreatType threat) const
 		return(TARGET_NONE);
 	}
 
-	if (Class->PrimaryWeapon != NULL) {
-		threat = threat | Class->PrimaryWeapon->Allowed_Threats();
-	}
-	if (Class->SecondaryWeapon != NULL) {
-		threat = threat | Class->SecondaryWeapon->Allowed_Threats();
+	for (int x = 0; x < Class->NumArmaments; x++) {
+		if (Class->Armaments[x] != NULL)
+		{
+			threat = threat | Class->Armaments[x]->Allowed_Threats();
+		}
 	}
 
 	/*
 	**	Organic weapon types don't consider anything but infantry to be a threat. Such
 	**	weapon types would be the dog jaw and the medic first aid kit.
 	*/
-	if (Is_Weapon_Equipped() && Class->PrimaryWeapon->WarheadPtr->IsOrganic) {
+	if (Is_Weapon_Equipped() && Class->Armaments[0]->WarheadPtr->IsOrganic) {
 		threat = threat & ~(THREAT_BUILDINGS|THREAT_VEHICLES|THREAT_BOATS|THREAT_AIR);
 	}
 
@@ -3734,7 +3734,8 @@ bool InfantryClass::Edge_Of_World_AI(void)
  * WARNINGS:   Only call this routine once per infantry per game logic loop.                   *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   07/29/1996 JLB : Created.                                                                 *
+ *   07/29/1996 JLB : Created.
+ *   07/21/2021 JJ  : Updating incoming move logic to use  not the primaryweapon
  *=============================================================================================*/
 void InfantryClass::Firing_AI(void)
 {
@@ -3825,7 +3826,7 @@ void InfantryClass::Firing_AI(void)
 				/*
 				**	Run away from slowly approaching projectiles.
 				*/
-				if (Class->PrimaryWeapon->MaxSpeed < Rule.Incoming) {
+				if (Class->Armaments[primary]->MaxSpeed < Rule.Incoming) {
 					Map[::As_Cell(TarCom)].Incoming(Coord, true);
 				}
 

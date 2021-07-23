@@ -61,7 +61,8 @@ int VortexFrame = -1;
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   10/07/1992 JLB : Created.                                                                 *
+ *   10/07/1992 JLB : Created.
+ *   07/21/2021 JJ  : Add support for new data type of multiple weapons
  *=============================================================================================*/
 void Debug_Key(unsigned input)
 {
@@ -310,7 +311,7 @@ void Debug_Key(unsigned input)
 					TechnoTypeClass const & ttype = (TechnoTypeClass const &)CurrentObject[0]->Class_Of();
 					int sight = ((int)ttype.SightRange)<<8;
 					int weapon = 0;
-					if (ttype.PrimaryWeapon != NULL) weapon = ttype.PrimaryWeapon->Range;
+					if (ttype.Armaments[0] != NULL) weapon = ttype.Armaments[0]->Range;
 					Set_Logic_Page(SeenBuff);
 					COORDINATE center = CurrentObject[0]->Center_Coord();
 					COORDINATE center2 = CurrentObject[0]->Fire_Coord(0);

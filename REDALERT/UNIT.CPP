@@ -322,14 +322,12 @@ UnitClass::UnitClass(UnitType classid, HousesType house) :
 	Reload = 0;
 	House->Tracking_Add(this);
 	Ammo = Class->MaxAmmo;
-	if (Class->PrimaryWeapon != NULL) {
-		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
-	}
-	if (Class->SecondaryWeapon != NULL) {
-		BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
+	for (int x = 0;x < Class->NumArmaments;x++)
+	{
+		if (Class->Armaments[x] != NULL)
+			BurstShotsRemaining[x] = Class->Armaments[x]->Burst;
 	}
 	IsCloakable = Class->IsCloakable;
-	IsIndependentFire = Class->IsIndependentFire;
 	if (Class->IsAnimating) Set_Rate(Options.Normalize_Delay(3));
 
 	/*
@@ -680,7 +678,7 @@ void UnitClass::Reload_AI(void)
  *=============================================================================================*/
 void UnitClass::Firing_AI(void)
 {
-	if (Target_Legal(TarCom) && Class->PrimaryWeapon != NULL) {
+	if (Target_Legal(TarCom) && Class->Armaments[0] != NULL) {
 
 		/*
 		**	Determine which weapon can fire. First check for the primary weapon. If that weapon
@@ -1105,7 +1103,7 @@ ResultType UnitClass::Take_Damage(int & damage, int distance, WarheadType warhea
 			if (Percent_Chance(50)) {
 				InfantryClass * i = 0;
 
-				if (Class->PrimaryWeapon == NULL) {
+				if (Class->Armaments[0] == NULL) {
 					i = new InfantryClass(INFANTRY_C1, House->Class->House);
 					if (i != NULL) i->IsTechnician = true;
 				} else {
@@ -1846,9 +1844,11 @@ void UnitClass::Per_Cell_Process(PCPType why)
 		*/
 		if (!Target_Legal(NavCom) && Path[0] == FACING_NONE) {
 			if (Class->IsNoFireWhileMoving) {
-				Arm[0] = Rearm_Delay()/4;  /* Well this is certainly arbitrary af -JJ */
-				if (IsIndependentFire) {
+				Arm[0] = Rearm_Delay()/4; 
+				if (Class->IsIndependentFire) {
 					Arm[1] = Rearm_Delay(true,1)/4;
+					Arm[2] = Rearm_Delay(true,2)/4;
+					Arm[3] = Rearm_Delay(true,3)/4;
 				}
 			}
 		}
@@ -3259,7 +3259,7 @@ MoveType UnitClass::Can_Enter_Cell(CELL cell, FacingType ) const
 			}
 
 			if (!cancrush && Is_Weapon_Equipped()) {
-				WarheadTypeClass const * whead = Class->PrimaryWeapon->WarheadPtr;
+				WarheadTypeClass const * whead = Class->Armaments[0]->WarheadPtr;
 
 				if (whead->IsWallDestroyer || (whead->IsWoodDestroyer && optr->IsWooden)) {
 //					if (!House->IsHuman && !House->Is_Ally(cellptr->Owner)) {
@@ -3361,7 +3361,7 @@ MoveType UnitClass::Can_Enter_Cell(CELL cell, FacingType ) const
 						**	Any non-allied blockage is considered impassable if the unit
 						**	is not equipped with a weapon.
 						*/
-						if (Class->PrimaryWeapon == NULL) return(MOVE_NO);
+						if (Class->NumArmaments == 0) return(MOVE_NO);
 
 						/*
 						**	Some kinds of terrain are considered destroyable if the unit is equipped
@@ -3373,7 +3373,7 @@ MoveType UnitClass::Can_Enter_Cell(CELL cell, FacingType ) const
 
 #ifdef TOFIX
 								if (((TerrainClass *)obj)->Class->Armor == ARMOR_WOOD &&
-										Class->PrimaryWeapon->WarheadPtr->IsWoodDestroyer) {
+										Class->Armaments[0]->WarheadPtr->IsWoodDestroyer) {
 
 									if (retval < MOVE_DESTROYABLE) retval = MOVE_DESTROYABLE;
 								} else {
@@ -3434,7 +3434,7 @@ MoveType UnitClass::Can_Enter_Cell(CELL cell, FacingType ) const
 				**	this vehicle should avoid the cell altogether.
 				*/
 				if (!Class->IsCrusher) {
-					if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->Bullet->IsAntiGround) {
+					if (Is_AG_Equipped()) {
 						retval = MOVE_DESTROYABLE;
 					} else {
 						return(MOVE_NO);
@@ -4138,7 +4138,7 @@ InfantryType UnitClass::Crew_Type(void) const
 	assert(Units.ID(this) == ID);
 	assert(IsActive);
 
-	if (Class->PrimaryWeapon == NULL) {
+	if (Class->NumArmaments == 0) {
 		if (Percent_Chance(50)) {
 			return(INFANTRY_C1);
 		} else {
@@ -4314,7 +4314,7 @@ FireErrorType UnitClass::Can_Fire(TARGET target, int which) const
 	FireErrorType	fire = DriveClass::Can_Fire(target, which);
 
 	if (fire == FIRE_OK) {
-		WeaponTypeClass const * weapon = (which == 0) ? Class->PrimaryWeapon : Class->SecondaryWeapon;
+		WeaponTypeClass const* weapon = Class->Armaments[which];
 
 		/*
 		**	If this unit cannot fire while moving, then bail.
@@ -4380,7 +4380,7 @@ BulletClass * UnitClass::Fire_At(TARGET target, int which)
 	assert(IsActive);
 
 	BulletClass * bullet = NULL;
-	WeaponTypeClass const * weap = (which == 0) ? Class->PrimaryWeapon : Class->SecondaryWeapon;
+	WeaponTypeClass const * weap = Class->Armaments[which];
 	if (weap == NULL) return(NULL);
 
 	if (Can_Fire(target, which) == FIRE_OK) {
@@ -4824,11 +4824,11 @@ if (*b != STRUCT_REPAIR) {
 TARGET UnitClass::Greatest_Threat(ThreatType threat) const
 {
 	assert(IsActive);
-	if (Class->PrimaryWeapon != NULL) {
-		threat = threat | Class->PrimaryWeapon->Allowed_Threats();
-	}
-	if (Class->SecondaryWeapon != NULL) {
-		threat = threat | Class->SecondaryWeapon->Allowed_Threats();
+	for (int x = 0; x < Class->NumArmaments; x++) {
+		if (Class->Armaments[x] != NULL)
+		{
+			threat = threat | Class->Armaments[x]->Allowed_Threats();
+		}
 	}
 
 #ifdef OBSOLETE
@@ -5042,7 +5042,7 @@ bool UnitClass::Should_Crush_It(TechnoClass const * it) const
 	**	fire the weapon instead. It is presumed that a wood destroying weapon is good against
 	**	most crushable object types (infantry).
 	*/
-	if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->WarheadPtr->IsWoodDestroyer) return(false);
+	if (Class->Armaments[0] != NULL && Class->Armaments[0]->WarheadPtr->IsWoodDestroyer) return(false);
 
 	/*
 	**	If the house IQ indicates that crushing should not be allowed, then don't

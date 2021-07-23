@@ -335,6 +335,7 @@ bool TechnoClass::Can_Teleport_Here(CELL cell) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   08/12/1996 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Added support for max 4 weapons.                                         *                  
  *=============================================================================================*/
 int TechnoClass::What_Weapon_Should_I_Use(TARGET target) const
 {
@@ -349,14 +350,29 @@ int TechnoClass::What_Weapon_Should_I_Use(TARGET target) const
 		armor = As_Object(target)->Class_Of().Armor;
 	}
 
-	TechnoTypeClass const * ttype = Techno_Type_Class();
-
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	int vals[4] = { 0,0,0,0 };
+	int bestindex = 0;
+	FireErrorType ok;
+	WeaponTypeClass const* wptr = NULL;
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		wptr = ttype->Armaments[i];
+		if (wptr != NULL && wptr->WarheadPtr != NULL)
+			vals[i] = wptr->WarheadPtr->Modifier[armor] * 1000;
+		if (In_Range(target, i))
+			vals[i] *= 2;
+		ok = Can_Fire(target, i);
+		if (ok == FIRE_CANT || ok == FIRE_ILLEGAL) 
+			vals[i] = 0;
+		if ((vals[bestindex] < vals[i]) && (i > 0))
+			bestindex = i;
+	}
+	return(bestindex);
 	/*
 	**	Get the value of the primary weapon verses the candidate target. Increase the
 	**	value of the weapon if it happens to be in range.
-	*/
 	int w1 = 0;
-	WeaponTypeClass const * wptr = ttype->PrimaryWeapon;
+	WeaponTypeClass const * wptr = ttype->Armaments[0];
 	if (wptr != NULL && wptr->WarheadPtr != NULL) w1 = wptr->WarheadPtr->Modifier[armor] * 1000;
 	if (In_Range(target, 0)) w1 *= 2;
 	FireErrorType ok = Can_Fire(target, 0);
@@ -364,9 +380,8 @@ int TechnoClass::What_Weapon_Should_I_Use(TARGET target) const
 
 	/*
 	**	Calculate a similar value for the secondary weapon.
-	*/
 	int w2 = 0;
-	wptr = ttype->SecondaryWeapon;
+	wptr = ttype->Armaments[1];
 	if (wptr != NULL && wptr->WarheadPtr != NULL) w2 = wptr->WarheadPtr->Modifier[armor] * 1000;
 	if (In_Range(target, 1)) w2 *= 2;
 	ok = Can_Fire(target, 1);
@@ -375,9 +390,8 @@ int TechnoClass::What_Weapon_Should_I_Use(TARGET target) const
 	/*
 	**	Return with the weapon identifier that should be used to fire upon the
 	**	candidate target.
-	*/
 	if (w2 > w1) return(1);
-	return(0);
+	return(0);*/
 }
 
 
@@ -407,7 +421,7 @@ int TechnoClass::How_Many_Survivors(void) const
 
 
 /***********************************************************************************************
- * TechnoClass::Combat_Damage -- Fetch the amount of damage infliced by the specified weapon.  *
+ * TechnoClass::Combat_Damage -- Fetch the amount of damage inflicted by the specified weapon. *
  *                                                                                             *
  *    This routine will examine the specified weapon of this object and determine how much     *
  *    damage it could inflict -- best case.                                                    *
@@ -420,25 +434,38 @@ int TechnoClass::How_Many_Survivors(void) const
  * WARNINGS:   This routine could return a negative number if a medic is scanned.              *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   09/16/1996 JLB : Created.                                                                 *
+ *   09/16/1996 JLB : Created.																   *
+ *   07/20/2021 JJ : Support 4 Weapons.                                                        *
  *=============================================================================================*/
 int TechnoClass::Combat_Damage(int which) const
 {
 	TechnoTypeClass const * ttype = Techno_Type_Class();
 
-	int divisor = 0;
-	int value = 0;
+	//int divisor = 0;
 
+	if (ttype->NumArmaments == 0)
+		return(0);
+	int value = 0;
+	if (which == -1) {
+		for (int i = 0; i < ttype->NumArmaments; i++)
+		{
+			if (ttype->Armaments[i] != NULL)
+				value += ttype->Armaments[i]->Attack;
+		}
+		return(value / ttype->NumArmaments);
+	}
+	return((ttype->Armaments[which] != NULL) ? ttype->Armaments[which]->Attack : 0);
+	/*
 	if (which == 0 || which == -1) {
-		if (ttype->PrimaryWeapon != NULL) {
-			value += ttype->PrimaryWeapon->Attack;
+		if (ttype->Armaments[0] != NULL) {
+			value += ttype->Armaments[0]->Attack;
 			divisor += 1;
 		}
 	}
 
 	if (which == 1 || which == -1) {
-		if (ttype->SecondaryWeapon != NULL) {
-			value += ttype->SecondaryWeapon->Attack;
+		if (ttype->Armaments[1] != NULL) {
+			value += ttype->Armaments[1]->Attack;
 			divisor += 1;
 		}
 	}
@@ -446,7 +473,7 @@ int TechnoClass::Combat_Damage(int which) const
 	if (divisor > 1) {
 		return(value / divisor);
 	}
-	return(value);
+	return(value);*/
 }
 
 
@@ -638,14 +665,13 @@ TechnoClass::TechnoClass(RTTIType rtti, int id, HousesType house) :
 	TarCom(TARGET_NONE),
 	SuspendedTarCom(TARGET_NONE),
 	PrimaryFacing(DIR_N),
-	Arm{ 0,0 },
+	Arm{ 0,0,0,0 },
 	Ammo(-1),
-	BurstShotsRemaining{ 1,1 },
+	BurstShotsRemaining{ 1,1,1,1 },
 	ElectricZapDelay(-1),
 	ElectricZapTarget(0),
 	ElectricZapWhich(0),
-	PurchasePrice(0),
-	IsIndependentFire(false)
+	PurchasePrice(0)
 {
 	//IsOwnedByPlayer = (PlayerPtr == House);
 	// Added for multiplayer changes. ST - 4/24/2019 10:40AM
@@ -901,7 +927,7 @@ RadioMessageType TechnoClass::Receive_Message(RadioClass * from, RadioMessageTyp
 		**	Just received instructions to attack the specified target.
 		*/
 		case RADIO_ATTACK_THIS:
-			if (Techno_Type_Class()->PrimaryWeapon != NULL) {
+			if (Techno_Type_Class()->Armaments[0] != NULL) {
 				Assign_Target(param);
 				Assign_Mission(MISSION_ATTACK);
 				return(RADIO_ROGER);
@@ -1409,8 +1435,8 @@ bool TechnoClass::In_Range(COORDINATE coord, int which) const
  *=============================================================================================*/
 fixed TechnoClass::Area_Modify(CELL cell) const
 {
-//	assert(Techno_Type_Class()->PrimaryWeapon != NULL);
-	if (Techno_Type_Class()->PrimaryWeapon == NULL || !Techno_Type_Class()->PrimaryWeapon->IsSupressed) return(1);
+//	assert(Techno_Type_Class()->Armaments[0] != NULL);
+	if (Techno_Type_Class()->Armaments[0] == NULL || !Techno_Type_Class()->Armaments[0]->IsSupressed) return(1);
 
 	int crange = Lepton_To_Cell(Rule.SupressRadius);
 	fixed odds = 1;
@@ -1673,9 +1699,9 @@ bool TechnoClass::Evaluate_Object(ThreatType method, int mask, int range, Techno
 	*/
 	if ((!Is_Foot() || !((FootClass *)this)->Team.Is_Valid()) &&
 			(House->IsHuman || (House->IsPlayerControl && Session.Type == GAME_NORMAL)) &&
-			otype == RTTI_BUILDING && tclass->PrimaryWeapon == NULL) {
+			otype == RTTI_BUILDING && tclass->Armaments[0] == NULL) {
 #ifdef OBSOLETE
-	if ((!Is_Foot() || ((FootClass *)this)->Team.Is_Valid()) && House->IsHuman && otype == RTTI_BUILDING && tclass->PrimaryWeapon == NULL) {
+	if ((!Is_Foot() || ((FootClass *)this)->Team.Is_Valid()) && House->IsHuman && otype == RTTI_BUILDING && tclass->Armaments[0] == NULL) {
 #endif
 		BEnd(BENCH_EVAL_OBJECT);
 		return(false);
@@ -1795,7 +1821,7 @@ bool TechnoClass::Evaluate_Object(ThreatType method, int mask, int range, Techno
 	**	don't consider an unarmed building to be a threat.
 	*/
 	if ((method & THREAT_BASE_DEFENSE) /*&& otype == RTTI_BUILDING*/) {
-		if (tclass->PrimaryWeapon == NULL) {
+		if (!Is_Weapon_Equipped()) {
 			value = 0;
 		}
 	}
@@ -1993,12 +2019,13 @@ int TechnoClass::Evaluate_Just_Cell(CELL cell) const
 		BEnd(BENCH_EVAL_WALL);
 		return(0);
 	}
-
+	TechnoTypeClass const* ttype = (TechnoTypeClass const*)Techno_Type_Class();
 	/*
 	**	See if the object has a weapon that can damage walls.
+	* but the original logic didn't actually evaluate if it has a weapon that can damage walls...
+	* It checked for a primary weapon and if the primary weapon had a warhead.
 	*/
-	TechnoTypeClass const * ttype = (TechnoTypeClass const *)Techno_Type_Class();
-	if (ttype->PrimaryWeapon == NULL || ttype->PrimaryWeapon->WarheadPtr == NULL) {
+	if (!Is_Warhead_Equipped()) {
 		BEnd(BENCH_EVAL_WALL);
 		return(0);
 	}
@@ -2007,7 +2034,7 @@ int TechnoClass::Evaluate_Just_Cell(CELL cell) const
 	**	If the weapon cannot deal with ground based targets, then don't consider
 	**	this a valid cell target.
 	*/
-	if (ttype->PrimaryWeapon->Bullet != NULL && !ttype->PrimaryWeapon->Bullet->IsAntiGround) {
+	if (!Is_AG_Equipped()) {
 		BEnd(BENCH_EVAL_WALL);
 		return(0);
 	}
@@ -2016,7 +2043,7 @@ int TechnoClass::Evaluate_Just_Cell(CELL cell) const
 	**	If the primary weapon cannot destroy a wall, then don't give the cell any
 	**	value as a target.
 	*/
-	if (!ttype->PrimaryWeapon->WarheadPtr->IsWallDestroyer) {
+	if (!Is_WD_Equipped()) {
 		BEnd(BENCH_EVAL_WALL);
 		return(0);
 	}
@@ -2032,9 +2059,10 @@ int TechnoClass::Evaluate_Just_Cell(CELL cell) const
 	/*
 	**	Since a wall was found, then return a value adjusted according to the range the wall
 	**	is from the object. The greater the range, the lesser the value returned.
+	* adjusted to use the best weapon for attacking the cell, not the wall and not just the Armaments[0].
 	*/
 	BEnd(BENCH_EVAL_WALL);
-	return(Weapon_Range(0) - Distance(Cell_Coord(cell)));
+	return(Weapon_Range(primary) - Distance(Cell_Coord(cell)));
 }
 
 
@@ -2718,7 +2746,7 @@ bool TechnoClass::Is_Ready_To_Cloak(void) const
 	if (Arm[0] != 0) {
 		return(false);
 	}
-	if (IsIndependentFire == true && (Arm[1] != 0)) {
+	if (Techno_Type_Class()->IsIndependentFire == true && (Arm[1] != 0)) {
 		return(false);
 	}
 
@@ -2805,6 +2833,7 @@ bool TechnoClass::Select(bool allow_mixed)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   12/23/1994 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Added support for 4 weapons.                                             * 
  *=============================================================================================*/
 FireErrorType TechnoClass::Can_Fire(TARGET target, int which) const
 {
@@ -2833,12 +2862,16 @@ FireErrorType TechnoClass::Can_Fire(TARGET target, int which) const
 		return(FIRE_CANT);
 	}
 
+	WeaponTypeClass const* weapon = Techno_Type_Class()->Armaments[which];
 	/*
-	**	If there is no weapon, then firing is not allowed.
+	**	If there is no weapon found, then firing is not allowed.
 	*/
-	WeaponTypeClass const * weapon = ((which == 0) ? Techno_Type_Class()->PrimaryWeapon : Techno_Type_Class()->SecondaryWeapon);
-	if (weapon == NULL) {
+	if(weapon == NULL) {
 		return(FIRE_CANT);
+	}
+	if (!(Techno_Type_Class()->IsIndependentFire)) {
+		if(Techno_Type_Class()->Armaments[0] == NULL)
+			return(FIRE_CANT);
 	}
 
 	/*
@@ -2871,8 +2904,14 @@ FireErrorType TechnoClass::Can_Fire(TARGET target, int which) const
 	/*
 	**	Don't allow firing if still rearming.
 	*/
-	if (Arm[0] != 0) return(FIRE_REARM);
-	if (Arm[1] != 0 && IsIndependentFire == true) return(FIRE_REARM);
+	if (Techno_Type_Class()->IsIndependentFire) {
+		if(Arm[which] != 0)
+			return(FIRE_REARM);
+	}
+	else {
+		if(Arm[0] != 0)
+			return(FIRE_REARM);
+	}
 	/*
 	**	The target must be within range in order to allow firing.
 	*/
@@ -3003,6 +3042,7 @@ void TechnoClass::Assign_Target(TARGET target)
  * HISTORY:																					   *
  *   12/26/1994 JLB : Created.                                                                 *
  *   07/13/2021 JJ  : Added handling of customized BurstDelay from ini.                        *
+ *   07/20/2021 JJ  : Added handling of 4 weapons                                              *
  *=============================================================================================*/
 int TechnoClass::Rearm_Delay(bool finalshot, int which) const
 {
@@ -3012,7 +3052,7 @@ int TechnoClass::Rearm_Delay(bool finalshot, int which) const
 		return(1);
 	}
 
-	WeaponTypeClass const * weapon = (which == 0) ? Techno_Type_Class()->PrimaryWeapon : Techno_Type_Class()->SecondaryWeapon;
+	WeaponTypeClass const* weapon = Techno_Type_Class()->Armaments[which];
 	if (weapon != NULL) {
 		if (finalshot) {
 			return(weapon->ROF * House->ROFBias);
@@ -3181,6 +3221,8 @@ bool TechnoClass::Electric_Zap(COORDINATE target_coord, int which, WindowNumberT
  *   07/03/1995 JLB : Moving platforms fire inaccurate projectiles.                            *
  *   02/22/1996 JLB : Handles camera "weapon" case.                                            *
  *   07/13/2021 JJ  : Handles burst delay and burst fire                                       *
+ *   07/17/2021 JJ  : Handles IndependentFire techno attribute                                 *
+ *   07/20/2021 JJ  : Updated to handle 4 weapons (armaments)                                  *
  *=============================================================================================*/
 BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 {
@@ -3192,7 +3234,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 	COORDINATE fire_coord;			// Coordinate of firing position.
 	TechnoTypeClass const & tclass = *Techno_Type_Class();
 	ObjectClass * object;
-	WeaponTypeClass const * weapon = (which == 0) ? tclass.PrimaryWeapon : tclass.SecondaryWeapon;
+	WeaponTypeClass const* weapon = tclass.Armaments[which];
 
 	/*
 	**	If this object doesn't have a weapon, then it is obvious that firing
@@ -3277,9 +3319,10 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			IsInRecoilState = true;
 			Mark(MARK_CHANGE_REDRAW);
 		}
-
-		if (tclass.Is_Two_Shooter()){
-			if (tclass.SecondaryWeapon == tclass.PrimaryWeapon) {
+		/* Support the vanilla two shooter logic on the first 2 weapon slots only.
+		*/
+		if (tclass.Is_Two_Shooter() && which < 2){
+			if (tclass.Armaments[0] == tclass.Armaments[1]) {
 				//Is this specifically a unit that has both of its hardpoints set to the same weapon and no burst set in the ini?
 				if (weapon->Burst == 1){
 					//alternating fire mode as is vanilla
@@ -3294,11 +3337,8 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			}
 			else{
 				//vanilla behavior but now we handle burst > 2 on a per-weapon basis.
-				//I believe there is one Arm timer per techno, not sure yet, need more time in the code.
-				//if this is the case then we delay firing for the entire techno based upon the last shot fired
-				//which implies that it's not possible to fire both primary and secondary weapons at the same time.
-				//need more time in the code.
-					Arm[(IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
+				//there is one reArm timer per techno in vanilla and we delay firing for the entire techno based upon the last shot fired
+					Arm[(tclass.IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
 			}
 			//this is a relay that tells other logic we're alternating between 2 barrels, because Is_Two_Shooter == true...
 			IsSecondShot = (IsSecondShot == false);
@@ -3315,7 +3355,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			*   - Burst fire > 2 from either is not handled correctly.
 			*    Example:  on a 3 shot burst, after the 2 shot the reArm delay would be the ROF with mods.
 			*/
-			Arm[(IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
+			Arm[(tclass.IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
 		}
 
 		/*
@@ -3536,6 +3576,7 @@ void TechnoClass::Player_Assign_Mission(MissionType mission, TARGET target, TARG
  * HISTORY:                                                                                    *
  *   01/19/1995 JLB : Created.                                                                 *
  *   03/21/1995 JLB : Special target control for trees.                                        *
+ *   07/20/2021 JJ  : Added Logic to handle 4 weapon slots                                     *
  *=============================================================================================*/
 ActionType TechnoClass::What_Action(ObjectClass const * object) const
 {
@@ -3593,12 +3634,10 @@ ActionType TechnoClass::What_Action(ObjectClass const * object) const
 		/*
 		**	If the weapon is blatantly disallowed from firing on the object specified, then
 		**	don't allow the attach check logic to proceed.
+		* JJ - we weren't considering all the weapons available so that's fixed.
 		*/
 		TechnoTypeClass const * ttype = Techno_Type_Class();
-		if (Is_Weapon_Equipped() &&
-				ttype->PrimaryWeapon->Bullet != NULL &&
-				ttype->PrimaryWeapon->Bullet->IsSubSurface &&
-				Map[object->Target_Coord()].Land_Type() != LAND_WATER) {
+		if (Is_SubWeapon_Equipped() && Map[object->Target_Coord()].Land_Type() != LAND_WATER) {
 
 			// Do nothing.
 
@@ -3616,7 +3655,7 @@ ActionType TechnoClass::What_Action(ObjectClass const * object) const
 						)) {
 					// Check for anti-air capability
 					int primary = What_Weapon_Should_I_Use(object->As_Target());
-					WeaponTypeClass const * weapon = (primary == 0) ? Techno_Type_Class()->PrimaryWeapon : Techno_Type_Class()->SecondaryWeapon;
+					WeaponTypeClass const* weapon = ttype->Armaments[primary];
 					if ((object->What_Am_I() != RTTI_AIRCRAFT) ||
 						((weapon != NULL) && weapon->Bullet->IsAntiAircraft) ||
 						(object->Is_Techno() && (((TechnoClass *)object)->Height == 0))) {
@@ -3667,6 +3706,7 @@ ActionType TechnoClass::What_Action(ObjectClass const * object) const
  * HISTORY:                                                                                    *
  *   01/19/1995 JLB : Created.                                                                 *
  *   07/10/1995 JLB : Force fire for buildings is explicitly disabled.                         *
+ *   07/20/2021 JJ  : Force fire for buildings is enabled and multiple weapons considered.     *
  *=============================================================================================*/
 ActionType TechnoClass::What_Action(CELL cell) const
 {
@@ -3687,15 +3727,19 @@ ActionType TechnoClass::What_Action(CELL cell) const
 	/*
 	**	Disable recognizing the <CTRL> key forced fire option when dealing with buildings.
 	*/
-	if (What_Am_I() == RTTI_BUILDING) ctrldown = false;
+	//if (What_Am_I() == RTTI_BUILDING) ctrldown = false;
 
 	/*
-	**	Disable recognizing the <CTRL> key forced fire option when dealing with submarines.
+	**	Disable recognizing the <CTRL> key forced fire option when dealing with anti-ship.
 	*/
-	if(What_Am_I() == RTTI_VESSEL) {
-		WeaponTypeClass const * weapon = ((VesselClass *)this)->Class->PrimaryWeapon;
-		if (weapon && weapon->Bullet->IsSubSurface) ctrldown = false;
-	}
+	//if(What_Am_I() == RTTI_VESSEL && Is_SubWeapon_Equipped()) ctrldown = false;
+
+	/*
+	**	Disable recognizing the <CTRL> key forced fire option when dealing with water targets.
+	*/
+	if (cellptr->Land_Type() == LAND_WATER) ctrldown = false;
+
+
 
 
 	if (cellptr->Overlay != OVERLAY_NONE) {
@@ -3710,13 +3754,13 @@ ActionType TechnoClass::What_Action(CELL cell) const
 		return(ACTION_GUARD_AREA);
 	}
 
-	if (House->IsPlayerControl && Techno_Type_Class()->PrimaryWeapon != NULL && (ctrldown || (optr && optr->IsLegalTarget))) {
-		WarheadTypeClass const * whead = Techno_Type_Class()->PrimaryWeapon->WarheadPtr;
+	if (House->IsPlayerControl && Is_Warhead_Equipped() && (ctrldown || (optr && optr->IsLegalTarget))) {
+		int primary = What_Weapon_Should_I_Use(::As_Target(cell));
+		WarheadTypeClass const * whead = Techno_Type_Class()->Armaments[primary]->WarheadPtr;
 
 // To be fixed for firing on ore by accounting for ore and ignoring the overlay in that case.
 
 		if (optr == NULL || (optr->IsWall && (whead->IsWallDestroyer || (whead->IsWoodDestroyer && optr->IsWooden)))) {
-			int primary = What_Weapon_Should_I_Use(::As_Target(cell));
 			if (Can_Player_Move() || In_Range(::As_Target(cell), primary)) {
 				return(ACTION_ATTACK);
 			}
@@ -3783,12 +3827,13 @@ bool TechnoClass::Can_Player_Move(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   01/23/1995 JLB : Created.                                                                 *
+ *   07/20/2021 JJ : Updated to handle multiple weapons                                        *
  *=============================================================================================*/
 bool TechnoClass::Can_Player_Fire(void) const
 {
 	assert(IsActive);
 
-	if (House->IsPlayerControl && Is_Techno() && Techno_Type_Class()->PrimaryWeapon != NULL) {
+	if (House->IsPlayerControl && Is_Techno() && (Techno_Type_Class()->NumArmaments > 0)) {
 		return(true);
 	}
 	return(false);
@@ -3809,12 +3854,200 @@ bool TechnoClass::Can_Player_Fire(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   01/23/1995 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Added handling of multiple weapons, originally logic considered only the *
+ *					  Primary, this is fixed to consider all weapons equipped and also if that *
+ *					  weaponry can do > 0 damage.                                              *
  *=============================================================================================*/
 bool TechnoClass::Is_Weapon_Equipped(void) const
 {
 	assert(IsActive);
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		if (ttype->Armaments[i] != NULL) {
+			if (ttype->Armaments[i]->Attack > 0)
+				return(true);
+		}
+	}
+	return(false);
+}
 
-	return(Techno_Type_Class()->PrimaryWeapon != NULL);
+/***********************************************************************************************
+ * TechnoClass::Is_Warhead_Equipped -- Determines if this object has a combat warhead.         *
+ *                                                                                             *
+ *    Use this routine to determine if this object is equipped with a combat warhead.          *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  bool; Is this object equipped with a combat warhead?                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *                                                                *
+ *   07/20/2021 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+bool TechnoClass::Is_Warhead_Equipped(void) const
+{
+	assert(IsActive);
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		if (ttype->Armaments[i] != NULL) {
+
+			if ((ttype->Armaments[i]->WarheadPtr != NULL) && (ttype->Armaments[i]->Attack > 0))
+				return(true);
+		}
+	}
+	return(false);
+}
+
+/***********************************************************************************************
+ * TechnoClass::Can_Molest -- Determines if this object has a can induce a damaging effect on  *
+ *                            another Techno                                                   *
+ *                                                                                             *
+ *    Use this routine to determine if this object is equipped with a combat warhead that      *
+ *    can damage another techno.                                                               *
+ *                                                                                             *
+ * INPUT:   TechnoClass; the victim                                                            *
+ *                                                                                             *
+ * OUTPUT:  bool; Is this object able to be nefarious with the victim                          *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *                                                                *
+ *   07/20/2021 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+bool TechnoClass::Can_Molest(TechnoClass const * other) const
+{
+	bool affecting = false;
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	for (int i = 0; i < ttype->NumArmaments;i++) {
+		if (ttype->Armaments[i] != NULL)
+		{
+			if (ttype->Armaments[i]->WarheadPtr != NULL) {
+				if (ttype->Armaments[i]->WarheadPtr->Modifier[other->Techno_Type_Class()->Armor] != 0) {
+					return(true);
+				}
+			}
+		}
+	}
+	return(false);
+}
+/***********************************************************************************************
+ * TechnoClass::Is_WD_Equipped -- Determines if this object has a wall-busting combat warhead. *
+ *                                                                                             *
+ *    Use this routine to determine if this object is equipped with a wall destroyer.          *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  bool; Is this object equipped with a wall-breaking combat warhead?                 *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *                                                                *
+ *   07/20/2021 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+bool TechnoClass::Is_WD_Equipped(void) const
+{
+	assert(IsActive);
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		if (ttype->Armaments[i] != NULL) {
+
+			if ((ttype->Armaments[i]->WarheadPtr != NULL) && (ttype->Armaments[i]->Attack > 0)) {
+				if(ttype->Armaments[i]->WarheadPtr->IsWallDestroyer)
+					return(true);
+			}
+		}
+	}
+	return(false);
+}
+
+/***********************************************************************************************
+ * TechnoClass::Is_AG_Equipped -- Determines if this object has a combat projectile with       * 
+ *                                Anti-Ground                                                  *
+ *                                                                                             *
+ *    Use this routine to determine if this object is equipped with a combat projectile with AG*
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  bool; Is this object equipped with a combat projectile with AG?                    *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *                                                                *
+ *   07/20/2021 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+bool TechnoClass::Is_AG_Equipped(void) const
+{
+	assert(IsActive);
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		if (ttype->Armaments[i] != NULL) {
+			if ((ttype->Armaments[i]->Bullet != NULL) && (ttype->Armaments[i]->Attack > 0)) {
+				if (ttype->Armaments[i]->Bullet->IsAntiGround)
+					return(true);
+			}
+		}
+	}
+	return(false);
+}
+
+/***********************************************************************************************
+ * TechnoClass::Is_AA_Equipped -- Determines if this object has a combat projectile with       *
+ *                                Anti-Air                                                     *
+ *                                                                                             *
+ *    Use this routine to determine if this object is equipped with a combat projectile with AA*
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  bool; Is this object equipped with a combat projectile with AA?                    *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *                                                                *
+ *   07/20/2021 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+bool TechnoClass::Is_AA_Equipped(void) const
+{
+	assert(IsActive);
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		if (ttype->Armaments[i] != NULL) {
+			if ((ttype->Armaments[i]->Bullet != NULL) && (ttype->Armaments[i]->Attack > 0)) {
+				if (ttype->Armaments[i]->Bullet->IsAntiAircraft)
+					return(true);
+			}
+		}
+	}
+	return(false);
+}
+
+/***********************************************************************************************
+ * TechnoClass::Is_SubWeapon_Equipped -- Determines if this object has a sub-surface weapon.   *
+ *                                                                                             *
+ *    Use this routine to determine if this object is equipped with a sub-surface weapon.      *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  bool; Is this object equipped with a sub-surface weapon?                           *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *                                                                *
+ * 07/20/2021 JJ  : Created.																   *
+ *=============================================================================================*/
+bool TechnoClass::Is_SubWeapon_Equipped(void) const
+{
+	assert(IsActive);
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		if (ttype->Armaments[i] != NULL) {
+			if (ttype->Armaments[i]->Bullet != NULL) {
+				if(ttype->Armaments[i]->Bullet->IsSubSurface)
+					return(true);
+			}	
+		}
+	}
+	return(false);
 }
 
 
@@ -3854,32 +4087,22 @@ bool TechnoClass::Can_Repair(void) const
  *                                                                                             *
  *    Use this routine to determine the maximum range for the weapon indicated.                *
  *                                                                                             *
- * INPUT:   which -- Which weapon to use when determining the range. 0=primary, 1=secondary.   *
+ * INPUT:   which -- Which weapon to use when determining the range.                           *
  *                                                                                             *
  * OUTPUT:  Returns with the range of the weapon (in leptons).                                 *
  *                                                                                             *
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   03/19/1995 JLB : Created.                                                                 *
+ *   03/19/1995 JLB : Created.  
+ *   07/20/2021 JJ  : Added support for multiple weapons.
  *=============================================================================================*/
 int TechnoClass::Weapon_Range(int which) const
 {
+	TechnoTypeClass const& ttype = *Techno_Type_Class();
 	assert(IsActive);
-	assert((unsigned)which < 2);
-
-	WeaponTypeClass const * weapon = NULL;
-	TechnoTypeClass const & ttype = *Techno_Type_Class();
-
-	switch (which) {
-		case 0:
-			weapon = ttype.PrimaryWeapon;
-			break;
-
-		case 1:
-			weapon = ttype.SecondaryWeapon;
-			break;
-	}
+	assert((unsigned)which < ttype.NumArmaments);
+	WeaponTypeClass const* weapon = ttype.Armaments[which];
 	if (weapon != NULL) {
 		return(weapon->Range);
 	}
@@ -4056,6 +4279,7 @@ bool TechnoClass::Captured(HouseClass * newowner)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   06/20/1995 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Updated to handle multiple weapons.                                      *
  *=============================================================================================*/
 ResultType TechnoClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
 {
@@ -4088,10 +4312,11 @@ ResultType TechnoClass::Take_Damage(int & damage, int distance, WarheadType warh
 
 				/*
 				**	The warhead to use is based on the weapon this object is equipped with.
+				* TODO update this logic to be more robust -JJ
 				*/
 				WarheadType wh = WARHEAD_HE;
-				if (Techno_Type_Class()->PrimaryWeapon != NULL) {
-					wh = WarheadType(Techno_Type_Class()->PrimaryWeapon->WarheadPtr->ID);
+				if (Techno_Type_Class()->Armaments[0] != NULL) {
+					wh = WarheadType(Techno_Type_Class()->Armaments[0]->WarheadPtr->ID);
 				}
 
 				int damage = Techno_Type_Class()->MaxStrength;
@@ -4868,6 +5093,7 @@ void TechnoClass::Kill_Cargo(TechnoClass * source)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/29/1995 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Updated to handle multiple weapons.                                      *
  *=============================================================================================*/
 InfantryType TechnoClass::Crew_Type(void) const
 {
@@ -4890,7 +5116,7 @@ InfantryType TechnoClass::Crew_Type(void) const
 	if (House->ActLike == HOUSE_NEUTRAL) {
 		infantry = Random_Pick(INFANTRY_C1, INFANTRY_C9);
 	} else {
-		if (Techno_Type_Class()->PrimaryWeapon == NULL && Percent_Chance(15)) {
+		if (Techno_Type_Class()->Armaments[0] == NULL && Percent_Chance(15)) {
 			if (Percent_Chance(50)) {
 				infantry = INFANTRY_C1;
 			} else {
@@ -4974,6 +5200,7 @@ int TechnoClass::Value(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/29/1995 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : handle Multiple Weapons.                                                 *
  *=============================================================================================*/
 int TechnoClass::Threat_Range(int control) const
 {
@@ -5007,7 +5234,9 @@ int TechnoClass::Threat_Range(int control) const
 	*/
 	int range = Techno_Type_Class()->ThreatRange;
 	if (range == 0) {
-		range = max(Weapon_Range(0), Weapon_Range(1));
+		for (int i = 0; i < Techno_Type_Class()->NumArmaments; i++) {
+			range = Max(Weapon_Range(i), range);
+		}
 	}
 
 	range *= 2;
@@ -5057,6 +5286,7 @@ bool TechnoClass::Is_In_Same_Zone(CELL cell) const
  *   06/25/1995 JLB : Commented.                                                               *
  *   10/15/1996 JLB : Alternates between guard area and attack.                                *
  *   11/01/1996 JLB : Allow recruit of guard area units in multiplay.                          *
+ *   07/20/2021 JJ  : Updated to accomodate multiple weapons.                                  *
  *=============================================================================================*/
 void TechnoClass::Base_Is_Attacked(TechnoClass const * enemy)
 {
@@ -5084,7 +5314,7 @@ void TechnoClass::Base_Is_Attacked(TechnoClass const * enemy)
 	/*
 	**	Don't overreact if this building can defend itself.
 	*/
-	if (Session.Type == GAME_NORMAL && Techno_Type_Class()->PrimaryWeapon != NULL) return;
+	if (Session.Type == GAME_NORMAL && Is_Weapon_Equipped()) return;
 
 	/*
 	** If the enemy is not an infantry or a unit there is not much we can
@@ -5135,7 +5365,7 @@ void TechnoClass::Base_Is_Attacked(TechnoClass const * enemy)
 			**	Don't allow a response if it doesn't have a weapon that will affect the
 			**	enemy object.
 			*/
-			if (infantry->Class->PrimaryWeapon->WarheadPtr->Modifier[enemy->Techno_Type_Class()->Armor] == 0) {
+			if (!infantry->Can_Molest(enemy)) {
 				continue;
 			}
 
@@ -5219,9 +5449,8 @@ void TechnoClass::Base_Is_Attacked(TechnoClass const * enemy)
 			**	Don't allow a response if it doesn't have a weapon that will affect the
 			**	enemy object.
 			*/
-			if (unit->Class->PrimaryWeapon->WarheadPtr->Modifier[enemy->Techno_Type_Class()->Armor] == 0) {
+			if (!unit->Can_Molest(enemy))
 				continue;
-			}
 
 			/*
 			**	Don't try to help if the building is on another planet.
@@ -5343,6 +5572,7 @@ void TechnoClass::Base_Is_Attacked(TechnoClass const * enemy)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   10/19/1996 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Handle multiple weapons.                                                 *
  *=============================================================================================*/
 bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 {
@@ -5379,10 +5609,9 @@ bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 	**	don't allow retaliation.
 	*/
 	TechnoTypeClass const * ttype = Techno_Type_Class();
-	if (ttype->PrimaryWeapon->WarheadPtr != NULL &&
-		ttype->PrimaryWeapon->WarheadPtr->Modifier[source->Techno_Type_Class()->Armor] == 0) {
+
+	if (!Can_Molest(source))
 			return(false);
-	}
 
 	/*
 	**	One can never retaliate against a dog because of their peculiar nature of attacking.
@@ -5393,7 +5622,7 @@ bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 	/*
 	**	Don't allow retaliation if it isn't equipped with a weapon that can deal with the threat.
 	*/
-	if (source->What_Am_I() == RTTI_AIRCRAFT && !ttype->PrimaryWeapon->Bullet->IsAntiAircraft) return(false);
+	if (source->What_Am_I() == RTTI_AIRCRAFT && !Is_AA_Equipped()) return(false);
 
 	/*
 	**	Tanya is not allowed to retaliate against buildings in the normal sense while in guard mode. That
@@ -5424,7 +5653,7 @@ bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 	if (!House->IsHuman && Percent_Chance(50)) {
 		fixed source_val = 0;
 		int primary = What_Weapon_Should_I_Use(source->As_Target());
-		WeaponTypeClass const * weapon = (primary == 0) ? source->Techno_Type_Class()->PrimaryWeapon : source->Techno_Type_Class()->SecondaryWeapon;
+		WeaponTypeClass const* weapon = source->Techno_Type_Class()->Armaments[primary];
 		if (weapon != NULL && weapon->WarheadPtr != NULL && In_Range(source, primary)) {
 			source_val = weapon->WarheadPtr->Modifier[Techno_Type_Class()->Armor];
 		}
@@ -5433,7 +5662,7 @@ bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 		TechnoClass const * tech = As_Techno(TarCom);
 		if (tech != NULL) {
 			primary = What_Weapon_Should_I_Use(tech->As_Target());
-			weapon = (primary == 0) ? source->Techno_Type_Class()->PrimaryWeapon : source->Techno_Type_Class()->SecondaryWeapon;
+			weapon = source->Techno_Type_Class()->Armaments[primary];
 			if (weapon != NULL && weapon->WarheadPtr != NULL && In_Range(tech, primary)) {
 				current_val = weapon->WarheadPtr->Modifier[Techno_Type_Class()->Armor];
 			}
@@ -6203,26 +6432,27 @@ int TechnoClass::Refund_Amount(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   10/02/1995 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Updated to take in account multiple weapons with Burst Delay and Burst   *
  *=============================================================================================*/
 int TechnoClass::Anti_Air(void) const
 {
 	assert(IsActive);
-
-	if (Is_Weapon_Equipped()) {
-		WeaponTypeClass const * weapon = Techno_Type_Class()->PrimaryWeapon;
-		BulletTypeClass const * bullet = weapon->Bullet;
-		WarheadTypeClass const * warhead = weapon->WarheadPtr;
-
-		if (bullet->IsAntiAircraft) {
-			int value = ((weapon->Attack * warhead->Modifier[ARMOR_ALUMINUM]) * weapon->Range) / weapon->ROF;
-
-			if (Techno_Type_Class()->Is_Two_Shooter()) {
-				value *= 2;
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	int value = 0;
+	WeaponTypeClass const* weapon;
+	BulletTypeClass const* bullet;
+	WarheadTypeClass const* warhead;
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		weapon = ttype->Armaments[i];
+		if (weapon != NULL) {
+			bullet = weapon->Bullet;
+			warhead = weapon->WarheadPtr;
+			if (bullet != NULL && bullet->IsAntiAircraft && warhead != NULL) {
+				value += (((weapon->Attack * warhead->Modifier[ARMOR_ALUMINUM]) * weapon->Range * weapon->Burst) / ((weapon->BurstDelay*weapon->Burst) + weapon->ROF));
 			}
-			return(value/50);
 		}
 	}
-	return(0);
+	return(value/50);
 }
 
 
@@ -6240,30 +6470,30 @@ int TechnoClass::Anti_Air(void) const
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   10/02/1995 JLB : Created.                                                                 *
+ *   10/02/1995 JLB : Created.
+ *   07/20/2021 JJ  : Updated to take in account multiple weapons with Burst Delay and Burst   *
  *=============================================================================================*/
 int TechnoClass::Anti_Armor(void) const
 {
 	assert(IsActive);
-
-	if (Is_Weapon_Equipped()) {
-		if (!Techno_Type_Class()->PrimaryWeapon->Bullet->IsAntiGround) return(0);
-
-		WeaponTypeClass const * weapon = Techno_Type_Class()->PrimaryWeapon;
-		BulletTypeClass const * bullet = weapon->Bullet;
-		WarheadTypeClass const * warhead = weapon->WarheadPtr;
-		int mrange = min(weapon->Range, 0x0400);
-
-		int value = ((weapon->Attack * warhead->Modifier[ARMOR_STEEL]) * mrange * warhead->SpreadFactor) / weapon->ROF;
-		if (Techno_Type_Class()->Is_Two_Shooter()) {
-			value *= 2;
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	int value = 0;
+	int mrange = 0;
+	WeaponTypeClass const* weapon;
+	BulletTypeClass const* bullet;
+	WarheadTypeClass const* warhead;
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		weapon = ttype->Armaments[i];
+		if (weapon != NULL) {
+			bullet = weapon->Bullet;
+			warhead = weapon->WarheadPtr;
+			if (bullet != NULL && bullet->IsAntiGround && warhead != NULL) {
+				mrange = min(weapon->Range, 0x0400);
+				value += (((weapon->Attack * warhead->Modifier[ARMOR_STEEL]) * mrange * weapon->Burst * warhead->SpreadFactor) / (((weapon->BurstDelay * weapon->Burst) + weapon->ROF)*((bullet->IsInaccurate)?2:1)));
+			}
 		}
-		if (bullet->IsInaccurate) {
-			value /= 2;
-		}
-		return(value/50);
 	}
-	return(0);
+	return(value / 50);
 }
 
 
@@ -6282,29 +6512,29 @@ int TechnoClass::Anti_Armor(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   10/02/1995 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Updated to take in account multiple weapons with Burst Delay and Burst   *
  *=============================================================================================*/
 int TechnoClass::Anti_Infantry(void) const
 {
 	assert(IsActive);
-
-	if (Is_Weapon_Equipped()) {
-		if (!Techno_Type_Class()->PrimaryWeapon->Bullet->IsAntiGround) return(0);
-
-		WeaponTypeClass const * weapon = Techno_Type_Class()->PrimaryWeapon;
-		BulletTypeClass const * bullet = weapon->Bullet;
-		WarheadTypeClass const * warhead = weapon->WarheadPtr;
-		int mrange = min(weapon->Range, 0x0400);
-
-		int value = ((weapon->Attack * warhead->Modifier[ARMOR_NONE]) * mrange * warhead->SpreadFactor) / weapon->ROF;
-		if (Techno_Type_Class()->Is_Two_Shooter()) {
-			value *= 2;
+	TechnoTypeClass const* ttype = Techno_Type_Class();
+	int value = 0;
+	int mrange = 0;
+	WeaponTypeClass const* weapon;
+	BulletTypeClass const* bullet;
+	WarheadTypeClass const* warhead;
+	for (int i = 0; i < ttype->NumArmaments; i++) {
+		weapon = ttype->Armaments[i];
+		if (weapon != NULL) {
+			bullet = weapon->Bullet;
+			warhead = weapon->WarheadPtr;
+			if (bullet != NULL && bullet->IsAntiGround && warhead != NULL) {
+				mrange = min(weapon->Range, 0x0400);
+				value += (((weapon->Attack * warhead->Modifier[ARMOR_NONE]) * mrange * weapon->Burst * warhead->SpreadFactor) / (((weapon->BurstDelay * weapon->Burst) + weapon->ROF) * ((bullet->IsInaccurate) ? 2 : 1)));
+			}
 		}
-		if (bullet->IsInaccurate) {
-			value /= 2;
-		}
-		return(value/50);
 	}
-	return(0);
+	return(value / 50);
 }
 
 
@@ -6407,17 +6637,17 @@ TechnoTypeClass::TechnoTypeClass(
 		int rotation,
 		SpeedType speed,
 		int horizontaloffset) :
-	ObjectTypeClass(	rtti,
-							id,
-							true,
-							is_stealthy,
-							is_selectable,
-							is_legal_target,
-							is_insignificant,
-							is_immune,
-							is_footprint,
-							name,
-							ininame),
+ObjectTypeClass(rtti,
+	id,
+	true,
+	is_stealthy,
+	is_selectable,
+	is_legal_target,
+	is_insignificant,
+	is_immune,
+	is_footprint,
+	name,
+	ininame),
 	Remap(remap),
 	IsDoubleOwned(false),
 	IsInvisible(false),
@@ -6439,7 +6669,7 @@ TechnoTypeClass::TechnoTypeClass(
 	Cost(0),
 	Level(-1),
 	Prerequisite(STRUCTF_NONE),
-	Risk(0),Reward(0),
+	Risk(0), Reward(0),
 	MaxSpeed(MPH_IMMOBILE),
 	Speed(speed),
 	MaxAmmo(-1),
@@ -6447,8 +6677,8 @@ TechnoTypeClass::TechnoTypeClass(
 	CameoData(NULL),
 	Rotation(rotation),
 	ROT(0),
-	PrimaryWeapon(NULL),
-	SecondaryWeapon(NULL),
+	Armaments{ NULL, NULL, NULL, NULL },
+	NumArmaments(0),
 	HorizontalOffset(horizontaloffset),
 	VerticalOffset(verticaloffset),
 	PrimaryOffset(primaryoffset),
@@ -6732,7 +6962,8 @@ int TechnoTypeClass::Repair_Step(void) const
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   07/29/1996 JLB : Created.                                                                 *
+ *   07/29/1996 JLB : Created.																   *
+ *   07/20/2021 JJ :  Updated to use armaments array.                                          *
  *=============================================================================================*/
 bool TechnoTypeClass::Is_Two_Shooter(void) const
 {
@@ -6745,12 +6976,11 @@ bool TechnoTypeClass::Is_Two_Shooter(void) const
 	* 
 	*/
 
-	if (PrimaryWeapon != NULL && (PrimaryWeapon == SecondaryWeapon || PrimaryWeapon->Burst > 1)) {
+	if (Armaments[0] != NULL && (Armaments[0] == Armaments[1] || Armaments[0]->Burst > 1)) {
 		return(true);
 	}
 	return(false);
 }
-
 
 /***********************************************************************************************
  * _Scale_To_256 -- Scales a 1..100 number into a 1..255 number.                               *
@@ -6832,8 +7062,25 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		IsDoubleOwned = ini.Get_Bool(Name(), "DoubleOwned", IsDoubleOwned);
 		ThreatRange = ini.Get_Lepton(Name(), "GuardRange", ThreatRange);
 		IsExploding = ini.Get_Bool(Name(), "Explodes", IsExploding);
-		PrimaryWeapon = WeaponTypeClass::As_Pointer(ini.Get_WeaponType(Name(), "Primary", PrimaryWeapon != NULL ? (WeaponType)(PrimaryWeapon->ID) : WEAPON_NONE));
-		SecondaryWeapon = WeaponTypeClass::As_Pointer(ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon != NULL ? (WeaponType)(SecondaryWeapon->ID) : WEAPON_NONE));
+		/*Process through all possible armaments*/
+		int armindex = 0;
+		Armaments[armindex] = WeaponTypeClass::As_Pointer(ini.Get_WeaponType(Name(), "Primary", Armaments[0] != NULL ? (WeaponType)(Armaments[0]->ID) : WEAPON_NONE));
+		if (Armaments[armindex] != NULL)
+			armindex++;
+		Armaments[armindex] = WeaponTypeClass::As_Pointer(ini.Get_WeaponType(Name(), "Secondary", Armaments[1] != NULL ? (WeaponType)(Armaments[1]->ID) : WEAPON_NONE));
+		if (Armaments[armindex] != NULL)
+			armindex++;
+		char addweapons[128] = "";
+		if(ini.Get_String(Name(), "AddWeapons", addweapons, addweapons, sizeof(addweapons)) > 1) {
+			char* token = strtok(addweapons, ",");
+			while (token != NULL && *token != '\0' && armindex < 4) {
+				Armaments[armindex] = WeaponTypeClass::As_Pointer(Weapon_From_Name(token));
+				token = strtok(NULL, ",");
+				if (Armaments[armindex] != NULL)
+					armindex++;
+			}
+		}
+		NumArmaments = armindex;
 		IsCloakable = ini.Get_Bool(Name(), "Cloakable", IsCloakable);
 		IsCrushable = ini.Get_Bool(Name(), "Crushable", IsCrushable);
 		IsScanner = ini.Get_Bool(Name(), "Sensors", IsScanner);
@@ -6859,14 +7106,14 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 //Mono_Printf("after image=: %s\n",GraphicName);if(Random_Pick(0,4)) Keyboard->Get();
 
 		IsLeader = false;
-		if (PrimaryWeapon != NULL && PrimaryWeapon->Attack > 0) {
+		if (Armaments[0] != NULL && Armaments[0]->Attack > 0) {
 			IsLeader = true;
 		}
 
 		/*
 		**	Check to see what zone this object should recognize.
 		*/
-		if (PrimaryWeapon != NULL && PrimaryWeapon->WarheadPtr != NULL && PrimaryWeapon->WarheadPtr->IsWallDestroyer) {
+		if (Armaments[0] != NULL && Armaments[0]->WarheadPtr != NULL && Armaments[0]->WarheadPtr->IsWallDestroyer) {
 			MZone = MZONE_DESTROYER;
 		}
 		if (Speed == SPEED_FLOAT) {

@@ -6015,7 +6015,8 @@ int HouseClass::AI_Building(void)
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   09/29/1995 JLB : Created.                                                                 *
+ *   09/29/1995 JLB : Created.
+ *   07/21/2021 JJ  : Support multiple weapons data type.
  *=============================================================================================*/
 int HouseClass::AI_Unit(void)
 {
@@ -6123,7 +6124,7 @@ int HouseClass::AI_Unit(void)
 		for (index = UNIT_FIRST; index < UNIT_COUNT; index++) {
 			UnitTypeClass const * utype = &UnitTypeClass::As_Reference(index);
 			if (Can_Build(utype, ActLike) && utype->Type != UNIT_HARVESTER) {
-				if (utype->PrimaryWeapon != NULL) {
+				if (utype->NumArmaments > 0) {
 					counter[index] = 20;
 				} else {
 					counter[index] = 1;

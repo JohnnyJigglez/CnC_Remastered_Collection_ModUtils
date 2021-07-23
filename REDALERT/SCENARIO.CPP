@@ -2242,8 +2242,8 @@ bool Read_Scenario_INI(char * fname, bool )
 	WeaponTypeClass::As_Pointer(WEAPON_FLAMER)->Sound = VOC_NONE;
 	InfantryTypeClass::As_Reference(INFANTRY_THIEF).IsDoubleOwned = false;
 	InfantryTypeClass::As_Reference(INFANTRY_E4).IsDoubleOwned = false;
-	InfantryTypeClass::As_Reference(INFANTRY_SPY).PrimaryWeapon = NULL;
-	InfantryTypeClass::As_Reference(INFANTRY_SPY).SecondaryWeapon = NULL;
+	InfantryTypeClass::As_Reference(INFANTRY_SPY).Armaments[0] = NULL;
+	InfantryTypeClass::As_Reference(INFANTRY_SPY).Armaments[1] = NULL;
 	InfantryTypeClass::As_Reference(INFANTRY_GENERAL).IsBomber = false;
 	UnitTypeClass::As_Reference(UNIT_HARVESTER).IsExploding = false;
 	UnitTypeClass::As_Reference(UNIT_ANT1).Level = -1;

@@ -79,13 +79,6 @@ class TechnoClass :	public RadioClass,
 		unsigned IsCloakable:1;
 
 		/*
-		**	If this object has the ability to fire its primary and secondary weapons independently,
-		**	then this bit will be set to true.
-		*/
-		unsigned IsIndependentFire:1;
-		
-
-		/*
 		**	If this object is designated as special then this flag will be true. For
 		**	buildings, this means that it is the primary factory. For units, it means
 		**	that the unit is the team leader.
@@ -220,9 +213,9 @@ class TechnoClass :	public RadioClass,
 
 		/*
 		**	This is the arming countdown. It represents the time necessary
-		**	to reload the weapon.
+		**	to reload the weapons.
 		*/
-		CDTimerClass<FrameTimerClass> Arm[2];
+		CDTimerClass<FrameTimerClass> Arm[4];
 
 		/*
 		**	The number of shot this object can fire before running out of ammo. If this
@@ -235,7 +228,7 @@ class TechnoClass :	public RadioClass,
 		**	The number of bullets this object can fire before depleting a burst/salvo.
 		**  There is one index per weapon hardpoint (Primary, Secondary)
 		*/
-		int BurstShotsRemaining[2];
+		int BurstShotsRemaining[4];
 
 		/*
 		**	Used by the tesla to handle electric zap
@@ -267,9 +260,9 @@ class TechnoClass :	public RadioClass,
 		*/
 		TechnoClass(RTTIType rtti, int id, HousesType house=HOUSE_NONE);
 #ifdef FIXIT_MULTI_SAVE
-		TechnoClass(NoInitClass const& x) : RadioClass(x), FlasherClass(x), StageClass(x), CargoClass(x), DoorClass(x), IdleTimer(x), IronCurtainCountDown(x), House(x), Crew(x), CloakDelay(x), PrimaryFacing(x), Arm{ x,x } {};
+		TechnoClass(NoInitClass const& x) : RadioClass(x), FlasherClass(x), StageClass(x), CargoClass(x), DoorClass(x), IdleTimer(x), IronCurtainCountDown(x), House(x), Crew(x), CloakDelay(x), PrimaryFacing(x), Arm{ x,x,x,x } {};
 #else
-		TechnoClass(NoInitClass const & x) : RadioClass(x), FlasherClass(x), StageClass(x), CargoClass(x), DoorClass(x), IronCurtainCountDown(x), House(x), Crew(x), CloakDelay(x), PrimaryFacing(x), Arm(x) {};
+		TechnoClass(NoInitClass const & x) : RadioClass(x), FlasherClass(x), StageClass(x), CargoClass(x), DoorClass(x), IronCurtainCountDown(x), House(x), Crew(x), CloakDelay(x), PrimaryFacing(x), Arm{ x,x,x,x } {};
 #endif
 		virtual ~TechnoClass(void) {House=0;};
 
@@ -306,6 +299,12 @@ class TechnoClass :	public RadioClass,
 		virtual bool Is_Allowed_To_Recloak(void) const;
 		virtual bool Can_Repair(void) const;
 		virtual bool Is_Weapon_Equipped(void) const;
+		virtual bool Is_Warhead_Equipped(void) const;
+		virtual bool Can_Molest(TechnoClass const * other) const;
+		virtual bool Is_AG_Equipped(void) const;
+		virtual bool Is_AA_Equipped(void) const;
+		virtual bool Is_WD_Equipped(void) const;
+		virtual bool Is_SubWeapon_Equipped(void) const;
 		virtual fixed Tiberium_Load(void) const;
 		virtual int Pip_Count(void) const;
 		virtual int Rearm_Delay(bool finalshot=true, int which=0) const;

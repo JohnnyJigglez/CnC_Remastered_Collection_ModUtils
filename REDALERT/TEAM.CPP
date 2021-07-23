@@ -590,7 +590,7 @@ void TeamClass::AI(void)
 			for (int index = 0; index < Buildings.Count(); index++) {
 				BuildingClass * b = Buildings.Ptr(index);
 
-				if (b != NULL && !b->IsInLimbo && b->House == House && b->Class->PrimaryWeapon == NULL) {
+				if (b != NULL && !b->IsInLimbo && b->House == House && b->Class->Armaments[0] == NULL) {
 					CELL cell = Coord_Cell(b->Center_Coord());
 					int dist = ::Distance(b->Center_Coord(), As_Coord(Zone)) * (Map.Cell_Threat(cell, House->Class->House) + 1);
 
@@ -996,7 +996,7 @@ bool TeamClass::Can_Add(FootClass * obj, int & typeindex) const
 	/*
 	**	Aircraft that have no ammo for their weapons cannot be recruited into a team.
 	*/
-	if (obj->What_Am_I() == RTTI_AIRCRAFT && obj->Techno_Type_Class()->PrimaryWeapon != NULL && !obj->Ammo) {
+	if (obj->What_Am_I() == RTTI_AIRCRAFT && obj->Techno_Type_Class()->Armaments[0] != NULL && !obj->Ammo) {
 		return(false);
 	}
 
@@ -1566,7 +1566,8 @@ void TeamClass::Calc_Center(TARGET & center, TARGET & close_member) const
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   12/29/1994 JLB : Created.                                                                 *
+ *   12/29/1994 JLB : Created.
+ *   07/21/2021 JJ  : Support Multiple Weapons data type
  *=============================================================================================*/
 void TeamClass::Took_Damage(FootClass * , ResultType result, TechnoClass * source)
 {
@@ -1593,7 +1594,7 @@ void TeamClass::Took_Damage(FootClass * , ResultType result, TechnoClass * sourc
 					if (Target_Legal(Target)) {
 						TechnoClass * techno = As_Techno(Target);
 
-						if (techno && ((TechnoTypeClass const &)techno->Class_Of()).PrimaryWeapon != NULL) {
+						if (techno && ((TechnoTypeClass const &)techno->Class_Of()).NumArmaments > 0) {
 							if (techno->In_Range(As_Coord(Zone), 0)) {
 								return;
 							}

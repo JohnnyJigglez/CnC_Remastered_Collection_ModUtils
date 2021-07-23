@@ -521,8 +521,14 @@ class TechnoTypeClass : public ObjectTypeClass
 		/*
 		**	These are the weapons that this techno object is armed with.
 		*/
-		WeaponTypeClass const * PrimaryWeapon;
-		WeaponTypeClass const * SecondaryWeapon;
+		//WeaponTypeClass const * PrimaryWeapon;
+		//WeaponTypeClass const * SecondaryWeapon;
+		WeaponTypeClass const * Armaments[4];
+
+		/*
+		**	The number of weapons a techno type is actually equipped with;
+		*/
+		int NumArmaments;
 
 		/*
 		**	These specify the lepton offsets to locate the exact coordinate of the

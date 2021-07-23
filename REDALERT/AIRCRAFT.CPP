@@ -221,6 +221,8 @@ void AircraftClass::operator delete(void * ptr)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/26/1994 JLB : Created.                                                                 *
+ *   07/14/2021 JJ : Updated to Support weapon salvos > 2                                      *
+ *   07/20/2021 JJ : Updated to Support multiple weapons                                       *
  *=============================================================================================*/
 AircraftClass::AircraftClass(AircraftType classid, HousesType house) :
 	FootClass(RTTI_AIRCRAFT, Aircraft.ID(this), house),
@@ -243,13 +245,11 @@ AircraftClass::AircraftClass(AircraftType classid, HousesType house) :
 	IsSecondShot = !Class->Is_Two_Shooter();
 	House->Tracking_Add(this);
 	Ammo = Class->MaxAmmo;
-	if (Class->PrimaryWeapon != NULL) {
-			BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
+	for (int x = 0;x < Class->NumArmaments;x++)
+	{
+		if (Class->Armaments[x] != NULL)
+			BurstShotsRemaining[x] = Class->Armaments[x]->Burst;
 	}
-	if (Class->SecondaryWeapon != NULL) {
-			BurstShotsRemaining[1] = Class->SecondaryWeapon->Burst;
-	}
-	IsIndependentFire = Class->IsIndependentFire;
 	Height = FLIGHT_LEVEL;
 	Strength = Class->MaxStrength;
 	NavCom = TARGET_NONE;
@@ -286,6 +286,7 @@ AircraftClass::AircraftClass(AircraftType classid, HousesType house) :
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/26/1994 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Supporting Multiple Weapons data structure.                              *
  *=============================================================================================*/
 bool AircraftClass::Unlimbo(COORDINATE coord, DirType dir)
 {
@@ -294,7 +295,7 @@ bool AircraftClass::Unlimbo(COORDINATE coord, DirType dir)
 
 	if (FootClass::Unlimbo(coord, dir)) {
 
-		if (*this == AIRCRAFT_BADGER || (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsCamera)) {
+		if (*this == AIRCRAFT_BADGER || (Class->Armaments[0] != NULL && Class->Armaments[0]->IsCamera)) {
 			IsALoaner = true;
 		}
 
@@ -769,8 +770,8 @@ int AircraftClass::Mission_Hunt(void)
 				switch (Can_Fire(TarCom, 0)) {
 					case FIRE_OK:
 						targ = ::As_Target(Coord_Move(Center_Coord(), SecondaryFacing, Weapon_Range(0)-0x0200));
-						if (Class->PrimaryWeapon != NULL) {
-							if (Class->PrimaryWeapon->IsCamera) {
+						if (Class->Armaments[0] != NULL) {
+							if (Class->Armaments[0]->IsCamera) {
 								Status = REGROUP;
 							} else {
 								Map[::As_Cell(TarCom)].Incoming(Coord, true);
@@ -780,7 +781,7 @@ int AircraftClass::Mission_Hunt(void)
 							**	Force the target to be the actual target if this aircraft is
 							**	equipped with homing projectile.
 							*/
-							if (Class->PrimaryWeapon->Bullet != NULL && Class->PrimaryWeapon->Bullet->ROT > 0) {
+							if (Class->Armaments[0]->Bullet != NULL && Class->Armaments[0]->Bullet->ROT > 0) {
 								targ = TarCom;
 							}
 						}
@@ -827,7 +828,7 @@ int AircraftClass::Mission_Hunt(void)
 					Enter_Idle_Mode();
 				}
 
-				if (Mission == MISSION_ATTACK || (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsCamera) || (!AttacksRemaining && !Is_Something_Attached())) {
+				if (Mission == MISSION_ATTACK || (Class->Armaments[0] != NULL && Class->Armaments[0]->IsCamera) || (!AttacksRemaining && !Is_Something_Attached())) {
 
 					if (IsALoaner)  {
 						if (Team) Team->Remove(this);
@@ -1510,7 +1511,10 @@ int AircraftClass::Paradrop_Cargo(void)
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   03/19/1995 JLB : Created.                                                                 *
+ *   03/19/1995 JLB : Created.
+ *   07/20/2021 JJ  : Added support for 4 weapons and added support for IndependentFire        *
+ *				      attribute.  Now if the aircraft has a camera in ANY Weapons slot the code*
+ *					  will function as inferred by vanilla logics                              *
  *=============================================================================================*/
 BulletClass * AircraftClass::Fire_At(TARGET target, int which)
 {
@@ -1529,8 +1533,9 @@ BulletClass * AircraftClass::Fire_At(TARGET target, int which)
 	/*
 	**	If the weapon is actually a camera, then perform the "snapshot" of the
 	**	ground instead of normal weapon fire.
+	*  (VANILLA Logic enhanced, camera was only recognized in the Primary weapon slot)
 	*/
-	if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsCamera) {
+	if (Class->Armaments[which] != NULL && Class->Armaments[which]->IsCamera) {
 		
 		if (Session.Type != GAME_GLYPHX_MULTIPLAYER) {
 
@@ -1551,7 +1556,15 @@ BulletClass * AircraftClass::Fire_At(TARGET target, int which)
 		}
 		
 		Ammo = 0;
-		Arm[0] = Rearm_Delay();
+		if (Class->IsIndependentFire) {
+			//use the timer of the weapon slot
+			Arm[which] = Rearm_Delay(true, which);
+		}
+		else {
+			//use one arming timer regardless of what weapons slot the camera was in.
+			//(VANILLA Logic enhanced, camera was only recognized in the Primary weapon slot)
+			Arm[0] = Rearm_Delay(true,which);
+		}
 		return(0);
 	}
 
@@ -1572,7 +1585,8 @@ BulletClass * AircraftClass::Fire_At(TARGET target, int which)
 		**	Falling bullets move at a speed proportionate to the delivery craft.
 		*/
 		if (bullet->Class->IsDropping) {
-			bullet->Fly_Speed(40, MPH_MEDIUM_SLOW);		// TCTC To fix.
+			//bullet->Fly_Speed(40, MPH_MEDIUM_SLOW); Vanilla
+			bullet->Fly_Speed(Speed, MPH_LIGHT_SPEED);		// TCTC To fix.
 		}
 	}
 	return(bullet);
@@ -1920,7 +1934,7 @@ void AircraftClass::Enter_Idle_Mode(bool )
 	assert(Aircraft.ID(this) == ID);
 	assert(IsActive);
 
-	MissionType mission = (Class->IsFixedWing && IsALoaner && Class->PrimaryWeapon != NULL) ? MISSION_HUNT : MISSION_GUARD;
+	MissionType mission = (Class->IsFixedWing && IsALoaner && Class->Armaments[0] != NULL) ? MISSION_HUNT : MISSION_GUARD;
 	if (Class->IsFixedWing) {
 		if (In_Which_Layer() == LAYER_GROUND) {
 			if (IsALoaner) {
@@ -1947,7 +1961,7 @@ void AircraftClass::Enter_Idle_Mode(bool )
 			**	Weapon equipped helicopters that run out of ammo and were
 			**	brought in as reinforcements will leave the map.
 			*/
-			if (Mission != MISSION_ATTACK && IsALoaner && Ammo == 0 && Class->PrimaryWeapon != NULL) {
+			if (Mission != MISSION_ATTACK && IsALoaner && Ammo == 0 && Class->Armaments[0] != NULL) {
 				mission = MISSION_HUNT;
 			} else {
 
@@ -2030,7 +2044,7 @@ void AircraftClass::Enter_Idle_Mode(bool )
 					}
 				}
 
-				if (Class->PrimaryWeapon != NULL) {
+				if (Class->Armaments[0] != NULL) {
 
 					/*
 					**	Weapon equipped helicopters that run out of ammo and were
@@ -2322,7 +2336,7 @@ ActionType AircraftClass::What_Action(ObjectClass const * target) const
 		action = ACTION_NONE;
 	}
 
-	if (action == ACTION_ATTACK && Class->PrimaryWeapon == NULL) {
+	if (action == ACTION_ATTACK && Class->Armaments[0] == NULL) {
 		action = ACTION_NONE;
 	}
 
@@ -2386,7 +2400,7 @@ ActionType AircraftClass::What_Action(CELL cell) const
 		action = ACTION_NOMOVE;
 	}
 
-	if (action == ACTION_ATTACK && Class->PrimaryWeapon == NULL) {
+	if (action == ACTION_ATTACK && Class->Armaments[0] == NULL) {
 		action = ACTION_NONE;
 	}
 
@@ -3751,7 +3765,7 @@ int AircraftClass::Mission_Guard(void)
 			return(MissionControl[Mission].Normal_Delay());
 		}
 
-		if (Class->PrimaryWeapon == NULL) {
+		if (Class->Armaments[0] == NULL) {
 			Assign_Destination(::As_Target(Coord_Cell(Coord)));
 			Assign_Mission(MISSION_MOVE);
 		} else {
@@ -4007,6 +4021,7 @@ void AircraftClass::Response_Select(void)
  * HISTORY:                                                                                    *
  *   03/05/1996 JLB : Created.                                                                 *
  *   07/11/1996 JLB : Fixed for camera carrying aircraft.                                      *
+ *   07/20/2021 JJ : Added support for independentfire attrib and 4 armaments                  *
  *=============================================================================================*/
 FireErrorType AircraftClass::Can_Fire(TARGET target, int which) const
 {
@@ -4017,8 +4032,8 @@ FireErrorType AircraftClass::Can_Fire(TARGET target, int which) const
 		return(FIRE_AMMO);
 	}
 
-	bool camera = (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsCamera);
-	bool fudge = (Passenger || (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->Bullet != NULL && Class->PrimaryWeapon->Bullet->IsParachuted));
+	bool camera = (Class->Armaments[which] != NULL && Class->Armaments[which]->IsCamera);
+	bool fudge = (Passenger || (Class->Armaments[which] != NULL && Class->Armaments[which]->Bullet != NULL && Class->Armaments[which]->Bullet->IsParachuted));
 
 	if (fudge && !camera && !Ammo && !Passenger) {
 		return(FIRE_AMMO);
@@ -4030,7 +4045,7 @@ FireErrorType AircraftClass::Can_Fire(TARGET target, int which) const
 	**	aircraft is generally clear.
 	*/
 	if (camera || (fudge && Passenger && Is_Something_Attached()))  {
-		if (Arm[0] != 0) return(FIRE_REARM);
+		if (Arm[(Class->IsIndependentFire) ? which : 0] != 0) return(FIRE_REARM);
 
 		if (Distance(target) < (camera ? 0x0380 : 0x0200) && Map.In_Radar(Coord_Cell(Center_Coord()))) {
 //		if (Distance(target) < (camera ? 0x0380 : 0x0280) && Map.In_Radar(Coord_Cell(Center_Coord()))) {

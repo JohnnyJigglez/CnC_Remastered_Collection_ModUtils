@@ -3490,9 +3490,9 @@ void DLLExportClass::DLL_Draw_Intercept(int shape_number, int x, int y, int widt
 			new_object.IsALoaner = techno_object->IsALoaner;
 			new_object.IsNominal = ttype->IsNominal;
 			new_object.MaxPips = ttype->Max_Pips();
-			new_object.IsAntiGround = (ttype->PrimaryWeapon != NULL) && (ttype->PrimaryWeapon->Bullet != NULL) && ttype->PrimaryWeapon->Bullet->IsAntiGround;
-			new_object.IsAntiAircraft = (ttype->PrimaryWeapon != NULL) && (ttype->PrimaryWeapon->Bullet != NULL) && ttype->PrimaryWeapon->Bullet->IsAntiAircraft;
-			new_object.IsSubSurface = (ttype->PrimaryWeapon != NULL) && (ttype->PrimaryWeapon->Bullet != NULL) && ttype->PrimaryWeapon->Bullet->IsSubSurface;
+			new_object.IsAntiGround = techno_object->Is_AG_Equipped();
+			new_object.IsAntiAircraft = techno_object->Is_AA_Equipped();
+			new_object.IsSubSurface = techno_object->Is_SubWeapon_Equipped();
 			new_object.IsIronCurtain = techno_object->IronCurtainCountDown > 0;
 
 			int full_name = techno_object->Full_Name();
@@ -6269,6 +6269,7 @@ bool DLLExportClass::Get_Occupier_State(uint64 player_id, unsigned char *buffer_
 *
 *
 * History: 4/22/2019 10:33AM - ST
+*		   7/21/2021 JJ - added support for multiple weapons on techno
 **************************************************************************************************/
 bool DLLExportClass::Get_Player_Info_State(uint64 player_id, unsigned char *buffer_in, unsigned int buffer_size)
 {
@@ -6362,7 +6363,7 @@ bool DLLExportClass::Get_Player_Info_State(uint64 player_id, unsigned char *buff
 			ObjectClass* object = CurrentObject[i];
 			if (object->Is_Techno()) {
 				TechnoClass* techno = (TechnoClass*)object;
-				if (techno->Techno_Type_Class()->PrimaryWeapon != NULL || techno->Techno_Type_Class()->SecondaryWeapon != NULL) {
+				if (techno->Techno_Type_Class()->NumArmaments > 0) {
 					action_object = object;
 					break;
 				}

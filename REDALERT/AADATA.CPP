@@ -570,12 +570,13 @@ short const * AircraftTypeClass::Overlap_List(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   06/26/1995 JLB : Created.                                                                 *
+ *   07/20/2021 JJ  : Support new weapon data type                                                       *
  *=============================================================================================*/
 int AircraftTypeClass::Max_Pips(void) const
 {
-	if (PrimaryWeapon != NULL) {
+	if (Armaments[0] != NULL) {
 		// Camera weapon (ex. on the Spy plane) doesn't display any pips
-		if (!PrimaryWeapon->IsCamera) {
+		if (!Armaments[0]->IsCamera) {
 			return(5);
 		}
 	}

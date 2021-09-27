@@ -2503,3 +2503,31 @@ BuildingClass * ObjectTypeClass::Who_Can_Build_Me(bool intheory, bool legal, Hou
 	}
 	return(anybuilding);
 }
+
+/***********************************************************************************************
+ * TechnoTypeClass::Read_INI -- Reads the object type data from the INI database.              *
+ *                                                                                             *
+ *    Use this routine to fill in the data for this object type class object from the          *
+ *    database specified. Typical use of this is for the rules parsing.                        *
+ *                                                                                             *
+ * INPUT:   ini   -- Reference to the INI database that the information will be lifted from.   *
+ *                                                                                             *
+ * OUTPUT:  bool; Was the database used to extract information? A failure (false) response     *
+ *                would mean that the database didn't contain a section that applies to this   *
+ *                object class object.                                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/23/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+bool ObjectTypeClass::Read_INI(CCINIClass& ini)
+{
+	if(ini.Is_Present(IniName)){
+		IsStealthy = ini.Get_Bool(IniName, "Stealthy", IsStealthy);
+		IsInsignificant = ini.Get_Bool(IniName, "Insignificant", IsInsignificant);
+		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
+		return(true);
+	}
+	return(false);
+}

@@ -8124,13 +8124,13 @@ void HouseClass::Init_Unit_Trackers(void)
 	if (Session.Type == GAME_INTERNET || Session.Type == GAME_GLYPHX_MULTIPLAYER) {
 		AircraftTotals = new UnitTrackerClass( (int) AIRCRAFT_COUNT);
 		InfantryTotals = new UnitTrackerClass( (int) INFANTRY_COUNT);
-		UnitTotals = new UnitTrackerClass ( (int) UNIT_COUNT);
+		UnitTotals = new UnitTrackerClass ( (int) UnitTypes.Count());
 		BuildingTotals = new UnitTrackerClass ( (int) STRUCT_COUNT);
 		VesselTotals = new UnitTrackerClass ( (int) VESSEL_COUNT);
 
 		DestroyedAircraft = new UnitTrackerClass ( (int) AIRCRAFT_COUNT);
 		DestroyedInfantry = new UnitTrackerClass( (int) INFANTRY_COUNT);
-		DestroyedUnits = new UnitTrackerClass ( (int) UNIT_COUNT);
+		DestroyedUnits = new UnitTrackerClass ( (int) UnitTypes.Count());
 		DestroyedBuildings = new UnitTrackerClass ( (int) STRUCT_COUNT);
 		DestroyedVessels = new UnitTrackerClass ( (int) VESSEL_COUNT);
 

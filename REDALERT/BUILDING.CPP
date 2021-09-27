@@ -2237,7 +2237,7 @@ void BuildingClass::Update_Buildables(void)
 				break;
 
 			case RTTI_UNITTYPE:
-				for (u = UNIT_FIRST; u < UNIT_COUNT; u++) {
+				for (u = UNIT_FIRST; u < UnitTypes.Count(); u++) {
 					if (PlayerPtr->Can_Build(&UnitTypeClass::As_Reference((UnitType)u), ActLike)) {
 						if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
 							Sidebar_Glyphx_Add(RTTI_UNITTYPE, u, House, buildable_via_capture);

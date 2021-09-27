@@ -580,11 +580,11 @@ class HouseClass {
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 		int UQuantity[UNIT_RA_COUNT-3];
 #else
-		int UQuantity[UNIT_COUNT-3];
+		int UQuantity[UNIT_COUNT+13];
 #endif
 #else
 		int BQuantity[STRUCT_COUNT];
-		int UQuantity[UNIT_COUNT];
+		int UQuantity[UNIT_COUNT+16];
 #endif
 
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98

@@ -656,7 +656,10 @@ bool RulesClass::Heap_Maximums(CCINIClass & ini)
 			new WarheadTypeClass(ini.Get_Entry("Warheads", x));
 		}
 	}
-	/* This code does not function correctly, sadly.
+/*
+	BulletTypes.Set_Heap(ProjectileMax);
+	CCPtr<BulletTypeClass>::Set_Heap(&BulletTypes);
+	BulletTypeClass::Init_Heap();
 	if (ini.Is_Present("Projectiles")) {
 		for (int x = 0; x < ini.Entry_Count("Projectiles"); x++) {
 			new BulletTypeClass(ini.Get_Entry("Projectiles", x));
@@ -717,6 +720,13 @@ bool RulesClass::Heap_Maximums(CCINIClass & ini)
 	if (ini.Is_Present("Weapons")) {
 		for (int x = 0; x < ini.Entry_Count("Weapons"); x++) {
 			new WeaponTypeClass(ini.Get_Entry("Weapons", x));
+		}
+	}
+	//UnitTypes.Set_Heap(UnitMax);
+	//UnitTypeClass::Init_Heap();
+	if (ini.Is_Present("VehicleTypes")) {
+		for (int x = 0; x < ini.Entry_Count("VehicleTypes"); x++) {
+			new UnitTypeClass(ini.Get_Entry("VehicleTypes", x), ini.Get_Int("VehicleTypes",ini.Get_Entry("VehicleTypes", x),0));
 		}
 	}
 

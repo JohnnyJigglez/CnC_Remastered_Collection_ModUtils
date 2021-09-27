@@ -2313,7 +2313,7 @@ bool CellClass::Goodie_Check(FootClass * object)
 								HouseClass * hptr = Houses.Ptr(i + HOUSE_MULTI1);
 								if (hptr != NULL && !hptr->IsDefeated) {
 									int j;
-									for( j=0; j < UNIT_COUNT; j++) {
+									for( j=0; j < UnitTypes.Count(); j++) {
 										ucount += hptr->QuantityU(j);
 									}
 									for( j=0; j < INFANTRY_COUNT; j++) {
@@ -2494,10 +2494,10 @@ crate_money:
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 					UnitType utype = Random_Pick(UNIT_FIRST, (UnitType)(UNIT_RA_COUNT-1 -3));
 #else
-					UnitType utype = Random_Pick(UNIT_FIRST, (UnitType)(UNIT_COUNT-1 -3));
+					UnitType utype = Random_Pick(UNIT_FIRST, (UnitType)(UnitTypes.Count()-1 -3));
 #endif
 #else
-					UnitType utype = Random_Pick(UNIT_FIRST, (UnitType)(UNIT_COUNT-1));
+					UnitType utype = Random_Pick(UNIT_FIRST, (UnitType)(UnitTypes.Count()-1));
 #endif
 					if (utype != UNIT_MCV || Session.Options.Bases) {
 						utp = &UnitTypeClass::As_Reference(utype);

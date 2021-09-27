@@ -297,6 +297,7 @@ class ObjectTypeClass : public AbstractTypeClass
 		virtual short const * Occupy_List(bool placement=false) const;
 		virtual short const * Overlap_List(void) const;
 		virtual BuildingClass * Who_Can_Build_Me(bool intheory, bool legal, HousesType house) const;
+		virtual bool Read_INI(CCINIClass& ini);
 		virtual void const * Get_Cameo_Data(void) const;
 		void const * Get_Image_Data(void) const {return ImageData;};
 		void const * Get_Radar_Data(void) const {return RadarIcon;};
@@ -399,7 +400,7 @@ class TechnoTypeClass : public ObjectTypeClass
 		unsigned IsCloakable:1;
 
 		/*
-		**	If this object has the ability to fire its primary and secondary weapons independently,
+		**	If this object has the ability to fire its weapons independently,
 		**	then this bit will be set to true.
 		*/
 		unsigned IsIndependentFire:1;
@@ -927,7 +928,8 @@ class UnitTypeClass : public TechnoTypeClass
 
 		/*
 		**	This value represents the unit class. It can serve as a unique
-		**	identification number for this unit class.
+		**	identification number for this unit class.  This tracking and reference method needs to be totally refactored
+		* as it will not permit new units to be added via rules.ini
 		*/
 		UnitType Type;
 
@@ -958,6 +960,7 @@ class UnitTypeClass : public TechnoTypeClass
 		**	This is the explicit unit class constructor.
 		*/
 		UnitTypeClass(NoInitClass const & x) : TechnoTypeClass(x) {}
+		UnitTypeClass(char const* name, int id);
 		UnitTypeClass	(
 						UnitType type,
 						int name,

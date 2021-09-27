@@ -303,6 +303,7 @@ UnitClass::~UnitClass(void)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   04/21/1994 JLB : Created.                                                                 *
+ *   07/--/2021 JJ  : Updated to account for multiple weapons.                                 *
  *=============================================================================================*/
 UnitClass::UnitClass(UnitType classid, HousesType house) :
 	DriveClass(RTTI_UNIT, Units.ID(this), house),
@@ -322,6 +323,7 @@ UnitClass::UnitClass(UnitType classid, HousesType house) :
 	Reload = 0;
 	House->Tracking_Add(this);
 	Ammo = Class->MaxAmmo;
+	/* Arm the weapons system on this unit */
 	for (int x = 0;x < Class->NumArmaments;x++)
 	{
 		if (Class->Armaments[x] != NULL)

@@ -6753,6 +6753,7 @@ int TechnoTypeClass::Get_Ownable(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/29/1995 JLB : Created.                                                                 *
+ *   08/15/2021 JJ : Updated to support up 4 factory build speed bonus                         *
  *=============================================================================================*/
  //#define UNIT_BUILD_BIAS fixed(5,4)
  //#define UNIT_BUILD_BIAS fixed(6,4)
@@ -6827,10 +6828,10 @@ int TechnoTypeClass::Time_To_Build(HousesType house) const
 	int divisor = hptr->Factory_Count(What_Am_I());
 	if (divisor != 0) {
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-		// Hack: allow the multiple-factory bonus, but only up to two factories if
+		// Hack: allow the multiple-factory bonus, but only up to four factories if
 		//			this is an AM<->AM game.
 		if (NewUnitsEnabled) {
-			time /= min(divisor, 2);
+			time /= min(divisor, 4);
 		}
 		else {
 			time /= divisor;
@@ -7023,10 +7024,12 @@ static inline int _Scale_To_256(int val)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/19/1996 JLB : Created.                                                                 *
+ *   07/25/2021 JJ  :  Added support for multiple weapons and independentfire                  *
+ *   09/25/2021 JJ  :  Added support for many once-hardcoded parameters                        *
  *=============================================================================================*/
 bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 {
-	if (ini.Is_Present(Name())) {
+	if (ObjectTypeClass::Read_INI(ini)) {
 #ifdef FIXIT_NAME_OVERRIDE
 		char buffer[256];
 		int id = ((RTTI+1) * 100) + ID;
@@ -7101,10 +7104,31 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		ROT = ini.Get_Int(Name(), "ROT", ROT);
 		MaxPassengers = ini.Get_Int(Name(), "Passengers", MaxPassengers);
 		IsIndependentFire = ini.Get_Bool(Name(), "IndependentFire", IsIndependentFire);
-//Mono_Printf("before image=: %s\n",GraphicName);
-		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
-//Mono_Printf("after image=: %s\n",GraphicName);if(Random_Pick(0,4)) Keyboard->Get();
-
+		//ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
+		Rotation = ini.Get_Int(Name(), "RotCount", Rotation);
+		IsNominal = ini.Get_Bool(Name(), "Nominal", IsNominal);
+		IsTurretEquipped = ini.Get_Bool(Name(), "Turret", IsTurretEquipped);
+		VerticalOffset = ini.Get_Int(Name(), "VerticalOffset", VerticalOffset);
+		HorizontalOffset = ini.Get_Int(Name(), "HorizontalOffset", HorizontalOffset);
+		char buffer2[16] = "";
+		if (ini.Get_String(Name(), "PrimaryFireFL", buffer2, buffer2, sizeof(buffer2))) {
+			char* token = strtok(buffer2, ",");
+			if (token != NULL) {
+				PrimaryOffset = atoi(token);
+				token = strtok(NULL, ",");
+				if (token != NULL)
+					PrimaryLateral = atoi(token);
+			}
+		}
+		if (ini.Get_String(Name(), "SecondaryFireFL", buffer2, buffer2, sizeof(buffer2)) > 1) {
+			char* token = strtok(buffer2, ",");
+			if (token != NULL) {
+				SecondaryOffset = atoi(token);
+				token = strtok(NULL, ",");
+				if (token != NULL)
+					SecondaryLateral = atoi(token);
+			}
+		}
 		IsLeader = false;
 		if (Armaments[0] != NULL && Armaments[0]->Attack > 0) {
 			IsLeader = true;

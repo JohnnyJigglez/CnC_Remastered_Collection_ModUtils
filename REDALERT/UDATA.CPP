@@ -862,6 +862,65 @@ UnitTypeClass::UnitTypeClass(
 	Speed = SPEED_WHEEL;
 }
 
+/***********************************************************************************************
+ * UnitTypeClass::UnitTypeClass -- Default constructor for unit type objects.            *
+ *                                                                                             *
+ *    This default constructor will initialize all the values of the unit to the default     *
+ *    state. Thus, if any of these settings are not specifically overridden by the rules.ini   *
+ *    file, they will remain this value in the game.                                           *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/15/2021 JJ : Created.                                                                  *
+ *=============================================================================================*/
+UnitTypeClass::UnitTypeClass(char const * ininame, int id) :
+	TechnoTypeClass(RTTI_UNITTYPE,
+		id,
+		TXT_LTANK,
+		ininame,
+		REMAP_NORMAL,
+		0x0000,
+		0x0000,
+		0x0000,
+		0x0000,
+		0x0000,
+		false,
+		false,
+		true,
+		true,
+		false,
+		false,
+		false,
+		false,
+		true,
+		false,
+		32,
+		SPEED_TRACK),
+	Type((UnitType)id),
+	IsCrateGoodie(false),
+	IsCrusher(false),
+	IsToHarvest(false),
+	IsRadarEquipped(false),
+	IsFireAnim(false),
+	IsLockTurret(false),
+	IsGigundo(false),
+	IsAnimating(false),
+	IsJammer(false),
+	IsGapper(false),
+	IsNoFireWhileMoving(false),
+	TurretOffset(0),
+	Mission(MISSION_NONE),
+	Explosion(ANIM_NONE),
+	MaxSize(0)
+{
+	Speed = SPEED_WHEEL;
+}
+
 
 /***********************************************************************************************
  * UnitTypeClass::operator new -- Allocates an object from the unit type class heap.           *
@@ -976,11 +1035,12 @@ void UnitTypeClass::Init_Heap(void)
  * HISTORY:                                                                                    *
  *   10/07/1992 JLB : Created.                                                                 *
  *   05/02/1994 JLB : Converted to member function.                                            *
+ *   09/21/2021 JJ  : Added support for non-hardcoded num of unittypes                         *
  *=============================================================================================*/
 UnitType UnitTypeClass::From_Name(char const * name)
 {
 	if (name != NULL) {
-		for (UnitType classid = UNIT_FIRST; classid < UNIT_COUNT; classid++) {
+		for (UnitType classid = UNIT_FIRST; classid < UnitTypes.Count(); classid++) {
 			if (stricmp(As_Reference(classid).IniName, name) == 0) {
 				return(classid);
 			}
@@ -1067,7 +1127,7 @@ void UnitTypeClass::Prep_For_Add(void)
  *=============================================================================================*/
 void UnitTypeClass::One_Time(void)
 {
-	for (UnitType index = UNIT_FIRST; index < UNIT_COUNT; index++) {
+	for (UnitType index = UNIT_FIRST; index < UnitTypes.Count(); index++) {
 		char	fullname[_MAX_FNAME+_MAX_EXT];
 		char	buffer[_MAX_FNAME];
 		UnitTypeClass const & uclass = As_Reference(index);
@@ -1255,7 +1315,7 @@ void UnitTypeClass::Dimensions(int &width, int &height) const
  *=============================================================================================*/
 int UnitTypeClass::Max_Pips(void) const
 {
-	if (Type == UNIT_HARVESTER) {
+	if (IsToHarvest) {
 		return(7);
 	}
 
@@ -1368,6 +1428,21 @@ bool UnitTypeClass::Read_INI(CCINIClass & ini)
 		if (MZone < MZONE_CRUSHER && IsCrusher) {
 			MZone = MZONE_CRUSHER;
 		}
+		TurretOffset = ini.Get_Int(IniName, "TurretOffset", TurretOffset);
+		IsCrateGoodie = ini.Get_Bool(IniName, "CrateGoodie", IsCrateGoodie);
+		IsCrusher = ini.Get_Bool(IniName, "Crusher", IsCrusher);
+		IsToHarvest = ini.Get_Bool(IniName, "Harvester", IsToHarvest);
+		IsFireAnim = ini.Get_Bool(IniName, "FiringAnim", IsFireAnim);
+		IsAnimating = ini.Get_Bool(IniName, "Animating", IsAnimating);
+		IsJammer = ini.Get_Bool(IniName, "Jammer", IsJammer);
+		IsGapper = ini.Get_Bool(IniName, "Gapper", IsGapper);
+		IsLockTurret = ini.Get_Bool(IniName, "LockTurret", IsLockTurret);
+		IsGigundo = ini.Get_Bool(IniName, "Gigundo", IsGigundo);
+		IsRadarEquipped = ini.Get_Bool(IniName, "RadarEquipped", IsRadarEquipped);
+		char buffer[32];
+		ini.Get_String(IniName, "Orders", "Sleep", buffer, sizeof(buffer));
+		Mission = MissionClass::Mission_From_Name(buffer);
+		Explosion = ini.Get_AnimType(IniName, "Explosion", Explosion);
 		return(true);
 	}
 	return(false);

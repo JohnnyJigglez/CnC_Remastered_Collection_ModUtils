@@ -513,6 +513,39 @@ char const * INIClass::Get_Entry(char const * section, int index) const
 	return(NULL);
 }
 
+/***********************************************************************************************
+ * INIClass::Get_Value -- Get an entry's value given ordinal number and section name.          *
+ *                                                                                             *
+ *    This will return the value for the entry under the section specified. The      *
+ *    ordinal number specified is used to determine which entry to retrieve. The entry         *
+ *    value is the text that appears to the right of the "=" character.                        *
+ *                                                                                             *
+ * INPUT:   section  -- The section to use.                                                    *
+ *                                                                                             *
+ *          index    -- The ordinal number to use when fetching an entry name.                 *
+ *                                                                                             *
+ * OUTPUT:  Returns with a pointer to the entry value.                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/27/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+char const* INIClass::Get_Value(char const* section, int index) const
+{
+	INISection* secptr = Find_Section(section);
+
+	if (secptr != NULL && index < secptr->EntryIndex.Count()) {
+		INIEntry* entryptr = secptr->EntryList.First();
+
+		while (entryptr != NULL && entryptr->Is_Valid()) {
+			if (index == 0) return(entryptr->Value);
+			index--;
+			entryptr = entryptr->Next();
+		}
+	}
+	return(NULL);
+}
 
 /***********************************************************************************************
  * INIClass::Put_UUBlock -- Store a binary encoded data block into the INI database.           *

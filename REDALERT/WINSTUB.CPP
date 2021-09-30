@@ -362,7 +362,7 @@ HANDLE DebugFile = INVALID_HANDLE_VALUE;
  *=============================================================================================*/
 void WWDebugString (char *string)
 {
-#if (0)
+#if (1)
 	char outstr[256];
 
 	sprintf (outstr, "%s", string);

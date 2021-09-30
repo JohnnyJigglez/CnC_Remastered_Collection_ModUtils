@@ -85,6 +85,8 @@ class INIClass {
 		int Entry_Count(char const * section) const;
 		char const * Get_Entry(char const * section, int index) const;
 
+		char const* Get_Value(char const* section, int index) const;
+
 		/*
 		**	Get the various data types from the section and entry specified.
 		*/

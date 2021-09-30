@@ -601,12 +601,12 @@ bool RulesClass::Recharge(CCINIClass & ini)
  *   07/13/2021 JJ  : Added Support for new weapons via ini.
  *   07/17/2021 JJ  : Added Support for new warheads via ini.
  *=============================================================================================*/
-bool RulesClass::Heap_Maximums(CCINIClass & ini)
+bool RulesClass::Heap_Maximums(CCINIClass& ini)
 {
 	/*
 	**	Heap maximum values.
 	*/
-	static char const * const MAXIMUMS = "Maximums";
+	static char const* const MAXIMUMS = "Maximums";
 	if (ini.Is_Present(MAXIMUMS)) {
 		MaxPlayers = ini.Get_Int(MAXIMUMS, "Players", MaxPlayers);
 		AircraftMax = ini.Get_Int(MAXIMUMS, "Aircraft", AircraftMax);
@@ -639,29 +639,25 @@ bool RulesClass::Heap_Maximums(CCINIClass & ini)
 	**	Any heaps that use the maximums that were just loaded, must
 	**	be initialized as necessary.
 	*/
-	Warheads.Set_Heap(WarheadMax);
-	new WarheadTypeClass("SA");
-	new WarheadTypeClass("HE");
-	new WarheadTypeClass("AP");
-	new WarheadTypeClass("Fire");
-	new WarheadTypeClass("HollowPoint");
-	new WarheadTypeClass("Super");
-	new WarheadTypeClass("Organic");
-	new WarheadTypeClass("Nuke");
-#ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-	new WarheadTypeClass("Mechanical");
-#endif
-	if (ini.Is_Present("Warheads")) {
-		for (int x = 0; x < ini.Entry_Count("Warheads"); x++) {
-			new WarheadTypeClass(ini.Get_Entry("Warheads", x));
+	if (Warheads.Count() == 0) {
+		Warheads.Set_Heap(WarheadMax);
+	}
+	static char const* const WH = "Warheads";
+	if (ini.Is_Present(WH)) {
+		for (int x = 0; x < ini.Entry_Count(WH); x++) {
+			new WarheadTypeClass(ini.Get_Value(WH,x));
 		}
 	}
-	/* This code does not function correctly, sadly.
-	if (ini.Is_Present("Projectiles")) {
-		for (int x = 0; x < ini.Entry_Count("Projectiles"); x++) {
-			new BulletTypeClass(ini.Get_Entry("Projectiles", x));
+	if (BulletTypes.Count() == 0) {
+		BulletTypes.Set_Heap(ProjectileMax);
+	}
+	static char const* const BT = "Projectiles";
+	if (ini.Is_Present(BT)) {
+		for (int x = 0; x < ini.Entry_Count(BT); x++) {
+			new BulletTypeClass(ini.Get_Value(BT, x));
 		}
-	}*/
+	}
+	if (Weapons.Count() == 0) {
 	Weapons.Set_Heap(WeaponMax);
 	new WeaponTypeClass("Colt45");
 	new WeaponTypeClass("ZSU-23");
@@ -714,6 +710,7 @@ bool RulesClass::Heap_Maximums(CCINIClass & ini)
 #ifdef FIXIT_CARRIER	//	checked - ajw 9/28/98
 	new WeaponTypeClass("AirAssault");
 #endif
+	}
 	if (ini.Is_Present("Weapons")) {
 		for (int x = 0; x < ini.Entry_Count("Weapons"); x++) {
 			new WeaponTypeClass(ini.Get_Entry("Weapons", x));

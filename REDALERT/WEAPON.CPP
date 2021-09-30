@@ -203,7 +203,7 @@ WeaponTypeClass * WeaponTypeClass::As_Pointer(WeaponType weapon)
  *=============================================================================================*/
 bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 {
-	if (ini.Is_Present(Name())) {
+	if (ini.Section_Present(Name())) {
 		IsSupressed = ini.Get_Bool(Name(), "Supress", IsSupressed);
 		Burst = ini.Get_Int(Name(), "Burst", Burst);
 		BurstDelay = ini.Get_Int(Name(), "BurstDelay", BurstDelay);
@@ -220,8 +220,38 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		IsCamera = ini.Get_Bool(Name(), "Camera", IsCamera);
 		IsElectric = ini.Get_Bool(Name(), "Charges", IsElectric);
 		IsTurboBoosted = ini.Get_Bool(Name(), "TurboBoost", IsTurboBoosted);
-		WarheadPtr = WarheadTypeClass::As_Pointer(ini.Get_WarheadType(Name(), "Warhead", WarheadPtr != NULL ? (WarheadType)(WarheadPtr->ID) : WARHEAD_NONE));
-		Bullet = BulletTypeClass::As_Pointer(ini.Get_BulletType(Name(), "Projectile", Bullet != NULL ? (BulletType)(Bullet->ID) : BULLET_NONE));
+		char buffer[32] = "";
+		if (ini.Get_String(Name(), "Warhead", buffer, buffer, sizeof(buffer))) {
+			WWDebugString("[Reading Weapon : ");
+			WWDebugString((char*)IniName);
+			WWDebugString(" and found warhead ");
+			WWDebugString(buffer);
+			WarheadTypeClass* twhptr = WarheadTC_From_Name(buffer);
+			if (twhptr != NULL) {
+				WarheadPtr = twhptr;
+				WWDebugString(" ]\n");
+			}
+			else{
+				WWDebugString(" but it is missing from Warheads! ]\n");
+			}
+		}
+		char pbuffer[32] = "";
+		if (ini.Get_String(Name(), "Projectile", pbuffer, pbuffer, sizeof(pbuffer))) {
+			WWDebugString("[Reading Weapon : ");
+			WWDebugString((char*)IniName);
+			WWDebugString(" and found projectile ");
+			WWDebugString(pbuffer);
+			BulletTypeClass* tprojptr = BulletTC_From_Name(pbuffer);
+			if (tprojptr != NULL) {
+				Bullet = tprojptr;
+				WWDebugString(" ]\n");
+			}
+			else {
+				WWDebugString(" but it is missing from BulletTypes! ]\n");
+			}
+		}
+		//WarheadPtr = WarheadTypeClass::As_Pointer(ini.Get_WarheadType(Name(), "Warhead", WarheadPtr != NULL ? (WarheadType)(WarheadPtr->ID) : WARHEAD_NONE));
+		//Bullet = BulletTypeClass::As_Pointer(ini.Get_BulletType(Name(), "Projectile", Bullet != NULL ? (BulletType)(Bullet->ID) : BULLET_NONE));
 
 
 		return(true);

@@ -1001,10 +1001,14 @@ char const * Version_Name(void);
 */
 BulletType Bullet_From_Name(char const* name);
 
+BulletTypeClass * BulletTC_From_Name(char const* name);
+
 /*
 **	WARHEAD.CPP
 */
 WarheadType Warhead_From_Name(char const* name);
+
+WarheadTypeClass* WarheadTC_From_Name(char const* name);
 
 /*
 **	WEAPON.CPP

@@ -50,7 +50,8 @@ class BulletClass :	public ObjectClass,
 		**	This specifies exactly what kind of bullet this is. All of the static attributes
 		**	for this bullet is located in the BulletTypeClass pointed to by this variable.
 		*/
-		CCPtr<BulletTypeClass> Class;
+		//CCPtr<BulletTypeClass> Class;
+		BulletTypeClass * Class;
 
 	private:
 		/*
@@ -74,9 +75,9 @@ class BulletClass :	public ObjectClass,
 		static void operator delete(void *ptr);
 		BulletClass(BulletType id, TARGET target, TechnoClass * Payback, int strength, WarheadType warhead, int speed);
 #ifdef FIXIT_MULTI_SAVE
-		BulletClass(NoInitClass const & x) : ObjectClass(x), Class(x), FlyClass(x), FuseClass(x), PrimaryFacing(x) {};
+		BulletClass(NoInitClass const & x) : ObjectClass(x), FlyClass(x), FuseClass(x), PrimaryFacing(x) {};
 #else
-		BulletClass(NoInitClass const & x) : ObjectClass(x), Class(x), FlyClass(x), FuseClass(x) {};
+		BulletClass(NoInitClass const & x) : ObjectClass(x), FlyClass(x), FuseClass(x) {};
 #endif
 		virtual ~BulletClass(void);
 		operator BulletType(void) const {return Class->Type;};

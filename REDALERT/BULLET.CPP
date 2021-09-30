@@ -75,7 +75,7 @@
  *=============================================================================================*/
 BulletClass::BulletClass(BulletType id, TARGET target, TechnoClass * payback, int strength, WarheadType warhead, int speed) :
 	ObjectClass(RTTI_BULLET, Bullets.ID(this)),
-	Class(BulletTypes.Ptr((int)id)),
+	Class(BulletTypeClass::As_Pointer(id)),
 	Payback(payback),
 	PrimaryFacing(DIR_N),
 	IsInaccurate(false),
@@ -690,6 +690,7 @@ void BulletClass::Detach(TARGET target, bool all)
  *=============================================================================================*/
 bool BulletClass::Unlimbo(COORDINATE coord, DirType dir)
 {
+
 	assert(Bullets.ID(this) == ID);
 	assert(IsActive);
 
@@ -698,9 +699,11 @@ bool BulletClass::Unlimbo(COORDINATE coord, DirType dir)
 	**	set direction and strength if the "punt" values were passed in. This allows a bullet
 	**	to be setup prior to being launched.
 	*/
-	if (!Class->IsHigh) {
+
+	if (!(Class->IsHigh)) {
 		Height = 0;
 	}
+
 	if (ObjectClass::Unlimbo(coord)) {
 		Map.Remove(this, In_Which_Layer());
 

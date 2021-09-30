@@ -77,10 +77,16 @@ WarheadTypeClass::WarheadTypeClass(char const * name) :
 	for (ArmorType armor = ARMOR_FIRST; armor < ARMOR_COUNT; armor++) {
 		Modifier[armor] = 1;
 	}
+	WWDebugString("[New Warhead: ");
+	WWDebugString((char*)IniName);
+	char buffer[20];
+	sprintf(buffer, " : %d", ID);
+	WWDebugString(buffer);
+	WWDebugString(" ]\n");
 }
 
 /***********************************************************************************************
- * Warhead_From_Name -- Conver ASCII name to warhead type ID number.                           *
+ * Warhead_From_Name -- Convert ASCII name to warhead type ID number.                           *
  *                                                                                             *
  *    This will find the warhead whos name matches that specified and then it will return the  *
  *    warhead ID number associated with it.                                                    *
@@ -106,6 +112,35 @@ WarheadType Warhead_From_Name(char const* name)
 	}
 
 	return(WARHEAD_NONE);
+}
+
+/***********************************************************************************************
+ * WarheadTypeClass_From_Name -- Convert ASCII name to warheadtype class pointer.               *
+ *                                                                                             *
+ *    This will find the warhead whos name matches that specified and then it will return the  *
+ *    pointer associated with it.                                                              *
+ *                                                                                             *
+ * INPUT:   name  -- Pointer to the ASCII name of the warhead type.                            *
+ *                                                                                             *
+ * OUTPUT:  Returns with the warhead type ID number that matches the name specified. If no     *
+ *          match could be found, then WARHEAD_NONE is returned.                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/27/2021 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+WarheadTypeClass* WarheadTC_From_Name(char const* name)
+{
+	if (!name) return(NULL);
+
+	for (int index = 0; index < Warheads.Count(); index++) {
+		if (stricmp(Warheads.Ptr(index)->Name(), name) == 0) {
+			return(Warheads.Ptr(index));
+		}
+	}
+
+	return(NULL);
 }
 
 
@@ -193,7 +228,13 @@ WarheadTypeClass * WarheadTypeClass::As_Pointer(WarheadType warhead)
  *=============================================================================================*/
 bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 {
-	if (ini.Is_Present(Name())) {
+	WWDebugString("[-WH- SCANNING INI FOR ");
+	WWDebugString((char*)Name());
+	WWDebugString(" ]\n");
+	if (ini.Section_Present(Name())) {
+		WWDebugString("[-WH-...Found Warhead Data FOR ");
+		WWDebugString((char*)Name());
+		WWDebugString(" ]\n");
 		SpreadFactor = ini.Get_Int(Name(), "Spread", SpreadFactor);
 		IsWallDestroyer = ini.Get_Bool(Name(), "Wall", IsWallDestroyer);
 		IsWoodDestroyer = ini.Get_Bool(Name(), "Wood", IsWoodDestroyer);

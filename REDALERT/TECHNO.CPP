@@ -3294,11 +3294,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			}
 			else{
 				//vanilla behavior but now we handle burst > 2 on a per-weapon basis.
-				//I believe there is one Arm timer per techno, not sure yet, need more time in the code.
-				//if this is the case then we delay firing for the entire techno based upon the last shot fired
-				//which implies that it's not possible to fire both primary and secondary weapons at the same time.
-				//need more time in the code.
-					Arm[(IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
+					Arm[(tclass.IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
 			}
 			//this is a relay that tells other logic we're alternating between 2 barrels, because Is_Two_Shooter == true...
 			IsSecondShot = (IsSecondShot == false);
@@ -3315,7 +3311,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			*   - Burst fire > 2 from either is not handled correctly.
 			*    Example:  on a 3 shot burst, after the 2 shot the reArm delay would be the ROF with mods.
 			*/
-			Arm[(IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
+			Arm[(tclass.IsIndependentFire) ? which : 0] = Rearm_Delay(BurstShotsRemaining[which] == 1, which);
 		}
 
 		/*
@@ -3435,7 +3431,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 		/*
 		** For electric zaps, immediately perform bullet logic.
 		*/
-		if (weapon->IsElectric) {
+		if (weapon->IsElectric && bullet != NULL) {
 			bullet->AI();
 		}
 

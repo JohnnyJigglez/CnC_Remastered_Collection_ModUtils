@@ -55,36 +55,6 @@
 #include	"function.h"
 #define   VIC   1
 
-/***********************************************************************************************
- * Anim_From_Name -- Given a name, this finds the corresponding anim type.                     *
- *                                                                                             *
- *    This routine will convert the supplied ASCII name into the animation type that it        *
- *    represents.                                                                              *
- *                                                                                             *
- * INPUT:   name  -- Pointer to the ASCII name to convert.                                     *
- *                                                                                             *
- * OUTPUT:  Returns with the animation type that matches the name specified. If no match could *
- *          be found, then ANIM_NONE is returned.                                              *
- *                                                                                             *
- * WARNINGS:   none                                                                            *
- *                                                                                             *
- * HISTORY:                                                                                    *
- *   07/06/1996 JLB : Created.                                                                 *
- *=============================================================================================*/
-AnimType Anim_From_Name(char const * name)
-{
-  #ifdef VIC
-	if (name == NULL) return(ANIM_NONE);
-
-	for (int anim = ANIM_FIRST; anim < ANIM_COUNT; anim++) {
-		if (stricmp(AnimTypeClass::As_Reference((AnimType)anim).IniName, name) == 0) {
-			return((AnimType)anim);
-		}
-	}
-#endif
-	return(ANIM_NONE);
-}
-
 
 /***********************************************************************************************
  * Shorten_Attached_Anims -- Reduces attached animation durations.                             *
@@ -551,7 +521,7 @@ void AnimClass::operator delete(void * ptr)
  *=============================================================================================*/
 AnimClass::AnimClass(AnimType animnum, COORDINATE coord, unsigned char timedelay, char loop) :
 	ObjectClass(RTTI_ANIM, Anims.ID(this)),
-	Class(AnimTypes.Ptr((int)animnum)),
+	Class(AnimTypeClass::As_Pointer(animnum)),
 	xObject(TARGET_NONE),
 	SortTarget(TARGET_NONE),
 	OwnerHouse(HOUSE_NONE),

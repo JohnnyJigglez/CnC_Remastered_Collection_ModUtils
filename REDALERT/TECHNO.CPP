@@ -3258,7 +3258,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 		firespeed *= Rule.TurboBoost;
 	}
 
- 	bullet = new BulletClass(weapon->Bullet->Type, target, this, firepower, WarheadType(weapon->WarheadPtr->ID), firespeed);
+ 	bullet = new BulletClass(weapon->Bullet->Type, target, this, firepower, weapon->WarheadPtr->Type, firespeed);
 
 	if (bullet != NULL) {
 

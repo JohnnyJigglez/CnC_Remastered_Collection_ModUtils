@@ -47,12 +47,13 @@ class AnimClass : public ObjectClass, public StageClass {
 		/*
 		**	This points to the type of animation object this is.
 		*/
-		CCPtr<AnimTypeClass> Class;
+		//CCPtr<AnimTypeClass> Class;
+	    AnimTypeClass* Class;
 
 	public:
 
 		AnimClass(AnimType animnum, COORDINATE coord, unsigned char timedelay=0, char loop=1);
-		AnimClass(NoInitClass const & x) : ObjectClass(x), Class(x), StageClass(x) {};
+		AnimClass(NoInitClass const & x) : ObjectClass(x), StageClass(x) {};
 		virtual ~AnimClass(void);
 
 		operator AnimType(void) const {return Class->Type;};

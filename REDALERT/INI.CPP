@@ -861,6 +861,39 @@ int INIClass::Get_Int(char const * section, char const * entry, int defvalue) co
 	return(defvalue);
 }
 
+/***********************************************************************************************
+ * INIClass::Get_Float -- Fetch a floating point entry from the specified section.             *
+ *                                                                                             *
+ *    This routine will fetch a float value from the entry and section specified. If no       *
+ *    entry could be found, then the default value will be returned instead.                   *
+ *                                                                                             *
+ * INPUT:   section  -- The section name to search under.                                      *
+ *                                                                                             *
+ *          entry    -- The entry name to search for.                                          *
+ *                                                                                             *
+ *          defvalue -- The default value to use if the specified entry could not be found.    *
+ *                                                                                             *
+ * OUTPUT:  Returns with the float value specified in the INI database or else returns the     *
+ *          default value.                                                                     *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/29/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+float INIClass::Get_Float(char const* section, char const* entry, float defvalue) const
+{
+	/*
+	**	Verify that the parameters are nominally correct.
+	*/
+	if (section == NULL || entry == NULL) return(defvalue);
+
+	INIEntry* entryptr = Find_Entry(section, entry);
+	if (entryptr && entryptr->Value != NULL) {
+				defvalue = atof(entryptr->Value);
+	}
+	return(defvalue);
+}
 
 /***********************************************************************************************
  * INIClass::Put_Hex -- Store an integer into the INI database, but use a hex format.          *

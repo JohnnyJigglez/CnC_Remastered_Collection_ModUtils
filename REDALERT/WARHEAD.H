@@ -43,7 +43,7 @@
 class WarheadTypeClass
 {
 	public:
-		WarheadTypeClass(char const * name);
+		WarheadTypeClass(int warheadtype, char const * name);
 		WarheadTypeClass(NoInitClass const &) {}
 
 		void * operator new(size_t);
@@ -57,11 +57,17 @@ class WarheadTypeClass
 		static WarheadTypeClass * As_Pointer(WarheadType weapon);
 
 		/*
-		**	This is the ID number of the weapon type. It is the weapon
-		**	type ID enum as well as the index number into the weapon
+		**	This is the ID number of the weapon type. It is index number into the weapon
 		**	heap.
 		*/
 		int ID;
+
+		/*
+		**	This is the AnimType we can use to override the ExplosionSet anims
+		*/
+		AnimType Anim;
+
+		WarheadType Type;
 
 		/*
 		**	This is the identifying name of this warhead type.

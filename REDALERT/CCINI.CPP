@@ -588,7 +588,6 @@ bool CCINIClass::Put_VocType(char const * section, char const * entry, VocType v
 AnimType CCINIClass::Get_AnimType(char const * section, char const * entry, AnimType defvalue) const
 {
 	char buffer[128];
-
 	Get_String(section, entry, Anim_Name(defvalue), buffer, sizeof(buffer));
 	return(Anim_From_Name(buffer));
 }

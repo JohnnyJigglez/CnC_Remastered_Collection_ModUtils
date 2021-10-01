@@ -63,7 +63,8 @@ TFixedIHeapClass<WarheadTypeClass> Warheads;
  * HISTORY:                                                                                    *
  *   07/19/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WarheadTypeClass::WarheadTypeClass(char const * name) :
+WarheadTypeClass::WarheadTypeClass(int warheadtype, char const* name) :
+	Type(WarheadType(warheadtype)),
 	ID(Warheads.ID(this)),
 	IniName(name),
 	SpreadFactor(1),
@@ -72,7 +73,8 @@ WarheadTypeClass::WarheadTypeClass(char const * name) :
 	IsTiberiumDestroyer(false),
 	IsOrganic(false),
 	ExplosionSet(0),
-	InfantryDeath(0)
+	InfantryDeath(0),
+	Anim(ANIM_NONE)
 {
 	for (ArmorType armor = ARMOR_FIRST; armor < ARMOR_COUNT; armor++) {
 		Modifier[armor] = 1;
@@ -80,7 +82,7 @@ WarheadTypeClass::WarheadTypeClass(char const * name) :
 	WWDebugString("[New Warhead: ");
 	WWDebugString((char*)IniName);
 	char buffer[20];
-	sprintf(buffer, " : %d", ID);
+	sprintf(buffer, " : %d", Type);
 	WWDebugString(buffer);
 	WWDebugString(" ]\n");
 }
@@ -104,14 +106,8 @@ WarheadTypeClass::WarheadTypeClass(char const * name) :
 WarheadType Warhead_From_Name(char const* name)
 {
 	if (!name) return(WARHEAD_NONE);
+	return WarheadTC_From_Name(name)->Type;
 
-	for (int index = 0; index < Warheads.Count(); index++) {
-		if (stricmp(Warheads.Ptr(index)->Name(), name) == 0) {
-			return(WarheadType(Warheads.Ptr(index)->ID));
-		}
-	}
-
-	return(WARHEAD_NONE);
 }
 
 /***********************************************************************************************
@@ -204,7 +200,11 @@ void WarheadTypeClass::operator delete(void * pointer)
 WarheadTypeClass * WarheadTypeClass::As_Pointer(WarheadType warhead)
 {
 	if (warhead != WARHEAD_NONE) {
-		return(Warheads.Ptr(warhead));
+		for (int index = 0; index < Warheads.Count(); index++) {
+			if (Warheads.Ptr(index)->Type == warhead) {
+				return(Warheads.Ptr(index));
+			}
+		}
 	}
 	return(NULL);
 }
@@ -241,7 +241,7 @@ bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 		IsTiberiumDestroyer = ini.Get_Bool(Name(), "Ore", IsTiberiumDestroyer);
 		ExplosionSet = ini.Get_Int(Name(), "Explosion", ExplosionSet);
 		InfantryDeath = ini.Get_Int(Name(), "InfDeath", InfantryDeath);
-
+		Anim = ini.Get_AnimType(Name(), "Anim", Anim);
 		char buffer[128];
 		if (ini.Get_String(Name(), "Verses", "100%%,100%%,100%%,100%%,100%%", buffer, sizeof(buffer))) {
 			char * aval = strtok(buffer, ",");

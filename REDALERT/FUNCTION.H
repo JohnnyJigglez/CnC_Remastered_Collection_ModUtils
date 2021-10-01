@@ -466,6 +466,7 @@ bool Building_Check(void);
 */
 void Shorten_Attached_Anims(ObjectClass * obj);
 AnimType Anim_From_Name(char const * name);
+AnimTypeClass * AnimType_From_Name(char const* name);
 
 /*
 **	AUDIO.CPP

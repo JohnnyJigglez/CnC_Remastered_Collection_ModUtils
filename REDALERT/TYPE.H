@@ -1516,7 +1516,7 @@ class BulletTypeClass : public ObjectTypeClass
 
 		//---------------------------------------------------------------------
 		BulletTypeClass(NoInitClass const & x) : ObjectTypeClass(x) {}
-		BulletTypeClass(char const * name);
+		BulletTypeClass(int bullettype, char const * name);
 
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
@@ -1756,6 +1756,7 @@ class AnimTypeClass : public ObjectTypeClass
 		**	fixed point number of the damage that is applied to the attached object
 		**	every game tick. The damage is expressed as damage points per game frame.
 		**	Because it is a fixed point fraction, the damage can be very slight.
+		**  
 		*/
 		fixed Damage;
 
@@ -1859,18 +1860,20 @@ class AnimTypeClass : public ObjectTypeClass
 							int virtualscale=0x100,
 							char const * virtualname=NULL,
 							AnimType virtualanim=ANIM_NONE);
-
+		AnimTypeClass(int animtype, char const* name);
 		static void Init_Heap(void);
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
 
 		static AnimTypeClass & As_Reference(AnimType type);
+		static AnimTypeClass * As_Pointer(AnimType type);
 		static void Init(TheaterType theater);
 		static void One_Time(void);
 
 		virtual bool Create_And_Place(CELL , HousesType =HOUSE_NONE) const {return false;};
 		virtual ObjectClass * Create_One_Of(HouseClass *) const {return 0;};
+		virtual bool Read_INI(CCINIClass& ini);
 };
 
 

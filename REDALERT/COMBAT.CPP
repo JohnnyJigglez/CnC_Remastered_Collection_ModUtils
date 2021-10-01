@@ -289,6 +289,7 @@ void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, Warh
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   05/19/1996 JLB : Created.                                                                 *
+ *   09/29/2021 JJ  : Add capability to override explosionSet with Anim                        *
  *=============================================================================================*/
 AnimType Combat_Anim(int damage, WarheadType warhead, LandType land)
 {
@@ -328,6 +329,8 @@ AnimType Combat_Anim(int damage, WarheadType warhead, LandType land)
 
 	WarheadTypeClass const * wptr = WarheadTypeClass::As_Pointer(warhead);
 //	WarheadTypeClass const * wptr = &Warheads[warhead];
+	if (wptr->Anim != ANIM_NONE)
+		return(wptr->Anim);
 	switch (wptr->ExplosionSet) {
 		case 6:
 			return(ANIM_ATOM_BLAST);

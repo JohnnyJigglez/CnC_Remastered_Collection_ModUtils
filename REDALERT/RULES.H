@@ -740,6 +740,7 @@ class RulesClass {
 		*/
 		int AircraftMax;
 		int AnimMax;
+		int AnimTypeMax;
 		int BuildingMax;
 		int BulletMax;
 		int FactoryMax;

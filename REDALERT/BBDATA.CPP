@@ -60,7 +60,7 @@
  *   10/17/1994 JLB : Created.                                                                 *
  *   07/17/1996 JLB : Uses correct default values.                                             *
  *=============================================================================================*/
-BulletTypeClass::BulletTypeClass(char const * name) :
+BulletTypeClass::BulletTypeClass(int bullettype, char const* name) :
 		ObjectTypeClass(	RTTI_BULLETTYPE,
 								BulletTypes.ID(this),
 								true,
@@ -91,7 +91,7 @@ BulletTypeClass::BulletTypeClass(char const * name) :
 	IsSubSurface(false),
 	IsParachuted(false),
 	IsGigundo(false),
-	Type(BulletType(ID)),
+	Type(BulletType(bullettype)),
 	ROT(0),
 	Arming(0),
 	Tumble(0)
@@ -99,7 +99,7 @@ BulletTypeClass::BulletTypeClass(char const * name) :
 	WWDebugString("[New Projectile: ");
 	WWDebugString((char*)IniName);
 	char buffer[20];
-	sprintf(buffer, " : %d", ID);
+	sprintf(buffer, " : %d", Type);
 	WWDebugString(buffer);
 	WWDebugString(" ]\n");
 
@@ -170,7 +170,6 @@ void BulletTypeClass::Init_Heap(void)
 	**	These bullet type class objects must be allocated in the exact order that they
 	**	are specified in the BulletType enumeration. This is necessary because the heap
 	**	allocation block index serves double duty as the type number index.
-	*/
 	new BulletTypeClass("Invisible");	//	BULLET_INVISIBLE
 	new BulletTypeClass("Cannon");		//	BULLET_CANNON
 	new BulletTypeClass("Ack");			//	BULLET_ACK
@@ -189,6 +188,7 @@ void BulletTypeClass::Init_Heap(void)
 	new BulletTypeClass("GPSSatellite");//	BULLET_GPS_SATELLITE
 	new BulletTypeClass("NukeUp");		//	BULLET_NUKE_UP
 	new BulletTypeClass("NukeDown");		//	BULLET_NUKE_DOWN
+	*/
 }
 
 
@@ -220,7 +220,8 @@ void BulletTypeClass::One_Time(void)
 		if (!(btc->IsInvisible)) {
 			char	fullname[_MAX_FNAME + _MAX_EXT];
 			_makepath(fullname, NULL, NULL, btc->Graphic_Name(), ".SHP");
-			WWDebugString("One Time Bullet Graphics load: ");
+			WWDebugString(btc->IniName);
+			WWDebugString(" one time Graphics load: ");
 			WWDebugString(fullname);
 			WWDebugString("\n");
 			#ifdef NDEBUG
@@ -258,12 +259,8 @@ void BulletTypeClass::One_Time(void)
  *=============================================================================================*/
 BulletTypeClass & BulletTypeClass::As_Reference(BulletType type)
 {
-	for (int index = 0; index < BulletTypes.Count(); index++) {
-		if (type == BulletTypes.Ptr(index)->Type) {
-			return *BulletTypes.Ptr(index);
-		}
-	}
-	return *BulletTypes.Ptr(0);
+	return *BulletTypeClass::As_Pointer(type);
+
 }
 
 /***********************************************************************************************
@@ -359,14 +356,7 @@ bool BulletTypeClass::Read_INI(CCINIClass & ini)
 BulletType Bullet_From_Name(char const* name)
 {
 	if (!name) return(BULLET_NONE);
-
-	for (int index = 0; index < BulletTypes.Count(); index++) {
-		if (stricmp(BulletTypes.Ptr(index)->Name(), name) == 0) {
-			return(BulletType(BulletTypes.Ptr(index)->ID));
-		}
-	}
-
-	return(BULLET_NONE);
+	return BulletTC_From_Name(name)->Type;
 }
 
 /***********************************************************************************************
@@ -394,6 +384,5 @@ BulletTypeClass * BulletTC_From_Name(char const* name)
 			return(BulletTypes.Ptr(index));
 		}
 	}
-
 	return(NULL);
 }

@@ -253,7 +253,7 @@ bool Init_Game(int , char * [])
 	AircraftTypes.Set_Heap(AIRCRAFT_COUNT);
 	InfantryTypes.Set_Heap(INFANTRY_COUNT);
 	//BulletTypes.Set_Heap(BULLET_COUNT);
-	AnimTypes.Set_Heap(ANIM_COUNT);
+	//AnimTypes.Set_Heap(ANIM_COUNT);
 	UnitTypes.Set_Heap(UNIT_COUNT);
 	VesselTypes.Set_Heap(VESSEL_COUNT);
 	TemplateTypes.Set_Heap(TEMPLATE_COUNT);
@@ -266,7 +266,7 @@ bool Init_Game(int , char * [])
 	AircraftTypeClass::Init_Heap();
 	InfantryTypeClass::Init_Heap();
 	//BulletTypeClass::Init_Heap();
-	AnimTypeClass::Init_Heap();
+	//AnimTypeClass::Init_Heap();
 	UnitTypeClass::Init_Heap();
 	VesselTypeClass::Init_Heap();
 	TemplateTypeClass::Init_Heap();
@@ -296,7 +296,7 @@ bool Init_Game(int , char * [])
 	CCPtr<AircraftTypeClass>::Set_Heap(&AircraftTypes);
 	CCPtr<InfantryTypeClass>::Set_Heap(&InfantryTypes);
 	//CCPtr<BulletTypeClass>::Set_Heap(&BulletTypes);
-	CCPtr<AnimTypeClass>::Set_Heap(&AnimTypes);
+	//CCPtr<AnimTypeClass>::Set_Heap(&AnimTypes);
 	CCPtr<UnitTypeClass>::Set_Heap(&UnitTypes);
 	CCPtr<VesselTypeClass>::Set_Heap(&VesselTypes);
 	CCPtr<TemplateTypeClass>::Set_Heap(&TemplateTypes);

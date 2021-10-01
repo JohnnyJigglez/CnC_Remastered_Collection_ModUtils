@@ -2320,7 +2320,7 @@ AnimTypeClass::AnimTypeClass(
 		char const * virtualname,
 		AnimType virtualanim) :
 	ObjectTypeClass(RTTI_ANIMTYPE,
-			int(anim),
+			AnimTypes.ID(this),
 			true,
 			true,
 			false,
@@ -2358,7 +2358,61 @@ AnimTypeClass::AnimTypeClass(
 	VirtualAnim(virtualanim)
 {
 }
-
+/***********************************************************************************************
+ * AnimTypeClass::AnimTypeClass -- Constructor for animation types.                            *
+ *                                                                                             *
+ *    This is the constructor for static objects that elaborate the various animation types    *
+ *    allowed in the game. Each animation in the game is of one of these types.                *
+ *                                                                                             *
+ * INPUT:   see below...                                                                       *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/27/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+AnimTypeClass::AnimTypeClass(int animtype,	char const * name):
+	ObjectTypeClass(RTTI_ANIMTYPE,
+			AnimTypes.ID(this),
+			true,
+			true,
+			false,
+			false,
+			true,
+			true,
+			false,
+			TXT_NONE,
+			name
+			),
+	IsNormalized(false),
+	IsGroundLayer(false),
+	IsTranslucent(false),
+	IsWhiteTrans(false),
+	IsFlameThrower(false),
+	IsScorcher(false),
+	IsCraterForming(false),
+	IsSticky(false),
+	IsTheater(false),
+	Type(AnimType(animtype)),
+	Size(0),
+	Biggest(0),
+	Damage(0),
+	Delay(1),
+	Start(0),
+	LoopStart(0),
+	LoopEnd(0),
+	Stages(0),
+	Loops(0),
+	Sound(VOC_NONE),
+	ChainTo(ANIM_NONE),
+	VirtualStages(0),
+	VirtualScale(1),
+	VirtualName(NULL),
+	VirtualAnim(ANIM_NONE)
+{
+}
 
 /***********************************************************************************************
  * AnimTypeClass::operator new -- Allocate an animation type object from private pool.         *
@@ -2537,12 +2591,15 @@ void AnimTypeClass::One_Time(void)
 {
 	for (int index = 0; index < AnimTypes.Count(); index++) {
 		char fullname[_MAX_FNAME+_MAX_EXT];
-
-		AnimTypeClass const & anim = As_Reference((AnimType)index);
+		
+		AnimTypeClass const& anim = *AnimTypes.Ptr(index);
 
 		if (!anim.IsTheater) {
-
-			_makepath(fullname, NULL, NULL, As_Reference((AnimType)index).IniName, ".SHP");
+			_makepath(fullname, NULL, NULL, anim.Graphic_Name(), ".SHP");
+			WWDebugString((char*)(anim.IniName));
+			WWDebugString(" one time Graphics load: ");
+			WWDebugString(fullname);
+			WWDebugString("\n");
 
 			#ifndef NDEBUG
 				RawFileClass file(fullname);
@@ -2552,7 +2609,7 @@ void AnimTypeClass::One_Time(void)
 					((void const *&)As_Reference((AnimType)index).ImageData) = MFCD::Retrieve(fullname);
 				}
 			#else
-				((void const *&)As_Reference((AnimType)index).ImageData) = MFCD::Retrieve(fullname);
+			((void const*&)anim.ImageData) = MFCD::Retrieve(fullname);
 			#endif
 		}
 	}
@@ -2572,18 +2629,21 @@ void AnimTypeClass::One_Time(void)
  * WARNINGS:   Call this routine when the theater changes.                                     *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   07/06/1996 JLB : Created.
- *   07/18/2021 JJ  : Updated to use a non-static HEAP size*
+ *   07/06/1996 JLB : Created.																   *
+ *   07/18/2021 JJ  : Updated to use a non-static HEAP size									   *
  *=============================================================================================*/
 void AnimTypeClass::Init(TheaterType theater)
 {
 	if (theater != LastTheater) {
 		for (int index = 0; index < AnimTypes.Count(); index++) {
-			AnimTypeClass const & anim = As_Reference((AnimType)index);
 
+			AnimTypeClass const& anim = *AnimTypes.Ptr(index);
 			if (anim.IsTheater) {
 				char fullname[_MAX_FNAME+_MAX_EXT];	// Fully constructed iconset name.
-				_makepath(fullname, NULL, NULL, anim.IniName, Theaters[theater].Suffix);
+				if (anim.VirtualName != NULL)
+				    _makepath(fullname, NULL, NULL, anim.VirtualName, Theaters[theater].Suffix);
+				else
+					_makepath(fullname, NULL, NULL, anim.Name(), Theaters[theater].Suffix);
 				((void const *&)anim.ImageData) = MFCD::Retrieve(fullname);
 			}
 		}
@@ -2612,8 +2672,10 @@ void AnimTypeClass::Init(TheaterType theater)
 char const * Anim_Name(AnimType anim)
 {
 	if (anim == ANIM_NONE) return("");
-
-	return(AnimTypeClass::As_Reference(anim).IniName);
+	AnimTypeClass* atc = AnimTypeClass::As_Pointer(anim);
+	if (atc != NULL)
+		return(atc->Name());
+	return("");
 }
 
 
@@ -2635,6 +2697,146 @@ char const * Anim_Name(AnimType anim)
  *=============================================================================================*/
 AnimTypeClass & AnimTypeClass::As_Reference(AnimType type)
 {
-	return(* AnimTypes.Ptr(type));
+	return(*AnimTypeClass::As_Pointer(type));
+}
+
+/***********************************************************************************************
+ * AnimTypeClass::As_Pointer -- Fetch a pointer to the animation type specified.               *
+ *                                                                                             *
+ *    This routine will convert the animation type specified into a pointer to the           *
+ *    animation type class object.                                                             *
+ *                                                                                             *
+ * INPUT:   type  -- The animation type to convert into a pointer.                           *
+ *                                                                                             *
+ * OUTPUT:  Returns with a pointer to the animation type class object.                       *
+ *                                                                                             *
+ * WARNINGS:   Be sure that the animation type specified is legal. If it isn't then the        *
+ *             results of this routine are undefined.                                          *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/23/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+AnimTypeClass * AnimTypeClass::As_Pointer(AnimType type)
+{
+	if (type == ANIM_NONE) { return(NULL); }
+
+	for (int anim = 0; anim < AnimTypes.Count(); anim++) {
+		if (AnimTypes.Ptr(anim)->Type == type) {
+			return(AnimTypes.Ptr(anim));
+		}
+	}
+	return(NULL);
+}
+
+/***********************************************************************************************
+ * AnimTypeClass::Anim_From_Name -- Given a name, this finds the corresponding anim type.       *
+ *                                                                                             *
+ *    This routine will convert the supplied ASCII name into the animation type that it        *
+ *    represents.                                                                              *
+ *                                                                                             *
+ * INPUT:   name  -- Pointer to the ASCII name to convert.                                     *
+ *                                                                                             *
+ * OUTPUT:  Returns with the animation type that matches the name specified. If no match could *
+ *          be found, then ANIM_NONE is returned.                                              *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   07/06/1996 JLB : Created.                                                                 *
+ *   09/21/2021 JJ  : Modified to use heap and moved to the ADATA.CPP                          *
+ *=============================================================================================*/
+AnimType Anim_From_Name(char const* name)
+{
+	AnimTypeClass* atc = AnimType_From_Name(name);
+	if (atc != NULL)
+		return(atc->Type);
+	return(ANIM_NONE);
+}
+
+/***********************************************************************************************
+ * AnimTypeClass::AnimType_From_Name -- Given a name, this finds the corresponding anim type   *
+ *                                      class.												   *
+ *                                                                                             *
+ *    This routine will convert the supplied ASCII name into the animation type that it        *
+ *    represents.                                                                              *
+ *                                                                                             *
+ * INPUT:   name  -- Pointer to the ASCII name to convert.                                     *
+ *                                                                                             *
+ * OUTPUT:  Returns with the animation type class that matches the name specified. If no match *
+ *          could be found, then NULL is returned.                                             *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/21/2021 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+AnimTypeClass * AnimType_From_Name(char const* name)
+{
+	if (name == NULL) return(NULL);
+
+	for (int anim = 0; anim < AnimTypes.Count(); anim++) {
+		if (!stricmp(AnimTypes.Ptr(anim)->Name(), name)) {
+			return(AnimTypes.Ptr(anim));
+		}
+	}
+	return(NULL);
+}
+
+/***********************************************************************************************
+ * AnimTypeClass::Read_INI -- Fetch the anim type data from the INI database.              *
+ *                                                                                             *
+ *    Use this routine to fetch override information about this anim type class object       *
+ *    from the INI database specified.                                                         *
+ *                                                                                             *
+ * INPUT:   ini   -- Reference to the INI database to examine.                                 *
+ *                                                                                             *
+ * OUTPUT:  bool; Was the section for this anim type found and the data extracted?             *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/29/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+bool AnimTypeClass::Read_INI(CCINIClass& ini)
+{
+	WWDebugString("[-WH- SCANNING INI FOR ");
+	WWDebugString((char*)Name());
+	WWDebugString(" ]\n");
+	if (ini.Is_Present(Name())) {
+		WWDebugString("[-WH-...Found AnimType Data FOR ");
+		WWDebugString((char*)Name());
+		WWDebugString(" ]\n");
+		IsNormalized = ini.Get_Bool(Name(), "Normalized", IsNormalized);
+		IsGroundLayer = ini.Get_Bool(Name(), "GroundLayer", IsGroundLayer);
+		IsTranslucent = ini.Get_Bool(Name(), "Translucent", IsTranslucent);
+		IsWhiteTrans = ini.Get_Bool(Name(), "WhiteTrans", IsWhiteTrans);
+		IsFlameThrower = ini.Get_Bool(Name(), "FlameThrower", IsFlameThrower);
+		IsScorcher = ini.Get_Bool(Name(), "Scorcher", IsScorcher);
+		IsCraterForming = ini.Get_Bool(Name(), "CraterForming", IsCraterForming);
+		IsSticky = ini.Get_Bool(Name(), "Sticky", IsSticky);
+		IsTheater = ini.Get_Bool(Name(), "Theater", IsTheater);
+		IsTheater = ini.Get_Bool(Name(), "Theater", IsTheater);
+		Size = ini.Get_Int(Name(), "Size", Size);
+		Biggest = ini.Get_Int(Name(), "Biggest", Biggest);
+		Damage = ini.Get_Fixed(Name(), "Damage", Damage);
+		Delay = ini.Get_Int(Name(), "Delay", Delay);
+		Start = ini.Get_Int(Name(), "Start", Start);
+		LoopStart = ini.Get_Int(Name(), "LoopStart", LoopStart);
+		LoopEnd = ini.Get_Int(Name(), "LoopEnd", LoopEnd);
+		Stages = ini.Get_Int(Name(), "Stages", Stages);
+		Loops = ini.Get_Int(Name(), "Loops", Loops);
+		Sound = ini.Get_VocType(Name(), "Sound", Sound);
+		ChainTo = ini.Get_AnimType(Name(), "Chain", ChainTo);
+		VirtualStages = ini.Get_Int(Name(), "VirtualStages", VirtualStages);
+		VirtualScale = ini.Get_Int(Name(), "Scale", VirtualScale);
+		char buffer[32];
+		if (ini.Get_String(Name(), "Name", "", buffer, sizeof(buffer))) {
+			VirtualName = buffer;
+		}
+		VirtualAnim = ini.Get_AnimType(Name(), "Anim", VirtualAnim);
+		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
+		return(true);
+	}
+	return(false);
 }
 

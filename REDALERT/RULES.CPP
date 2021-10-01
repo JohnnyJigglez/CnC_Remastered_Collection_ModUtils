@@ -235,6 +235,7 @@ RulesClass::RulesClass(void) :
 	GemValue(110),
 	AircraftMax(100),
 	AnimMax(100),
+	AnimTypeMax(200),
 	BuildingMax(500),
 	BulletMax(40),
 	FactoryMax(20),
@@ -611,6 +612,7 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		MaxPlayers = ini.Get_Int(MAXIMUMS, "Players", MaxPlayers);
 		AircraftMax = ini.Get_Int(MAXIMUMS, "Aircraft", AircraftMax);
 		AnimMax = ini.Get_Int(MAXIMUMS, "Anim", AnimMax);
+		AnimTypeMax = ini.Get_Int(MAXIMUMS, "AnimType", AnimTypeMax);
 		BuildingMax = ini.Get_Int(MAXIMUMS, "Building", BuildingMax);
 		BulletMax = ini.Get_Int(MAXIMUMS, "Bullet", BulletMax);
 		FactoryMax = ini.Get_Int(MAXIMUMS, "Factory", FactoryMax);
@@ -639,22 +641,34 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 	**	Any heaps that use the maximums that were just loaded, must
 	**	be initialized as necessary.
 	*/
+	if (AnimTypes.Count() == 0) {
+		AnimTypes.Set_Heap(AnimTypeMax);
+		AnimTypeClass::Init_Heap();
+	}
+	static char const* const AT = "Animations";
+	if (ini.Is_Present(AT)) {
+		for (int x = 0; x < ini.Entry_Count(AT); x++) {
+			new AnimTypeClass(atoi(ini.Get_Entry(AT, x)), ini.Get_Value(AT, x));
+		}
+	}
+
 	if (Warheads.Count() == 0) {
 		Warheads.Set_Heap(WarheadMax);
 	}
 	static char const* const WH = "Warheads";
 	if (ini.Is_Present(WH)) {
 		for (int x = 0; x < ini.Entry_Count(WH); x++) {
-			new WarheadTypeClass(ini.Get_Value(WH,x));
+			new WarheadTypeClass(atoi(ini.Get_Entry(WH, x)),ini.Get_Value(WH,x));
 		}
 	}
+
 	if (BulletTypes.Count() == 0) {
 		BulletTypes.Set_Heap(ProjectileMax);
 	}
 	static char const* const BT = "Projectiles";
 	if (ini.Is_Present(BT)) {
 		for (int x = 0; x < ini.Entry_Count(BT); x++) {
-			new BulletTypeClass(ini.Get_Value(BT, x));
+			new BulletTypeClass(atoi(ini.Get_Entry(BT,x)),ini.Get_Value(BT, x));
 		}
 	}
 	if (Weapons.Count() == 0) {
@@ -1017,6 +1031,10 @@ bool RulesClass::Objects(CCINIClass & ini)
 	/*
 	**	Fetch the game object values from the rules file.
 	*/
+	for (int index = 0; index < AnimTypes.Count(); index++) {
+		AnimTypes.Ptr(index)->Read_INI(ini);
+	}
+
 	for (int index = 0; index < Warheads.Count(); index++) {
 		Warheads.Ptr(index)->Read_INI(ini);
 	}

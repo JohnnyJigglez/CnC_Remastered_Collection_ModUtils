@@ -672,6 +672,16 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		}
 	}
 	if (Weapons.Count() == 0) {
+		Weapons.Set_Heap(WeaponMax);
+	}
+	static char const* const WT = "Weapons";
+	if (ini.Is_Present(WT)) {
+		for (int x = 0; x < ini.Entry_Count(WT); x++) {
+			new WeaponTypeClass(ini.Get_Value(WT, x));
+		}
+	}
+	/*
+	if (Weapons.Count() == 0) {
 	Weapons.Set_Heap(WeaponMax);
 	new WeaponTypeClass("Colt45");
 	new WeaponTypeClass("ZSU-23");
@@ -729,7 +739,7 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		for (int x = 0; x < ini.Entry_Count("Weapons"); x++) {
 			new WeaponTypeClass(ini.Get_Entry("Weapons", x));
 		}
-	}
+	}*/
 
 	return(true);
 }

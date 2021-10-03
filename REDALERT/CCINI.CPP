@@ -663,15 +663,16 @@ bool CCINIClass::Put_UnitType(char const * section, char const * entry, UnitType
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/03/1996 JLB : Created.                                                                 *
+ *   10/02/2021 JJ  : Updated to remove the WeaponType enum of the olden-code                  *
  *=============================================================================================*/
-WeaponType CCINIClass::Get_WeaponType(char const * section, char const * entry, WeaponType defvalue) const
+WeaponTypeClass* CCINIClass::Get_WeaponType(char const* section, char const* entry) const
 {
-	char buffer[128];
+	char buffer[32];
 
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		return(Weapon_From_Name(buffer));
+		return(WeaponTypeClass::From_Name(buffer));
 	}
-	return(defvalue);
+	return(NULL);
 }
 
 
@@ -684,7 +685,7 @@ WeaponType CCINIClass::Get_WeaponType(char const * section, char const * entry, 
  *                                                                                             *
  *          entry    -- Identifier to store the weapon identifier with.                        *
  *                                                                                             *
- *          value    -- The weapon identifier to store.                                        *
+ *          index    -- The weapon identifier to store.                                        *
  *                                                                                             *
  * OUTPUT:  bool; Was the weapon identifier stored?                                            *
  *                                                                                             *
@@ -693,12 +694,12 @@ WeaponType CCINIClass::Get_WeaponType(char const * section, char const * entry, 
  * HISTORY:                                                                                    *
  *   07/03/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-bool CCINIClass::Put_WeaponType(char const * section, char const * entry, WeaponType value)
+bool CCINIClass::Put_WeaponType(char const * section, char const * entry, int index)
 {
-	if (value == WEAPON_NONE) {
+	if (index < 0 || index > Weapons.Count()-1) {
 		return(Put_String(section, entry, "<none>"));
 	}
-	return(Put_String(section, entry, WeaponTypeClass::As_Pointer(value)->Name()));
+	return(Put_String(section, entry, Weapons.Ptr(index)->Name()));
 }
 
 

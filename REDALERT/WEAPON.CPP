@@ -168,18 +168,9 @@ void WeaponTypeClass::operator delete(void * pointer)
  * HISTORY:                                                                                    *
  *   07/17/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WeaponTypeClass * WeaponTypeClass::As_Pointer(WeaponType weapon)
+WeaponTypeClass * WeaponTypeClass::As_Pointer(int index)
 {
-	if (weapon != WEAPON_NONE) {
-		return(Weapons.Ptr(weapon));
-//		for (int index = 0; index < Weapons.Count(); index++) {
-//			WeaponTypeClass * ptr = Weapons.Ptr(index);
-//			if (ptr->ID == weapon) {
-//				return(ptr);
-//			}
-//		}
-	}
-	return(NULL);
+	return(Weapons.Ptr(index));
 }
 
 
@@ -222,38 +213,18 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		IsTurboBoosted = ini.Get_Bool(Name(), "TurboBoost", IsTurboBoosted);
 		char buffer[32] = "";
 		if (ini.Get_String(Name(), "Warhead", buffer, buffer, sizeof(buffer))) {
-			WWDebugString("[Reading Weapon : ");
-			WWDebugString((char*)IniName);
-			WWDebugString(" and found warhead ");
-			WWDebugString(buffer);
 			WarheadTypeClass* twhptr = WarheadTC_From_Name(buffer);
 			if (twhptr != NULL) {
 				WarheadPtr = twhptr;
-				WWDebugString(" ]\n");
-			}
-			else{
-				WWDebugString(" but it is missing from Warheads! ]\n");
 			}
 		}
 		char pbuffer[32] = "";
 		if (ini.Get_String(Name(), "Projectile", pbuffer, pbuffer, sizeof(pbuffer))) {
-			WWDebugString("[Reading Weapon : ");
-			WWDebugString((char*)IniName);
-			WWDebugString(" and found projectile ");
-			WWDebugString(pbuffer);
 			BulletTypeClass* tprojptr = BulletTC_From_Name(pbuffer);
 			if (tprojptr != NULL) {
 				Bullet = tprojptr;
-				WWDebugString(" ]\n");
-			}
-			else {
-				WWDebugString(" but it is missing from BulletTypes! ]\n");
 			}
 		}
-		//WarheadPtr = WarheadTypeClass::As_Pointer(ini.Get_WarheadType(Name(), "Warhead", WarheadPtr != NULL ? (WarheadType)(WarheadPtr->ID) : WARHEAD_NONE));
-		//Bullet = BulletTypeClass::As_Pointer(ini.Get_BulletType(Name(), "Projectile", Bullet != NULL ? (BulletType)(Bullet->ID) : BULLET_NONE));
-
-
 		return(true);
 	}
 	return(false);
@@ -276,17 +247,46 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
  * HISTORY:                                                                                    *
  *   07/17/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WeaponType Weapon_From_Name(char const * name)
+WeaponTypeClass * WeaponTypeClass::From_Name(char const * name)
 {
-	if (!name) return(WEAPON_NONE);
+	if (!name) return(NULL);
 
 	for (int index = 0; index < Weapons.Count(); index++) {
 		if (stricmp(Weapons.Ptr(index)->Name(), name) == 0) {
-			return(WeaponType(Weapons.Ptr(index)->ID));
+			return(Weapons.Ptr(index));
 		}
 	}
+	return(NULL);
 
-	return(WEAPON_NONE);
+}
+
+/***********************************************************************************************
+ * ID_From_Name -- Conver ASCII name to weapon ID number/index in the Weapons heap.            *
+ *                                                                                             *
+ *    This will find the weapon ID whos name matches that specified and then it will return the*
+ *    weapon ID number associated with it.                                                     *
+ *                                                                                             *
+ * INPUT:   name  -- Pointer to the ASCII name of the weapon.                                  *
+ *                                                                                             *
+ * OUTPUT:  Returns with the weapon type ID number that matches the name specified. If no      *
+ *          match could be found, then -1 is returned.                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   10/02/2021 JJ : Created.                                                                  *
+ *=============================================================================================*/
+int WeaponTypeClass::ID_From_Name(char const* name)
+{
+	if (!name) return(-1);
+
+	for (int index = 0; index < Weapons.Count(); index++) {
+		if (stricmp(Weapons.Ptr(index)->Name(), name) == 0) {
+			return(index);
+		}
+	}
+	return(-1);
+
 }
 
 

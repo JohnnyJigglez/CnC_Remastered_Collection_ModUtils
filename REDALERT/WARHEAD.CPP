@@ -79,12 +79,6 @@ WarheadTypeClass::WarheadTypeClass(int warheadtype, char const* name) :
 	for (ArmorType armor = ARMOR_FIRST; armor < ARMOR_COUNT; armor++) {
 		Modifier[armor] = 1;
 	}
-	WWDebugString("[New Warhead: ");
-	WWDebugString((char*)IniName);
-	char buffer[20];
-	sprintf(buffer, " : %d", Type);
-	WWDebugString(buffer);
-	WWDebugString(" ]\n");
 }
 
 /***********************************************************************************************
@@ -228,13 +222,7 @@ WarheadTypeClass * WarheadTypeClass::As_Pointer(WarheadType warhead)
  *=============================================================================================*/
 bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 {
-	WWDebugString("[-WH- SCANNING INI FOR ");
-	WWDebugString((char*)Name());
-	WWDebugString(" ]\n");
 	if (ini.Section_Present(Name())) {
-		WWDebugString("[-WH-...Found Warhead Data FOR ");
-		WWDebugString((char*)Name());
-		WWDebugString(" ]\n");
 		SpreadFactor = ini.Get_Int(Name(), "Spread", SpreadFactor);
 		IsWallDestroyer = ini.Get_Bool(Name(), "Wall", IsWallDestroyer);
 		IsWoodDestroyer = ini.Get_Bool(Name(), "Wood", IsWoodDestroyer);

@@ -1014,7 +1014,7 @@ WarheadTypeClass* WarheadTC_From_Name(char const* name);
 /*
 **	WEAPON.CPP
 */
-WeaponType Weapon_From_Name(char const * name);
+//WeaponTypeClass* WeaponTypeClass::Weapon_From_Name(char const * name);
 ArmorType Armor_From_Name(char const * name);
 
 /*

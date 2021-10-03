@@ -2239,7 +2239,9 @@ bool Read_Scenario_INI(char * fname, bool )
 //	Session.Messages.Add_Message(NULL, 0, NULL, PCOLOR_GREEN, TPF_6PT_GRAD|TPF_USE_GRAD_PAL|TPF_FULLSHADOW, 1);
 //	Session.Messages.Add_Message(NULL, 0, NULL, PCOLOR_GREEN, TPF_6PT_GRAD|TPF_USE_GRAD_PAL|TPF_FULLSHADOW, 1);
 //	Session.Messages.Add_Message(NULL, 0, NULL, PCOLOR_GREEN, TPF_6PT_GRAD|TPF_USE_GRAD_PAL|TPF_FULLSHADOW, 1);
-	WeaponTypeClass::As_Pointer(WEAPON_FLAMER)->Sound = VOC_NONE;
+	WeaponTypeClass* flamer = WeaponTypeClass::From_Name("Flamer");
+	if (flamer != NULL)
+		flamer->Sound = VOC_NONE;
 	InfantryTypeClass::As_Reference(INFANTRY_THIEF).IsDoubleOwned = false;
 	InfantryTypeClass::As_Reference(INFANTRY_E4).IsDoubleOwned = false;
 	InfantryTypeClass::As_Reference(INFANTRY_SPY).PrimaryWeapon = NULL;
@@ -2612,7 +2614,9 @@ bool Read_Scenario_INI(char * fname, bool )
 	}
 
 	if ((_stricmp(Scen.ScenarioName, "scu35ea.ini") == 0) || (_stricmp(Scen.ScenarioName, "scu47ea.ini") == 0)) {
-		WeaponTypeClass::As_Pointer(Weapon_From_Name("Sniper"))->Burst = 2;
+		WeaponTypeClass* sniper = WeaponTypeClass::From_Name("Sniper");
+		if(sniper != NULL)
+			sniper->Burst = 2;
 	}
 
 	/*

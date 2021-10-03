@@ -2687,7 +2687,7 @@ typedef enum WarheadType : char {
 **	This enumerates the various weapon types. The weapon is characterized
 **	by the projectile it launches, the damage it does, and the rate of
 **	fire.
-*/
+
 typedef enum WeaponType : char {
 	WEAPON_NONE=-1,
 
@@ -2746,7 +2746,7 @@ typedef enum WeaponType : char {
 
 	WEAPON_COUNT,
 	WEAPON_FIRST=0
-} WeaponType;
+} WeaponType;*/
 
 
 /**********************************************************************

@@ -2596,10 +2596,6 @@ void AnimTypeClass::One_Time(void)
 
 		if (!anim.IsTheater) {
 			_makepath(fullname, NULL, NULL, anim.Graphic_Name(), ".SHP");
-			WWDebugString((char*)(anim.IniName));
-			WWDebugString(" one time Graphics load: ");
-			WWDebugString(fullname);
-			WWDebugString("\n");
 
 			#ifndef NDEBUG
 				RawFileClass file(fullname);
@@ -2799,13 +2795,8 @@ AnimTypeClass * AnimType_From_Name(char const* name)
  *=============================================================================================*/
 bool AnimTypeClass::Read_INI(CCINIClass& ini)
 {
-	WWDebugString("[-WH- SCANNING INI FOR ");
-	WWDebugString((char*)Name());
-	WWDebugString(" ]\n");
+
 	if (ini.Is_Present(Name())) {
-		WWDebugString("[-WH-...Found AnimType Data FOR ");
-		WWDebugString((char*)Name());
-		WWDebugString(" ]\n");
 		IsNormalized = ini.Get_Bool(Name(), "Normalized", IsNormalized);
 		IsGroundLayer = ini.Get_Bool(Name(), "GroundLayer", IsGroundLayer);
 		IsTranslucent = ini.Get_Bool(Name(), "Translucent", IsTranslucent);

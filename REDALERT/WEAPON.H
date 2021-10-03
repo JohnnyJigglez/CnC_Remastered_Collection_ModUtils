@@ -55,7 +55,9 @@ class WeaponTypeClass
 
 		char const * Name(void) const {return(IniName);}
 		bool Read_INI(CCINIClass & ini);
-		static WeaponTypeClass * As_Pointer(WeaponType weapon);
+		static WeaponTypeClass * As_Pointer(int index);
+		static WeaponTypeClass * From_Name(char const* name);
+		static int ID_From_Name(char const* name);
 		void Code_Pointers(void) {}
 		void Decode_Pointers(void) {}
 		ThreatType Allowed_Threats(void) const;

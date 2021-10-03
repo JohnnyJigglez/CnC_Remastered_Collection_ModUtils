@@ -6828,8 +6828,8 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		IsDoubleOwned = ini.Get_Bool(Name(), "DoubleOwned", IsDoubleOwned);
 		ThreatRange = ini.Get_Lepton(Name(), "GuardRange", ThreatRange);
 		IsExploding = ini.Get_Bool(Name(), "Explodes", IsExploding);
-		PrimaryWeapon = WeaponTypeClass::As_Pointer(ini.Get_WeaponType(Name(), "Primary", PrimaryWeapon != NULL ? (WeaponType)(PrimaryWeapon->ID) : WEAPON_NONE));
-		SecondaryWeapon = WeaponTypeClass::As_Pointer(ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon != NULL ? (WeaponType)(SecondaryWeapon->ID) : WEAPON_NONE));
+		PrimaryWeapon = ini.Get_WeaponType(Name(), "Primary");
+		SecondaryWeapon = ini.Get_WeaponType(Name(), "Secondary");
 		IsCloakable = ini.Get_Bool(Name(), "Cloakable", IsCloakable);
 		IsCrushable = ini.Get_Bool(Name(), "Crushable", IsCrushable);
 		IsScanner = ini.Get_Bool(Name(), "Sensors", IsScanner);

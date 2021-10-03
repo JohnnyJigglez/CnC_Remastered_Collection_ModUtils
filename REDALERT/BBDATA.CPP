@@ -59,6 +59,7 @@
  * HISTORY:                                                                                    *
  *   10/17/1994 JLB : Created.                                                                 *
  *   07/17/1996 JLB : Uses correct default values.                                             *
+ *   09/25/2021 JJ  : now Type identifier is specified as part of the instantiation            *
  *=============================================================================================*/
 BulletTypeClass::BulletTypeClass(int bullettype, char const* name) :
 		ObjectTypeClass(	RTTI_BULLETTYPE,
@@ -96,13 +97,6 @@ BulletTypeClass::BulletTypeClass(int bullettype, char const* name) :
 	Arming(0),
 	Tumble(0)
 {
-	WWDebugString("[New Projectile: ");
-	WWDebugString((char*)IniName);
-	char buffer[20];
-	sprintf(buffer, " : %d", Type);
-	WWDebugString(buffer);
-	WWDebugString(" ]\n");
-
 }
 
 
@@ -163,32 +157,35 @@ void BulletTypeClass::operator delete(void * ptr)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/06/1996 JLB : Created.                                                                 *
+ *   10/01/2021 JJ : Modified to work with new constructor sig.                                *
  *=============================================================================================*/
 void BulletTypeClass::Init_Heap(void)
 {
-	/*
-	**	These bullet type class objects must be allocated in the exact order that they
+	/*	These bullet type class objects must be allocated in the exact order that they
 	**	are specified in the BulletType enumeration. This is necessary because the heap
 	**	allocation block index serves double duty as the type number index.
-	new BulletTypeClass("Invisible");	//	BULLET_INVISIBLE
-	new BulletTypeClass("Cannon");		//	BULLET_CANNON
-	new BulletTypeClass("Ack");			//	BULLET_ACK
-	new BulletTypeClass("Torpedo");		//	BULLET_TORPEDO
-	new BulletTypeClass("FROG");			//	BULLET_FROG
-	new BulletTypeClass("HeatSeeker");	//	BULLET_HEAT_SEEKER
-	new BulletTypeClass("LaserGuided");	//	BULLET_LASER_GUIDED
-	new BulletTypeClass("Lobbed");		//	BULLET_LOBBED
-	new BulletTypeClass("Bomblet");		//	BULLET_BOMBLET
-	new BulletTypeClass("Ballistic");	//	BULLET_BALLISTIC
-	new BulletTypeClass("Parachute");	//	BULLET_PARACHUTE
-	new BulletTypeClass("Fireball");		//	BULLET_FIREBALL
-	new BulletTypeClass("LeapDog");		//	BULLET_DOG
-	new BulletTypeClass("Catapult");		//	BULLET_CATAPULT
-	new BulletTypeClass("AAMissile");	//	BULLET_AAMISSILE
-	new BulletTypeClass("GPSSatellite");//	BULLET_GPS_SATELLITE
-	new BulletTypeClass("NukeUp");		//	BULLET_NUKE_UP
-	new BulletTypeClass("NukeDown");		//	BULLET_NUKE_DOWN
+	**But not really true anymore since we use the TYPE variable for that, they just sit in a dynamic heap now
+	**and maybe someday I'll wrote the code that sorts an assumed-unsorted list so we can get on with our lives
+	**and not hold onto so many pointers when we instantiate the BULLET class and other classes like it.
 	*/
+	new BulletTypeClass(0,"Invisible");	//	BULLET_INVISIBLE
+	new BulletTypeClass(1,"Cannon");		//	BULLET_CANNON
+	new BulletTypeClass(2,"Ack");			//	BULLET_ACK
+	new BulletTypeClass(3,"Torpedo");		//	BULLET_TORPEDO
+	new BulletTypeClass(4,"FROG");			//	BULLET_FROG
+	new BulletTypeClass(5,"HeatSeeker");	//	BULLET_HEAT_SEEKER
+	new BulletTypeClass(6,"LaserGuided");	//	BULLET_LASER_GUIDED
+	new BulletTypeClass(7,"Lobbed");		//	BULLET_LOBBED
+	new BulletTypeClass(8,"Bomblet");		//	BULLET_BOMBLET
+	new BulletTypeClass(9,"Ballistic");	//	BULLET_BALLISTIC
+	new BulletTypeClass(11,"Parachute");	//	BULLET_PARACHUTE
+	new BulletTypeClass(12, "Fireball");		//	BULLET_FIREBALL
+	new BulletTypeClass(13, "LeapDog");		//	BULLET_DOG
+	new BulletTypeClass(14, "Catapult");		//	BULLET_CATAPULT
+	new BulletTypeClass(15, "AAMissile");	//	BULLET_AAMISSILE
+	new BulletTypeClass(16, "GPSSatellite");//	BULLET_GPS_SATELLITE
+	new BulletTypeClass(17, "NukeUp");		//	BULLET_NUKE_UP
+	new BulletTypeClass(18, "NukeDown");		//	BULLET_NUKE_DOWN
 }
 
 
@@ -220,10 +217,6 @@ void BulletTypeClass::One_Time(void)
 		if (!(btc->IsInvisible)) {
 			char	fullname[_MAX_FNAME + _MAX_EXT];
 			_makepath(fullname, NULL, NULL, btc->Graphic_Name(), ".SHP");
-			WWDebugString(btc->IniName);
-			WWDebugString(" one time Graphics load: ");
-			WWDebugString(fullname);
-			WWDebugString("\n");
 			#ifdef NDEBUG
 			    ((void const*&)btc->ImageData) = MFCD::Retrieve(fullname);
 			#else

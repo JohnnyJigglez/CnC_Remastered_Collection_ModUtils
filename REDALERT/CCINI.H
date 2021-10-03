@@ -40,6 +40,7 @@
 #include	"pk.h"
 
 class TriggerTypeClass;
+class WeaponTypeClass; //added this because the compiler was spazzing out?
 
 /*
 **	The advanced version of the INI database manager. It handles the C&C expansion types and
@@ -73,7 +74,7 @@ class CCINIClass : public INIClass
 		VQType Get_VQType(char const * section, char const * entry, VQType defvalue) const;
 		VocType Get_VocType(char const * section, char const * entry, VocType defvalue) const;
 		WarheadType Get_WarheadType(char const * section, char const * entry, WarheadType defvalue) const;
-		WeaponType Get_WeaponType(char const * section, char const * entry, WeaponType defvalue) const;
+		WeaponTypeClass * Get_WeaponType(char const* section, char const* entry) const;
 		long Get_Owners(char const * section, char const * entry, long defvalue) const;
 		CrateType Get_CrateType(char const * section, char const * entry, CrateType defvalue) const;
 
@@ -96,7 +97,7 @@ class CCINIClass : public INIClass
 		bool Put_TriggerType(char const * section, char const * entry, TriggerTypeClass * value);
 		bool Put_VocType(char const * section, char const * entry, VocType value);
 		bool Put_WarheadType(char const * section, char const * entry, WarheadType value);
-		bool Put_WeaponType(char const * section, char const * entry, WeaponType value);
+		bool Put_WeaponType(char const * section, char const * entry, int index);
 		bool Put_CrateType(char const * section, char const * entry, CrateType value);
 
 		int Get_Unique_ID(void) const;

@@ -2395,7 +2395,7 @@ AnimTypeClass::AnimTypeClass(int animtype,	char const * name):
 	IsCraterForming(false),
 	IsSticky(false),
 	IsTheater(false),
-	Type(AnimType(animtype)),
+	Type(static_cast<AnimType>(animtype)),
 	Size(0),
 	Biggest(0),
 	Damage(0),
@@ -2743,6 +2743,7 @@ AnimTypeClass * AnimTypeClass::As_Pointer(AnimType type)
  *=============================================================================================*/
 AnimType Anim_From_Name(char const* name)
 {
+	if (name == NULL) return ANIM_NONE;
 	AnimTypeClass* atc = AnimType_From_Name(name);
 	if (atc != NULL)
 		return(atc->Type);

@@ -156,7 +156,7 @@ int Modify_Damage(int damage, WarheadType warhead, ArmorType armor, int distance
  *   06/20/1994 JLB : Source is a pointer.                                                     *
  *   06/18/1996 JLB : Strength could be negative for healing effects.                          *
  *=============================================================================================*/
-void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, WarheadType warhead)
+void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, WarheadTypeClass * warhead)
 {
 	CELL				cell;			// Cell number under explosion.
 	ObjectClass *	object;			// Working object pointer.
@@ -165,9 +165,9 @@ void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, Warh
 	int				range;		// Damage effect radius.
 	int				count;		// Number of vehicle IDs in list.
 
-	if (!strength || Special.IsInert || warhead == WARHEAD_NONE) return;
+	if (!strength || Special.IsInert || warhead->Type == WARHEAD_NONE) return;
 
-	WarheadTypeClass const * whead = WarheadTypeClass::As_Pointer(warhead);
+	//WarheadTypeClass const * whead = WarheadTypeClass::As_Pointer(war);
 //	WarheadTypeClass const * whead = &Warheads[warhead];
 //	range = ICON_LEPTON_W*2;
 	range = ICON_LEPTON_W + (ICON_LEPTON_W >> 1);
@@ -242,11 +242,11 @@ void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, Warh
 	if (cellptr->Overlay != OVERLAY_NONE) {
 		OverlayTypeClass const * optr = &OverlayTypeClass::As_Reference(cellptr->Overlay);
 
-		if (optr->IsTiberium && whead->IsTiberiumDestroyer) {
+		if (optr->IsTiberium && warhead->IsTiberiumDestroyer) {
 			cellptr->Reduce_Tiberium(strength / 10);
 		}
 		if (optr->IsWall) {
-			if (whead->IsWallDestroyer || (whead->IsWoodDestroyer && optr->IsWooden)) {
+			if (warhead->IsWallDestroyer || (warhead->IsWoodDestroyer && optr->IsWooden)) {
 				Map[cell].Reduce_Wall(strength);
 			}
 		}
@@ -262,7 +262,7 @@ void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, Warh
 		 cellptr->TType == TEMPLATE_BRIDGE_2A || cellptr->TType == TEMPLATE_BRIDGE_2B ||
 		 cellptr->TType == TEMPLATE_BRIDGE_3A || cellptr->TType == TEMPLATE_BRIDGE_3B ) {
 
-		if (((warhead == WARHEAD_AP || warhead == WARHEAD_HE) && Random_Pick(1, Rule.BridgeStrength) < strength)) {
+		if (((warhead->Type == WARHEAD_AP || warhead->Type == WARHEAD_HE) && Random_Pick(1, Rule.BridgeStrength) < strength)) {
 			Map.Destroy_Bridge_At(cell);
 		}
 	}
@@ -291,13 +291,13 @@ void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, Warh
  *   05/19/1996 JLB : Created.                                                                 *
  *   09/29/2021 JJ  : Add capability to override explosionSet with Anim                        *
  *=============================================================================================*/
-AnimType Combat_Anim(int damage, WarheadType warhead, LandType land)
+AnimType Combat_Anim(int damage, WarheadTypeClass * warhead, LandType land)
 {
 	/*
 	**	For cases of no damage or invalid warhead, don't have any
 	**	animation effect at all.
 	*/
-	if (damage == 0 || warhead == WARHEAD_NONE) {
+	if (damage == 0 || warhead->Type == WARHEAD_NONE) {
 		return(ANIM_NONE);
 	}
 
@@ -327,11 +327,11 @@ AnimType Combat_Anim(int damage, WarheadType warhead, LandType land)
 		ANIM_WATER_EXP1,
 	};
 
-	WarheadTypeClass const * wptr = WarheadTypeClass::As_Pointer(warhead);
+	//WarheadTypeClass const * wptr = WarheadTypeClass::As_Pointer(warhead);
 //	WarheadTypeClass const * wptr = &Warheads[warhead];
-	if (wptr->Anim != ANIM_NONE)
-		return(wptr->Anim);
-	switch (wptr->ExplosionSet) {
+	if (warhead->Anim != NULL)
+		return(warhead->Anim->Type);
+	switch (warhead->ExplosionSet) {
 		case 6:
 			return(ANIM_ATOM_BLAST);
 
@@ -391,7 +391,7 @@ AnimType Combat_Anim(int damage, WarheadType warhead, LandType land)
  * HISTORY:                                                                                    *
  *   07/26/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int rawdamage, TechnoClass * source, WarheadType warhead)
+void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int rawdamage, TechnoClass * source, WarheadTypeClass * warhead)
 {
 	int cell_radius = (radius + CELL_LEPTON_W-1) / CELL_LEPTON_W;
 	CELL cell = Coord_Cell(coord);
@@ -418,7 +418,7 @@ void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int rawdamage, TechnoClas
 			int dist_from_center = Distance(XY_Coord(x+cell_radius, y+cell_radius), XY_Coord(cell_radius, cell_radius));
 			int damage = rawdamage * Inverse(fixed(cell_radius, dist_from_center));
 			Explosion_Damage(Cell_Coord(tcell), damage, source, warhead);
-			if (warhead == WARHEAD_FIRE && damage > 100) {
+			if (warhead->Type == WARHEAD_FIRE && damage > 100) {
 				new SmudgeClass(Random_Pick(SMUDGE_SCORCH1, SMUDGE_SCORCH6), Cell_Coord(tcell));
 			}
 		}

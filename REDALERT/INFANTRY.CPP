@@ -327,7 +327,7 @@ void InfantryClass::operator delete(void * ptr)
  *   11/22/1994 JLB : Shares base damage handler for techno objects.                           *
  *   03/31/1995 JLB : Revenge factor.                                                          *
  *=============================================================================================*/
-ResultType InfantryClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
+ResultType InfantryClass::Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source, bool forced)
 {
 	assert(Infantry.ID(this) == ID);
 	assert(IsActive);
@@ -391,7 +391,7 @@ ResultType InfantryClass::Take_Damage(int & damage, int distance, WarheadType wa
 		*/
 		bool delthis = false;
 		TARGET us = As_Target();
-		switch (WarheadTypeClass::As_Pointer(warhead)->InfantryDeath) {
+		switch (warhead->InfantryDeath) {
 			default:
 			case 0:
 				delthis = true;
@@ -676,7 +676,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 #else
 							int damage = min( (tech->Techno_Type_Class()->MaxStrength) / 3, tech->Strength-1);
 #endif
-							tech->Take_Damage(damage, 0, WARHEAD_HE, this, true);
+							tech->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), this, true);
 						}
 						BEnd(BENCH_PCP);
 						delete this;
@@ -930,7 +930,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 				return;
 			} else {
 				if (::As_Target(Coord_Cell(Center_Coord())) == NavCom) {
-					Explosion_Damage(Coord, Rule.BridgeStrength, this, WARHEAD_HE);
+					Explosion_Damage(Coord, Rule.BridgeStrength, this, WarheadTypeClass::As_Pointer(WARHEAD_HE));
 
 					Stop_Driver();
 					Scatter(Adjacent_Cell(Coord, PrimaryFacing), true, true);
@@ -941,8 +941,8 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 					if (!Target_Legal(NavCom) || Map[As_Cell(NavCom)].Land_Type() == LAND_WATER) {
 						Mark(MARK_DOWN);		// Needed only so that Tanya will get destroyed by the explosion.
 					}
-					Explosion_Damage(Coord, Rule.BridgeStrength, NULL, WARHEAD_HE);
-					Explosion_Damage(Coord, Rule.BridgeStrength, NULL, WARHEAD_HE);
+					Explosion_Damage(Coord, Rule.BridgeStrength, NULL, WarheadTypeClass::As_Pointer(WARHEAD_HE));
+					Explosion_Damage(Coord, Rule.BridgeStrength, NULL, WarheadTypeClass::As_Pointer(WARHEAD_HE));
 					if (!IsActive) {
 						BEnd(BENCH_PCP);
 						return;
@@ -1000,7 +1000,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 			** Show the animation and get rid of the land mine
 			*/
 			COORDINATE blcoord = bldng->Center_Coord();
-			new AnimClass(Combat_Anim(Rule.APMineDamage, WARHEAD_HE, cellptr->Land_Type()), blcoord);
+			new AnimClass(Combat_Anim(Rule.APMineDamage, WarheadTypeClass::As_Pointer(WARHEAD_HE), cellptr->Land_Type()), blcoord);
 			delete bldng;
 			int damage;
 			for (int index = 0; index < Infantry.Count(); index++) {
@@ -1009,7 +1009,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 					int dist = ::Distance(obj->Coord, blcoord);
 					if (dist <= 0xC0) {
 						damage = Rule.APMineDamage;
-						obj->Take_Damage(damage, 0, WARHEAD_HE);
+						obj->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE));
 					}
 				}
 			}
@@ -1040,7 +1040,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 LandType land = Map[Coord].Land_Type();
 if (!IsDriving && !Class->IsBomber && (land == LAND_ROCK || land == LAND_WATER || land == LAND_RIVER)) {
 	int damage = Strength;
-	Take_Damage(damage, 0, WARHEAD_AP, NULL, true);
+	Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_AP), NULL, true);
 	return;
 }
 #endif

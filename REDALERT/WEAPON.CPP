@@ -110,7 +110,7 @@ WeaponTypeClass::~WeaponTypeClass(void)
 
 
 /***********************************************************************************************
- * WeaponTypeClass::operator new -- Allocates a weapon type object form the special heap.      *
+ * WeaponTypeClass::operator new -- Allocates a weapon type object from the special heap.      *
  *                                                                                             *
  *    This will allocate a weapon type object from a special heap that has been set up for     *
  *    that purpose.                                                                            *
@@ -195,6 +195,9 @@ WeaponTypeClass * WeaponTypeClass::As_Pointer(int index)
 bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ini.Section_Present(Name())) {
+		char message[128];
+		sprintf(message, "ReadINI WeaponType %s ...\n", Name());
+		WWDebugString(message);
 		IsSupressed = ini.Get_Bool(Name(), "Supress", IsSupressed);
 		Burst = ini.Get_Int(Name(), "Burst", Burst);
 		BurstDelay = ini.Get_Int(Name(), "BurstDelay", BurstDelay);
@@ -213,17 +216,25 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		IsTurboBoosted = ini.Get_Bool(Name(), "TurboBoost", IsTurboBoosted);
 		char buffer[32] = "";
 		if (ini.Get_String(Name(), "Warhead", buffer, buffer, sizeof(buffer))) {
-			WarheadTypeClass* twhptr = WarheadTC_From_Name(buffer);
+			WarheadTypeClass* twhptr = WarheadTypeClass::From_Name(buffer);
 			if (twhptr != NULL) {
 				WarheadPtr = twhptr;
 			}
 		}
 		char pbuffer[32] = "";
 		if (ini.Get_String(Name(), "Projectile", pbuffer, pbuffer, sizeof(pbuffer))) {
-			BulletTypeClass* tprojptr = BulletTC_From_Name(pbuffer);
+			BulletTypeClass* tprojptr = BulletTypeClass::From_Name(pbuffer);
 			if (tprojptr != NULL) {
 				Bullet = tprojptr;
 			}
+		}
+		if (WarheadPtr != NULL) {
+			sprintf(message, "ReadINI WeaponType %s has warhead %s.\n", Name(), WarheadPtr->IniName);
+			WWDebugString(message);
+		}
+		if (Bullet != NULL) {
+			sprintf(message, "ReadINI WeaponType %s has projectile %s.\n", Name(), Bullet->IniName);
+			WWDebugString(message);
 		}
 		return(true);
 	}
@@ -249,11 +260,23 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
  *=============================================================================================*/
 WeaponTypeClass * WeaponTypeClass::From_Name(char const * name)
 {
-	if (!name) return(NULL);
-
+	if (name == NULL) return(NULL);
+	//char message[128];
+	//sprintf(message, "WeaponTypeClass.FromName Entry: %s .\n", name);
+	//WWDebugString(message);
+	static WeaponTypeClass* weapon = NULL;
+	//for (int index = 0; index < Weapons.Count(); index++) {
+	//	sprintf(message, "WeaponTypeClass.FromName ITERATE: %s .\n", Weapons.Ptr(index)->Name());
+	//	WWDebugString(message);
+	//}
 	for (int index = 0; index < Weapons.Count(); index++) {
-		if (stricmp(Weapons.Ptr(index)->Name(), name) == 0) {
-			return(Weapons.Ptr(index));
+		weapon = Weapons.Ptr(index);
+		//sprintf(message, "WeaponTypeClass.FromName DETECTED: %s .\n", weapon->Name());
+		//WWDebugString(message);
+		if (stricmp(weapon->Name(), name) == 0) {
+			//sprintf(message, "WeaponTypeClass.FromName FOUND.\n");
+			//WWDebugString(message);
+			return(weapon);
 		}
 	}
 	return(NULL);

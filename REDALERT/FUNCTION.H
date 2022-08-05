@@ -469,6 +469,11 @@ AnimType Anim_From_Name(char const * name);
 AnimTypeClass * AnimType_From_Name(char const* name);
 
 /*
+**	BDATA.CPP
+*/
+RTTIType RTTIType_From_Name(char const* name);
+
+/*
 **	AUDIO.CPP
 */
 VocType Voc_From_Name(char const * name);
@@ -495,9 +500,9 @@ int harderr_handler(unsigned, unsigned, unsigned __far *);
 **	COMBAT.CPP
 */
 int Modify_Damage(int damage, WarheadType warhead, ArmorType armor, int distance);
-void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, WarheadType warhead);
-AnimType Combat_Anim(int damage, WarheadType warhead, LandType land);
-void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int damage, TechnoClass * source, WarheadType warhead);
+void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, WarheadTypeClass * warhead);
+AnimType Combat_Anim(int damage, WarheadTypeClass * warhead, LandType land);
+void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int damage, TechnoClass * source, WarheadTypeClass * warhead);
 
 /*
 **	CONQUER.CPP
@@ -1002,14 +1007,14 @@ char const * Version_Name(void);
 */
 BulletType Bullet_From_Name(char const* name);
 
-BulletTypeClass * BulletTC_From_Name(char const* name);
+//BulletTypeClass * From_Name(char const* name);
 
 /*
 **	WARHEAD.CPP
 */
 WarheadType Warhead_From_Name(char const* name);
 
-WarheadTypeClass* WarheadTC_From_Name(char const* name);
+//WarheadTypeClass* WarheadTC_From_Name(char const* name);
 
 /*
 **	WEAPON.CPP

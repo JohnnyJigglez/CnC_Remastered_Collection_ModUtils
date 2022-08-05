@@ -671,7 +671,7 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 			new BulletTypeClass(atoi(ini.Get_Entry(BT,x)),ini.Get_Value(BT, x));
 		}
 	}
-	if (Weapons.Count() == 0) {
+	/*if (Weapons.Count() == 0) {
 		Weapons.Set_Heap(WeaponMax);
 	}
 	static char const* const WT = "Weapons";
@@ -679,8 +679,8 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		for (int x = 0; x < ini.Entry_Count(WT); x++) {
 			new WeaponTypeClass(ini.Get_Value(WT, x));
 		}
-	}
-	/*
+	}*/
+	
 	if (Weapons.Count() == 0) {
 	Weapons.Set_Heap(WeaponMax);
 	new WeaponTypeClass("Colt45");
@@ -735,13 +735,25 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 	new WeaponTypeClass("AirAssault");
 #endif
 	}
-	if (ini.Is_Present("Weapons")) {
-		for (int x = 0; x < ini.Entry_Count("Weapons"); x++) {
-			new WeaponTypeClass(ini.Get_Entry("Weapons", x));
+	static char const* const WT = "Weapons";
+	if (ini.Is_Present(WT)) {
+		for (int x = 0; x < ini.Entry_Count(WT); x++) {
+			new WeaponTypeClass(ini.Get_Value(WT, x));
 		}
-	}*/
+	}
 
 	return(true);
+
+	/*if (BuildingTypes.Count() == 0) {
+		BuildingTypes.Set_Heap(BuildingMax);
+		BuildingTypeClass::Init_Heap();
+	}
+	static char const* const BDT = "Buildings";
+	if (ini.Is_Present(BDT)) {
+		for (int x = 0; x < ini.Entry_Count(BDT); x++) {
+			new BuildingTypeClass(atoi(ini.Get_Entry(BDT, x)), ini.Get_Value(BDT, x));
+		}
+	}*/
 }
 
 
@@ -1041,22 +1053,23 @@ bool RulesClass::Objects(CCINIClass & ini)
 	/*
 	**	Fetch the game object values from the rules file.
 	*/
+	//char message[128];
+	//sprintf(message, "RulesClassObjects INIFILE: %s .\n", ini.);
+	//WWDebugString(message);
 	for (int index = 0; index < AnimTypes.Count(); index++) {
 		AnimTypes.Ptr(index)->Read_INI(ini);
 	}
 
-	for (int index = 0; index < Warheads.Count(); index++) {
-		Warheads.Ptr(index)->Read_INI(ini);
+	for (int whindex = 0; whindex < Warheads.Count(); whindex++) {
+		Warheads.Ptr(whindex)->Read_INI(ini);
 	}
 
 	for (int proj = 0; proj < BulletTypes.Count(); proj++) {
 		BulletTypes.Ptr(proj)->Read_INI(ini);
 	}
-
 	for (int windex = 0; windex < Weapons.Count(); windex++) {
 		Weapons.Ptr(windex)->Read_INI(ini);
 	}
-
 	for (int uindex = 0; uindex < UnitTypes.Count(); uindex++) {
 		UnitTypes.Ptr(uindex)->Read_INI(ini);
 	}
@@ -1076,6 +1089,29 @@ bool RulesClass::Objects(CCINIClass & ini)
 	for (int bindex = 0; bindex < BuildingTypes.Count(); bindex++) {
 		BuildingTypes.Ptr(bindex)->Read_INI(ini);
 	}
+	//char message[128];
+	//sprintf(message, "RulesClassObjects Number of Weapons: %d .\n", Weapons.Count());
+	//WWDebugString(message);
+	/*for (int windex = 0; windex < Weapons.Count(); windex++) {
+		Weapons.Ptr(windex)->Read_INI(ini);
+	}*/
+	///*Reparse for only those weapons that were added by a unit but they were not in the weapons section*/
+	//for (int index = 0; index < Weapons.Count(); index++) {
+	//		WeaponTypeClass* ptr = Weapons.Ptr(index);
+	//	if (!ptr->WarheadPtr && !ptr->Bullet) {
+	//		ptr->Read_INI(ini);
+	//	}
+	//}
+	///*Reparse for only those warheads that were added by a weapon but they were not in the warheads section*/
+	//for (int index = 0; index < Warheads.Count(); index++) {
+	//	if (!Warheads.Ptr(index)->IsReadfromINI)
+	//		Warheads.Ptr(index)->Read_INI(ini);
+	//}
+	///*Reparse for only those projectiles that were added by a weapon but they were not in the projectiles section*/
+	//for (int index = 0; index < BulletTypes.Count(); index++) {
+	//	if (!BulletTypes.Ptr(index)->IsReadfromINI)
+	//		BulletTypes.Ptr(index)->Read_INI(ini);
+	//}
 
 	/*
 	**	Fetch the house attribute override values.

@@ -347,7 +347,7 @@ class TechnoClass :	public RadioClass,
 		virtual BulletClass * Fire_At(TARGET target, int which=0);
 		virtual int Weapon_Range(int which) const;
 		virtual bool Captured(HouseClass * newowner);
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
 		bool Evaluate_Cell(ThreatType method, int mask, CELL cell, int range, TechnoClass const ** object, int & value, int zone=0) const;
 		bool Evaluate_Object(ThreatType method, int mask, int range, TechnoClass const * object, int & value, int zone=-1) const;
 		int Evaluate_Just_Cell(CELL cell) const;

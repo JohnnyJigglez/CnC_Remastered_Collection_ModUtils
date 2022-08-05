@@ -808,7 +808,7 @@ void AnimClass::AI(void)
 					*/
 					int damage = Accum;
 					Accum -= damage;
-					if (As_Object(xObject)->Take_Damage(damage, 0, WARHEAD_FIRE) == RESULT_DESTROYED) {
+					if (As_Object(xObject)->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_FIRE)) == RESULT_DESTROYED) {
 						if (Target_Legal(VirtualAnimTarget)) {
 							delete As_Animation(VirtualAnimTarget);
 						}
@@ -1241,7 +1241,7 @@ void AnimClass::Do_Atom_Damage(HousesType ownerhouse, CELL cell)
 		rawdamage = Rule.AtomDamage/5;
 	}
 
-	Wide_Area_Damage(Cell_Coord(cell), radius * CELL_LEPTON_W, rawdamage, building, WARHEAD_FIRE);
+	Wide_Area_Damage(Cell_Coord(cell), radius * CELL_LEPTON_W, rawdamage, building, WarheadTypeClass::As_Pointer(WARHEAD_FIRE));
 	Shake_The_Screen(3);
 	if (Session.Type == GAME_NORMAL) {
 		//GamePalette.Set(FADE_PALETTE_SLOW, Call_Back);	//TO_FIX. ST 5/8/2019

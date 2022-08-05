@@ -38,6 +38,7 @@
 #include "object.h"
 #include	"fly.h"
 #include	"fuse.h"
+#include "WARHEAD.H"
 
 
 class BulletClass :	public ObjectClass,
@@ -50,7 +51,6 @@ class BulletClass :	public ObjectClass,
 		**	This specifies exactly what kind of bullet this is. All of the static attributes
 		**	for this bullet is located in the BulletTypeClass pointed to by this variable.
 		*/
-		//CCPtr<BulletTypeClass> Class;
 		BulletTypeClass * Class;
 
 	private:
@@ -74,6 +74,7 @@ class BulletClass :	public ObjectClass,
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
 		BulletClass(BulletType id, TARGET target, TechnoClass * Payback, int strength, WarheadType warhead, int speed);
+		BulletClass(BulletTypeClass* projectile, TARGET target, TechnoClass* payback, int strength, WarheadTypeClass* warhead, int speed);
 #ifdef FIXIT_MULTI_SAVE
 		BulletClass(NoInitClass const & x) : ObjectClass(x), FlyClass(x), FuseClass(x), PrimaryFacing(x) {};
 #else
@@ -140,7 +141,7 @@ class BulletClass :	public ObjectClass,
 		/*
 		**	The warhead of this projectile.
 		*/
-		WarheadType Warhead;
+		WarheadTypeClass* Warhead;
 
 		/*
 		** Some additional padding in case we need to add data to the class and maintain backwards compatibility for save/load

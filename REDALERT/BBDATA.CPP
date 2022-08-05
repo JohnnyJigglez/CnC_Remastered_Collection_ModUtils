@@ -92,7 +92,7 @@ BulletTypeClass::BulletTypeClass(int bullettype, char const* name) :
 	IsSubSurface(false),
 	IsParachuted(false),
 	IsGigundo(false),
-	Type(BulletType(bullettype)),
+	Type(static_cast<BulletType>(bullettype)),
 	ROT(0),
 	Arming(0),
 	Tumble(0)
@@ -303,6 +303,9 @@ BulletTypeClass* BulletTypeClass::As_Pointer(BulletType bullet)
 bool BulletTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ini.Is_Present(Name())) {
+		char message[128];
+		sprintf(message, "ReadINI BulletType %s ...\n", Name());
+		WWDebugString(message);
 		Arming = ini.Get_Int(Name(), "Arm", Arming);
 		ROT = ini.Get_Int(Name(), "ROT", ROT);
 		Tumble = ini.Get_Int(Name(), "Frames", Tumble);
@@ -349,7 +352,7 @@ bool BulletTypeClass::Read_INI(CCINIClass & ini)
 BulletType Bullet_From_Name(char const* name)
 {
 	if (!name) return(BULLET_NONE);
-	return BulletTC_From_Name(name)->Type;
+	return BulletTypeClass::From_Name(name)->Type;
 }
 
 /***********************************************************************************************
@@ -368,7 +371,7 @@ BulletType Bullet_From_Name(char const* name)
  * HISTORY:                                                                                    *
  *   09/27/2021 JJ : Created.                                                                 *
  *=============================================================================================*/
-BulletTypeClass * BulletTC_From_Name(char const* name)
+BulletTypeClass * BulletTypeClass::From_Name(char const* name)
 {
 	if (!name) return(NULL);
 

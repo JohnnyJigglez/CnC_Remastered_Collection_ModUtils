@@ -34,6 +34,7 @@
 
 #ifndef INFANTRY_H
 #define INFANTRY_H
+#include "WARHEAD.H"
 
 
 class InfantryClass : public FootClass
@@ -164,7 +165,7 @@ class InfantryClass : public FootClass
 		virtual ActionType What_Action(ObjectClass const * object) const;
 		virtual ActionType What_Action(CELL cell) const;
 		virtual BulletClass * Fire_At(TARGET target, int which);
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
 		virtual FireErrorType Can_Fire(TARGET target, int which) const;
 		virtual COORDINATE Fire_Coord(int which) const;
 		virtual void Assign_Target(TARGET);

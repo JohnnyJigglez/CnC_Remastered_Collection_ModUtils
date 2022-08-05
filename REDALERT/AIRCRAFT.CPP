@@ -1603,7 +1603,7 @@ BulletClass * AircraftClass::Fire_At(TARGET target, int which)
  * HISTORY:                                                                                    *
  *   05/26/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-ResultType AircraftClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
+ResultType AircraftClass::Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source, bool forced)
 {
 	assert(Aircraft.ID(this) == ID);
 	assert(IsActive);
@@ -1765,7 +1765,7 @@ int AircraftClass::Mission_Move(void)
 								if (Process_Landing()) {
 									Strength = 1;
 									int damage = Strength;
-									Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+									Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_AP), 0, true);
 									return(1);
 								}
 								return(500);
@@ -4111,7 +4111,7 @@ bool AircraftClass::Landing_Takeoff_AI(void)
 
 					int damage = Strength;
 					Map.Remove(this, layer);
-					Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+					Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_AP), 0, true);
 					return(true);
 				}
 

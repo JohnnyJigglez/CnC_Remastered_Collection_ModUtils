@@ -1050,7 +1050,7 @@ void HouseClass::AI(void)
 					//     land mines from blowing up under low-power conditions
 					if (b.Class->Drain) {
 						int damage = 1;
-						b.Take_Damage(damage, 0, WARHEAD_AP, 0);
+						b.Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_AP), 0);
 					}
 				}
 			}
@@ -2947,7 +2947,7 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 						inf->Coord = Cell_Coord(cell);
 						inf->Mark(MARK_DOWN);
 						int damage = inf->Strength;
-						inf->Take_Damage(damage, 0, WARHEAD_FIRE, 0, true);
+						inf->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_FIRE), 0, true);
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 					} else if(tech->What_Am_I() == RTTI_UNIT && *(UnitClass *)tech == UNIT_DEMOTRUCK) {
 						tech->Assign_Target(tech->As_Target());
@@ -4121,7 +4121,7 @@ void HouseClass::Blowup_All(void)
 				// damage = uptr->Strength; // Original
 				damage = 0x7fff; // Copied from TD
 
-				uptr->Take_Damage(damage, 0, WARHEAD_HE, NULL, true);
+				uptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
 				count++;
 				if (count > 5 && uptr->IsActive) {
 					delete uptr;
@@ -4146,7 +4146,7 @@ void HouseClass::Blowup_All(void)
 			// damage = aptr->Strength; // Original
 			damage = 0x7fff; // Copied from TD
 
-			aptr->Take_Damage(damage, 0, WARHEAD_HE, NULL, true);
+			aptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
 			if (!aptr->IsActive) {
 				i--;
 			}
@@ -4167,7 +4167,7 @@ void HouseClass::Blowup_All(void)
 			// damage = vptr->Strength; // Original
 			damage = 0x7fff; // Copied from TD 
 
-			vptr->Take_Damage(damage, 0, WARHEAD_HE, NULL, true);
+			vptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
 			if (!vptr->IsActive) {
 				i--;
 			}
@@ -4192,7 +4192,7 @@ void HouseClass::Blowup_All(void)
 				// damage = bptr->Strength; // Original
 				damage = 0x7fff; // Copied from TD 
 
-				bptr->Take_Damage(damage, 0, WARHEAD_HE, NULL, true);
+				bptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
 				count++;
 				if (count > 5) {
 					delete bptr;
@@ -4223,7 +4223,7 @@ void HouseClass::Blowup_All(void)
 				damage = 0x7fff; // Copied from TD 
 
 				warhead = Random_Pick(WARHEAD_SA, WARHEAD_FIRE);
-				iptr->Take_Damage(damage, 0, warhead, NULL, true);
+				iptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(warhead), NULL, true);
 
 				count++;
 				if (count > 5) {

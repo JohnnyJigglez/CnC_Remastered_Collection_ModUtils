@@ -44,7 +44,9 @@ class WarheadTypeClass
 {
 	public:
 		WarheadTypeClass(int warheadtype, char const * name);
+		WarheadTypeClass(char const* name);
 		WarheadTypeClass(NoInitClass const &) {}
+		~WarheadTypeClass(void);
 
 		void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
@@ -55,18 +57,26 @@ class WarheadTypeClass
 		char const * Name(void) const {return(IniName);}
 		bool Read_INI(CCINIClass & ini);
 		static WarheadTypeClass * As_Pointer(WarheadType weapon);
-
+		static WarheadTypeClass * From_Name(char const* name);
+		//static WarheadType WarheadType_From_Name(char const* name);
 		/*
-		**	This is the ID number of the weapon type. It is index number into the weapon
+		**	This is the ID number of the warhead type. It is index number into the warhead
 		**	heap.
 		*/
 		int ID;
 
 		/*
-		**	This is the AnimType we can use to override the ExplosionSet anims
+		*  This is let's other objects know that the object has had its information parsed from an ini file. 
 		*/
-		AnimType Anim;
+		bool IsReadfromINI:1;
 
+		/*
+		**	This is the AnimTypeClass we can use to override the ExplosionSet anims
+		*/
+		AnimTypeClass * Anim;
+		/*
+		**	This is the WarheadType that is used by game logic that requires it.
+		*/
 		WarheadType Type;
 
 		/*

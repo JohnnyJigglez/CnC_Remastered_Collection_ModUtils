@@ -1931,7 +1931,7 @@ bool MapClass::Destroy_Bridge_At(CELL cell)
 							ObjectClass * next = obj->Next;
 							if (obj->Is_Techno()) {
 								int damage = obj->Strength;
-								obj->Take_Damage(damage, 0, WARHEAD_HE, NULL, true);
+								obj->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
 							}
 							obj = next;
 						}
@@ -2046,7 +2046,7 @@ bool MapClass::Destroy_Bridge_At(CELL cell)
 									ObjectClass * next = obj->Next;
 									if (obj->Is_Techno()) {
 										int damage = obj->Strength;
-										obj->Take_Damage(damage, 0, WARHEAD_HE, NULL, true);
+										obj->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
 									}
 									obj = next;
 								}

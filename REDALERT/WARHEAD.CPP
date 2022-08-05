@@ -64,21 +64,61 @@ TFixedIHeapClass<WarheadTypeClass> Warheads;
  *   07/19/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
 WarheadTypeClass::WarheadTypeClass(int warheadtype, char const* name) :
-	Type(WarheadType(warheadtype)),
+	Type(static_cast<WarheadType>(warheadtype)),
 	ID(Warheads.ID(this)),
 	IniName(name),
 	SpreadFactor(1),
+	IsReadfromINI(false),
 	IsWallDestroyer(false),
 	IsWoodDestroyer(false),
 	IsTiberiumDestroyer(false),
 	IsOrganic(false),
 	ExplosionSet(0),
 	InfantryDeath(0),
-	Anim(ANIM_NONE)
+	Anim(NULL)
 {
 	for (ArmorType armor = ARMOR_FIRST; armor < ARMOR_COUNT; armor++) {
 		Modifier[armor] = 1;
 	}
+}
+
+/***********************************************************************************************
+ * WarheadTypeClass::WarheadTypeClass -- Default constructor for warhead objects.              *
+ *                                                                                             *
+ *    This default constructor for a warhead object will fill in all the default values        *
+ *    for a warhead. It is presumed that these values will be normal unless specifically       *
+ *    overridden by the INI database.                                                          *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   10/05/2021 JJ : Created.                                                                  *
+ *=============================================================================================*/
+WarheadTypeClass::WarheadTypeClass(char const* name) : WarheadTypeClass(-1, name) {}
+
+/***********************************************************************************************
+ * WeaponTypeClass::~WeaponTypeClass -- Destructor for weapon type class objects.              *
+ *                                                                                             *
+ *    This destructor really doesn't do anything but set the pointers to NULL. This is a       *
+ *    general purposes safety tactic but is otherwise useless.                                 *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   07/17/1996 JLB : Created.                                                                 *
+ *=============================================================================================*/
+WarheadTypeClass::~WarheadTypeClass(void)
+{
+	IniName = NULL;
+	Anim = NULL;
 }
 
 /***********************************************************************************************
@@ -99,8 +139,11 @@ WarheadTypeClass::WarheadTypeClass(int warheadtype, char const* name) :
  *=============================================================================================*/
 WarheadType Warhead_From_Name(char const* name)
 {
-	if (!name) return(WARHEAD_NONE);
-	return WarheadTC_From_Name(name)->Type;
+	if(name == NULL) return(WARHEAD_NONE);
+	WarheadTypeClass* ptr = WarheadTypeClass::From_Name(name);
+	if(ptr == NULL)
+		return(WARHEAD_NONE);
+	return ptr->Type;
 
 }
 
@@ -120,16 +163,15 @@ WarheadType Warhead_From_Name(char const* name)
  * HISTORY:                                                                                    *
  *   09/27/2021 JJ  : Created.                                                                 *
  *=============================================================================================*/
-WarheadTypeClass* WarheadTC_From_Name(char const* name)
+WarheadTypeClass* WarheadTypeClass::From_Name(char const* name)
 {
-	if (!name) return(NULL);
+	if (name == NULL) return(NULL);
 
 	for (int index = 0; index < Warheads.Count(); index++) {
-		if (stricmp(Warheads.Ptr(index)->Name(), name) == 0) {
+		if (!stricmp(Warheads.Ptr(index)->Name(), name)) {
 			return(Warheads.Ptr(index));
 		}
 	}
-
 	return(NULL);
 }
 
@@ -223,13 +265,16 @@ WarheadTypeClass * WarheadTypeClass::As_Pointer(WarheadType warhead)
 bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ini.Section_Present(Name())) {
+		char message[128];
+		sprintf(message, "ReadINI WarheadType %s ...\n", Name());
+		WWDebugString(message);
 		SpreadFactor = ini.Get_Int(Name(), "Spread", SpreadFactor);
 		IsWallDestroyer = ini.Get_Bool(Name(), "Wall", IsWallDestroyer);
 		IsWoodDestroyer = ini.Get_Bool(Name(), "Wood", IsWoodDestroyer);
 		IsTiberiumDestroyer = ini.Get_Bool(Name(), "Ore", IsTiberiumDestroyer);
 		ExplosionSet = ini.Get_Int(Name(), "Explosion", ExplosionSet);
 		InfantryDeath = ini.Get_Int(Name(), "InfDeath", InfantryDeath);
-		Anim = ini.Get_AnimType(Name(), "Anim", Anim);
+		Anim = ini.Get_Anim(Name(), "Anim"); //this requires a lookup to the AnimTypes heap
 		char buffer[128];
 		if (ini.Get_String(Name(), "Verses", "100%%,100%%,100%%,100%%,100%%", buffer, sizeof(buffer))) {
 			char * aval = strtok(buffer, ",");
@@ -238,8 +283,8 @@ bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 				aval = strtok(NULL, ",");
 			}
 		}
-
 		IsOrganic = (Modifier[ARMOR_STEEL] == 0);
+		IsReadfromINI = true;
 		return(true);
 	}
 	return(false);

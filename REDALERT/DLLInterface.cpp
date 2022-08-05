@@ -8334,7 +8334,7 @@ void DLLExportClass::Debug_Kill_Unit(int x, int y)
 		static const int debug_damage = 100; // 100 = Incremental damage
 		if (obj) {
 			int damage = debug_damage;
-			obj->Take_Damage(damage, 0, WARHEAD_HE, 0, true);
+			obj->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), 0, true);
 		} else {
 			if (cellptr->Overlay != OVERLAY_NONE) {
 				OverlayTypeClass const * optr = &OverlayTypeClass::As_Reference(cellptr->Overlay);

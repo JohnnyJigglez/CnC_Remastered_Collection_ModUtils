@@ -592,6 +592,32 @@ AnimType CCINIClass::Get_AnimType(char const * section, char const * entry, Anim
 	return(Anim_From_Name(buffer));
 }
 
+/***********************************************************************************************
+ * CCINIClass::Get_Anim -- Fetch an animation pointer from the INI database.           *
+ *                                                                                             *
+ *    This will fetch an Animation from the INI database. The anim is stored as a text        *
+ *    name of the art file used for that anim.                                                 *
+ *                                                                                             *
+ * INPUT:   section  -- The section to search for the entry under.                             *
+ *                                                                                             *
+ *          entry    -- The entry to search for.                                               *
+ *                                                                                             *
+ *          defvalue -- The default AnimType to use if the entry could not be located.         *
+ *                                                                                             *
+ * OUTPUT:  Returns with the anim type specified in the database. If it could not be found,    *
+ *          then the default value is returned.                                                *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/04/2022 JJ : Created.                                                                 *
+ *=============================================================================================*/
+AnimTypeClass * CCINIClass::Get_Anim(char const * section, char const * entry) const
+{
+	char buffer[128];
+	Get_String(section, entry, Anim_Name(ANIM_NONE), buffer, sizeof(buffer));
+	return(AnimType_From_Name(buffer));
+}
 
 /***********************************************************************************************
  * CCINIClass::Put_AnimType -- Stores the animation identifier to the INI database.            *
@@ -620,6 +646,74 @@ bool CCINIClass::Put_AnimType(char const * section, char const * entry, AnimType
 	return(Put_String(section, entry, Anim_Name(value)));
 }
 
+/***********************************************************************************************
+ * CCINIClass::Get_RTTIType -- Fetch a RTTI Type from the INI database.           *
+ *                                                                                             *
+ *    This will fetch an RTTIType from the INI database. The RTTI is stored as a text        *
+ *    name.                                                 *
+ *                                                                                             *
+ * INPUT:   section  -- The section to search for the entry under.                             *
+ *                                                                                             *
+ *          entry    -- The entry to search for.                                               *
+ *                                                                                             *        *
+ *                                                                                             *
+ * OUTPUT:  Returns with the rtti type specified in the database. If it could not be found,    *
+ *          then the default value is returned.                                                *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/04/2022 JJ : Created.                                                                 *
+ *=============================================================================================*/
+RTTIType CCINIClass::Get_RTTIType(char const* section, char const* entry, RTTIType defvalue) const
+{
+	char buffer[128];
+	if (Get_String(section, entry, "", buffer, sizeof(buffer)))
+		return(RTTIType_From_Name(buffer));
+	return(defvalue);
+}
+
+/***********************************************************************************************
+ * CCINIClass::Get_Coord -- Fetch a Coordinate from the INI database.           *
+ *                                                                                             *
+ *    This will fetch an Coordinate from the INI database. The Coordinate is stored as a text        *
+ *    name.                                                 *
+ *                                                                                             *
+ * INPUT:   section  -- The section to search for the entry under.                             *
+ *                                                                                             *
+ *          entry    -- The entry to search for.                                               *
+ *                                                                                             *        *
+ *                                                                                             *
+ * OUTPUT:  Returns with the Coordinate specified in the database. If it could not be found,    *
+ *          then the default value is returned.                                                *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/04/2022 JJ : Created.                                                                 *
+ *=============================================================================================*/
+COORDINATE CCINIClass::Get_Coord(char const* section, char const* entry, COORDINATE defvalue) const
+{
+	char buffer[128];
+	int xcoord = 0, ycoord = 0;
+	char message[128];
+	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+		sprintf(message, "CCINIClass.Get_Coord parsed %s for %s : %s \n", entry,section,buffer);
+		WWDebugString(message);
+		char* token = strtok(buffer, ",");
+		if (token){
+			xcoord = atoi(token);
+			token = strtok(NULL, ",");
+			if (token) {
+				ycoord = atoi(token);
+				sprintf(message, "CCINIClass.Get_Coord obtained %d , %d \n", xcoord, ycoord);
+				WWDebugString(message);
+				return(XY_Coord(xcoord, ycoord));
+			}
+		}
+	}
+	return(defvalue);
+}
 
 UnitType CCINIClass::Get_UnitType(char const * section, char const * entry, UnitType defvalue) const
 {
@@ -668,8 +762,24 @@ bool CCINIClass::Put_UnitType(char const * section, char const * entry, UnitType
 WeaponTypeClass* CCINIClass::Get_WeaponType(char const* section, char const* entry) const
 {
 	char buffer[32];
-
+	char message[128];
+	//static WeaponTypeClass weapon = NULL;
+	//static WeaponTypeClass * weaponptr = NULL;
+	//sprintf(message, "CCINIClass.GetWeaponType WeaponCountB %d .\n", Weapons.Count());
+	//WWDebugString(message);
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+		sprintf(message, "CCINIClass.Get_WeaponType parsed %s for %s : %s \n", entry, section, buffer);
+		WWDebugString(message);
+		/*weaponptr = WeaponTypeClass::From_Name(buffer);
+		if (weaponptr == NULL) {
+			weaponptr = new WeaponTypeClass(buffer);
+			sprintf(message, "CCINIClass.GetWeaponType new Weapon generated with name: %s .\n", weaponptr->Name());
+			WWDebugString(message);
+		}
+		sprintf(message, "CCINIClass.GetWeaponType WeaponCountA %d .\n", Weapons.Count());
+		WWDebugString(message);
+		sprintf(message, "CCINIClass.GetWeaponType obtained %s .\n", weaponptr->Name());
+		WWDebugString(message);*/
 		return(WeaponTypeClass::From_Name(buffer));
 	}
 	return(NULL);

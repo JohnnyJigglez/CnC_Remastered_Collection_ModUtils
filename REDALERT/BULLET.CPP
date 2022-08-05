@@ -83,6 +83,39 @@ BulletClass::BulletClass(BulletType id, TARGET target, TechnoClass * payback, in
 	IsLocked(true),
 	TarCom(target),
 	MaxSpeed(speed),
+	Warhead(WarheadTypeClass::As_Pointer(warhead))
+{
+	Strength = strength;
+	Height = FLIGHT_LEVEL;
+}
+
+/***********************************************************************************************
+ * BulletClass::BulletClass -- Bullet constructor.                                             *
+ *                                                                                             *
+ *    This is the constructor for the bullet class. It handles all                             *
+ *    initialization of the bullet and starting it in motion toward its                        *
+ *    target.                                                                                  *
+ *                                                                                             *
+ * INPUT:   id       -- The type of bullet this is (could be missile).                         *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/04/2022 JJ : Created.                                                                 *
+ *=============================================================================================*/
+
+BulletClass::BulletClass(BulletTypeClass * projectile, TARGET target, TechnoClass* payback, int strength, WarheadTypeClass * warhead, int speed) :
+	ObjectClass(RTTI_BULLET, Bullets.ID(this)),
+	Class(projectile),
+	Payback(payback),
+	PrimaryFacing(DIR_N),
+	IsInaccurate(false),
+	IsToAnimate(false),
+	IsLocked(true),
+	TarCom(target),
+	MaxSpeed(speed),
 	Warhead(warhead)
 {
 	Strength = strength;
@@ -170,6 +203,7 @@ BulletClass::~BulletClass(void)
 
 	Class=0;
 	Payback=0;
+	Warhead = NULL;
 }
 
 
@@ -385,7 +419,7 @@ void BulletClass::AI(void)
 
 	/*
 	**	Handle any body rotation at this time. This process must
-	**	occur every game fame in order to achieve smooth rotation.
+	**	occur every game frame in order to achieve smooth rotation.
 	*/
 	if (PrimaryFacing.Is_Rotating()) {
 		PrimaryFacing.Rotation_Adjust(Class->ROT);
@@ -724,7 +758,7 @@ bool BulletClass::Unlimbo(COORDINATE coord, DirType dir)
 		**	fire is inherently inaccurate.
 		*/
 		if (IsInaccurate || Class->IsInaccurate ||
-			((Is_Target_Cell(TarCom) || Is_Target_Infantry(TarCom)) && (Warhead == WARHEAD_AP || Class->IsFueled))) {
+			((Is_Target_Cell(TarCom) || Is_Target_Infantry(TarCom)) && (Warhead->Type == WARHEAD_AP || Class->IsFueled))) {
 
 			/*
 			**	Inaccuracy for low velocity or homing projectiles manifests itself as a standard

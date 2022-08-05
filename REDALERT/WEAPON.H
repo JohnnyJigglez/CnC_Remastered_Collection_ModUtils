@@ -62,10 +62,10 @@ class WeaponTypeClass
 		void Decode_Pointers(void) {}
 		ThreatType Allowed_Threats(void) const;
 		bool Is_Wall_Destroyer(void) const;
+		bool IsUsable(void) const { return (Bullet && WarheadPtr); }
 
 		/*
-		**	This is both the weapon type number and the index number into
-		**	the weapon array.
+		**	This is the index number in the weapon heap.
 		*/
 		int ID;
 
@@ -115,11 +115,9 @@ class WeaponTypeClass
 		int BurstDelay;
 
 		/*
-		**	This is the unit class of the projectile fired. A subset of the unit types
-		**	represent projectiles. It is one of these classes that is specified here.
-		**	If this object does not fire anything, then this value will be BULLET_NONE.
+		**	Projectile Type that the weapon uses.
 		*/
-		BulletTypeClass const * Bullet;
+		BulletTypeClass * Bullet;
 
 		/*
 		**	This is the damage (explosive load) to be assigned to the projectile that
@@ -133,9 +131,9 @@ class WeaponTypeClass
 		MPHType MaxSpeed;
 
 		/*
-		**	Warhead to attach to the projectile.
+		**	Warhead Type to attach to the projectile.
 		*/
-		WarheadTypeClass const * WarheadPtr;
+		WarheadTypeClass * WarheadPtr;
 
 		/*
 		**	Objects that fire (which can be buildings as well) will fire at a

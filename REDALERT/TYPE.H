@@ -571,6 +571,7 @@ class TechnoTypeClass : public ObjectTypeClass
 				);
 
 		bool Is_Two_Shooter(void) const;
+		bool HasWeaponEquipped(int which) const;
 		int Legal_Placement(CELL pos) const;
 		virtual int Raw_Cost(void) const;
 		virtual int Max_Passengers(void) const {return(MaxPassengers);}
@@ -776,6 +777,7 @@ class BuildingTypeClass : public TechnoTypeClass {
 						short const * sizelist,
 						short const * overlap
 						);
+		BuildingTypeClass(int type, char const* ininame);
 		operator StructType(void) const {return(Type);};
 
 		static void * operator new(size_t);
@@ -1378,6 +1380,8 @@ class BulletTypeClass : public ObjectTypeClass
 		*/
 		unsigned IsHigh:1;
 
+		bool IsReadfromINI:1;
+
 		/*
 		** Does this bullet need a shadow drawn under it?  Shadowed bullets
 		** use the Height value to offset their Y position.
@@ -1525,6 +1529,7 @@ class BulletTypeClass : public ObjectTypeClass
 		static void Init_Heap(void);
 		static BulletTypeClass & As_Reference(BulletType type);
 		static BulletTypeClass* As_Pointer(BulletType bullet);
+		static BulletTypeClass* From_Name(char const* name);
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 

@@ -982,7 +982,7 @@ void BuildingClass::AI(void)
 		}			
 		
 		int damage = Strength;
-		Take_Damage(damage, 0, WARHEAD_FIRE, As_Techno(WhomToRepay), true);
+		Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_FIRE), As_Techno(WhomToRepay), true);
 		if (!IsActive) {
 			return;
 		}
@@ -1219,7 +1219,7 @@ bool BuildingClass::Unlimbo(COORDINATE coord, DirType dir)
  *   11/22/1994 JLB : Shares base damage handler for techno objects.                           *
  *   07/15/1995 JLB : Power ratio gets adjusted.                                               *
  *=============================================================================================*/
-ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
+ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source, bool forced)
 {
 	assert(Buildings.ID(this) == ID);
 	assert(IsActive);
@@ -1279,7 +1279,7 @@ ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadType wa
 				*/
 				if (tech && tech->IsActive && tech->What_Am_I() == RTTI_AIRCRAFT && ((AircraftClass *)tech)->Class->IsFixedWing && ((AircraftClass *)tech)->In_Which_Layer() == LAYER_GROUND) {
 					int damage = 500;
-					tech->Take_Damage(damage, 0, WARHEAD_AP, source, forced);
+					tech->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_AP), source, forced);
 				}
 
 				Sound_Effect(VOC_KABOOM22, Coord);
@@ -1424,7 +1424,7 @@ ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadType wa
 					**	Show pieces of fire to indicate that a significant change in
 					**	damage level has occurred.
 					*/
-					if (warhead == WARHEAD_FIRE) {
+					if (warhead->Type == WARHEAD_FIRE) {
 						switch (Random_Pick(0, 5+Class->Width()+Class->Height())) {
 							case 0:
 								break;
@@ -4818,7 +4818,7 @@ int BuildingClass::Mission_Unload(void)
 		};
 		enum {
 			DOOR_STAGES = 5,
-			DOOR_RATE = 8
+			DOOR_RATE = 16 //8
 		};
 		UnitClass * unit;
 		switch (Status) {

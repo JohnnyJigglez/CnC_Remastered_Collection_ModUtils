@@ -40,6 +40,7 @@
 #include "cargo.h"
 #include "mission.h"
 #include	"target.h"
+#include "WARHEAD.H"
 
 
 /****************************************************************************
@@ -199,7 +200,7 @@ class UnitClass :	public DriveClass
 		/*
 		**	Combat related.
 		*/
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
 		virtual BulletClass * Fire_At(TARGET target, int which=0);
 
 		/*

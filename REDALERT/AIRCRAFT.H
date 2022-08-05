@@ -142,7 +142,7 @@ class AircraftClass : public FootClass, public FlyClass
 		/*
 		**	Combat related.
 		*/
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source, bool forced=false);
 		virtual BulletClass * Fire_At(TARGET target, int which);
 
 		/*

@@ -2869,6 +2869,50 @@ BuildingTypeClass::BuildingTypeClass(
 	Anims[BSTATE_AUX2].Rate = 0;
 }
 
+/***********************************************************************************************
+ * BuildingTypeClass::BuildingTypeClass -- This is the constructor for the building types.     *
+ *                                                                                             *
+ *    This is the constructor used to create the building types.                               *
+ *                                                                                             *
+ * INPUT:   see below...                                                                       *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/04/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+BuildingTypeClass::BuildingTypeClass(int btype, char const* ininame) : BuildingTypeClass(static_cast<StructType>(btype),
+		TXT_NONE,
+		ininame,
+		FACING_NONE,
+		XYP_COORD(0, 0),
+	    REMAP_NONE,
+		0x0000,
+		0x0000,
+		0x0000,
+		false,
+		true,
+		true,
+		false,
+		false,
+		false,
+		true,
+		true,
+		false,
+		true,
+		false,
+		false,
+		RTTI_NONE,
+		DIR_N,
+		BSIZE_11,
+		NULL,
+		(short const *)List11,
+	    (short const *)NULL)
+{
+}
+
 
 /***********************************************************************************************
  * BuildingTypeClass::operator new -- Allocates a building type object from the special heap.  *
@@ -3765,6 +3809,9 @@ bool BuildingTypeClass::Flush_For_Placement(CELL cell, HouseClass * house)  cons
 bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (TechnoTypeClass::Read_INI(ini)) {
+		char message[128];
+		sprintf(message, "BTC.Read_INI parsing %s .\n", Name());
+		WWDebugString(message);
 		Speed = ini.Get_Bool(Name(), "WaterBound", (Speed == SPEED_FLOAT)) ? SPEED_FLOAT : SPEED_NONE;
 		Capacity = ini.Get_Int(Name(), "Storage", Capacity);
 		Adjacent = ini.Get_Int(Name(), "Adjacent", Adjacent);
@@ -3774,6 +3821,42 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		IsUnsellable = ini.Get_Bool(Name(), "Unsellable", IsUnsellable);
 		IsBase = ini.Get_Bool(Name(), "BaseNormal", IsBase);
 		Power = ini.Get_Int(Name(), "Power", (Power > 0) ? Power : -Drain);
+		IsFake = ini.Get_Bool(Name(), "Fake", IsFake);
+		IsWall = ini.Get_Bool(Name(), "Wall", IsWall);
+		IsSimpleDamage = ini.Get_Bool(Name(), "SimpleDamage", IsSimpleDamage);
+		IsRegulated = ini.Get_Bool(Name(), "Regulated", IsRegulated);
+		ToBuild = ini.Get_RTTIType(Name(), "Build", ToBuild);
+		ExitCoordinate = ini.Get_Coord(Name(), "ExitCoord", ExitCoordinate);
+		char buffer[128];
+		//char xytoken[8];
+		if (ini.Get_String(Name(), "ExitList", "", buffer, sizeof(buffer))) {
+			sprintf(message, "BTC.Read_INI Building has ExitList : %s \n", buffer);
+			WWDebugString(message);
+			short count = 0;
+			char* token = NULL;
+			char* rest = buffer;
+			short xcoord = 0, ycoord = 0;
+			static short tempexitlist[16];
+			char* xytoken = strtok_s(rest, "|",&rest);
+			while (xytoken != NULL && count < 15) {
+				token = strtok(xytoken, ",");
+				if (token != NULL) {
+					xcoord = atoi(token);
+					token = strtok(NULL, ",");
+					if (token != NULL)
+						ycoord = atoi(token);
+					sprintf(message, "BTC.Read_INI Building has ExitList with coord %d : %d , %d \n", count,xcoord,ycoord);
+					WWDebugString(message);
+					tempexitlist[count] = XYCELL(xcoord, ycoord);
+				}
+				else
+					break;
+				xytoken = strtok_s(rest, "|", &rest);
+				count++;
+			}
+			tempexitlist[count] = REFRESH_EOL;
+			ExitList = (const short *)tempexitlist;
+		}
 		if (Power < 0) {
 			Drain = -Power;
 			Power = 0;
@@ -3782,7 +3865,39 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 	}
 	return(false);
 }
-
+/***********************************************************************************************
+ * BuildingTypeClass::RTTIType_From_Name -- Given a name, this finds the corresponding anim type   *
+ *                                      class.												   *
+ *                                                                                             *
+ *    This routine will convert the supplied ASCII name into the animation type that it        *
+ *    represents.                                                                              *
+ *                                                                                             *
+ * INPUT:   name  -- Pointer to the ASCII name to convert.                                     *
+ *                                                                                             *
+ * OUTPUT:  Returns with the animation type class that matches the name specified. If no match *
+ *          could be found, then NULL is returned.                                             *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/04/2022 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+RTTIType RTTIType_From_Name(char const* name)
+{
+	if (name == NULL) 
+		return(RTTI_NONE);
+	if (stricmp("AIRCRAFT", name) == 0)
+		return(RTTI_AIRCRAFTTYPE);
+	if (stricmp("UNIT", name) == 0)
+		return(RTTI_UNITTYPE);
+	if (stricmp("VESSEL", name) == 0)
+		return(RTTI_VESSELTYPE);
+	if (stricmp("INFANTRY", name) == 0)
+		return(RTTI_INFANTRYTYPE);
+	if (stricmp("BUILDING", name) == 0)
+		return(RTTI_BUILDINGTYPE);
+	return(RTTI_NONE);
+}
 
 /***********************************************************************************************
  * BuildingTypeClass::Coord_Fixup -- Adjusts coordinate to be legal for assignment.            *

@@ -1039,7 +1039,7 @@ bool UnitClass::Unlimbo(COORDINATE coord, DirType dir)
  *   06/30/1995 JLB : Lasers do maximum damage against gunboat.                                *
  *   08/16/1995 JLB : Harvester crushing doesn't occur on early missions.                      *
  *=============================================================================================*/
-ResultType UnitClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
+ResultType UnitClass::Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source, bool forced)
 {
 	assert(Units.ID(this) == ID);
 	assert(IsActive);
@@ -1080,7 +1080,7 @@ ResultType UnitClass::Take_Damage(int & damage, int distance, WarheadType warhea
 			**	Tiberium they are carrying.
 			*/
 			if (Tiberium > 0 && Rule.IsExplosiveHarvester) {
-				Wide_Area_Damage(Coord, CELL_LEPTON_W + CELL_LEPTON_W/2, Credit_Load()+Class->MaxStrength, this, WARHEAD_HE);
+				Wide_Area_Damage(Coord, CELL_LEPTON_W + CELL_LEPTON_W/2, Credit_Load()+Class->MaxStrength, this, WarheadTypeClass::As_Pointer(WARHEAD_HE));
 			}
 
 			/*
@@ -1912,10 +1912,10 @@ void UnitClass::Per_Cell_Process(PCPType why)
 				*/
 				if (*bldng == STRUCT_AVMINE) {
 					int damage = Rule.AVMineDamage;
-					Take_Damage(damage, 0, WARHEAD_HE);
+					Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE));
 				} else {
 					int damage = 10;
-					Take_Damage(damage, 0, WARHEAD_HE);
+					Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE));
 				}
 				delete bldng;
 				if (!IsActive) {
@@ -1933,9 +1933,10 @@ void UnitClass::Per_Cell_Process(PCPType why)
 		*/
 		LandType land = Map[Coord].Land_Type();
 		if (!IsDriving && IsMovingOntoBridge && (land == LAND_ROCK || land == LAND_WATER || land == LAND_RIVER)) {
-			new AnimClass(Combat_Anim(Strength, WARHEAD_AP, land), Coord);
+			WarheadTypeClass * wh = WarheadTypeClass::As_Pointer(WARHEAD_AP);
+			new AnimClass(Combat_Anim(Strength, wh, land), Coord);
 			int damage = Strength;
-			Take_Damage(damage, 0, WARHEAD_AP, NULL, true);
+			Take_Damage(damage, 0, wh, NULL, true);
 			return;
 		}
 	}

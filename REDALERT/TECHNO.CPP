@@ -2837,7 +2837,7 @@ FireErrorType TechnoClass::Can_Fire(TARGET target, int which) const
 	**	If there is no weapon, then firing is not allowed.
 	*/
 	WeaponTypeClass const * weapon = ((which == 0) ? Techno_Type_Class()->PrimaryWeapon : Techno_Type_Class()->SecondaryWeapon);
-	if (weapon == NULL) {
+	if (weapon == NULL || !(weapon->IsUsable())) {
 		return(FIRE_CANT);
 	}
 
@@ -3181,12 +3181,13 @@ bool TechnoClass::Electric_Zap(COORDINATE target_coord, int which, WindowNumberT
  *   07/03/1995 JLB : Moving platforms fire inaccurate projectiles.                            *
  *   02/22/1996 JLB : Handles camera "weapon" case.                                            *
  *   07/13/2021 JJ  : Handles burst delay and burst fire                                       *
+ *   08/04/2022 JJ  : Updated bullet spawning to use pointers to WH + Projectile data          *
  *=============================================================================================*/
 BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 {
 	assert(IsActive);
 
-	BulletClass * bullet;				// Projectile.
+	BulletClass* bullet = NULL;				// Projectile.
 	DirType dir;					// The facing to impart upon the projectile.
 	COORDINATE target_coord;		// Coordinate of the target.
 	COORDINATE fire_coord;			// Coordinate of firing position.
@@ -3258,7 +3259,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 		firespeed *= Rule.TurboBoost;
 	}
 
- 	bullet = new BulletClass(weapon->Bullet->Type, target, this, firepower, weapon->WarheadPtr->Type, firespeed);
+ 	bullet = new BulletClass(weapon->Bullet, target, this, firepower, weapon->WarheadPtr, firespeed);
 
 	if (bullet != NULL) {
 
@@ -3708,10 +3709,9 @@ ActionType TechnoClass::What_Action(CELL cell) const
 
 	if (House->IsPlayerControl && Techno_Type_Class()->PrimaryWeapon != NULL && (ctrldown || (optr && optr->IsLegalTarget))) {
 		WarheadTypeClass const * whead = Techno_Type_Class()->PrimaryWeapon->WarheadPtr;
-
 // To be fixed for firing on ore by accounting for ore and ignoring the overlay in that case.
 
-		if (optr == NULL || (optr->IsWall && (whead->IsWallDestroyer || (whead->IsWoodDestroyer && optr->IsWooden)))) {
+		if (optr == NULL || (optr->IsWall && (whead != NULL) && (whead->IsWallDestroyer || (whead->IsWoodDestroyer && optr->IsWooden)))) {
 			int primary = What_Weapon_Should_I_Use(::As_Target(cell));
 			if (Can_Player_Move() || In_Range(::As_Target(cell), primary)) {
 				return(ACTION_ATTACK);
@@ -4053,7 +4053,7 @@ bool TechnoClass::Captured(HouseClass * newowner)
  * HISTORY:                                                                                    *
  *   06/20/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-ResultType TechnoClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
+ResultType TechnoClass::Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source, bool forced)
 {
 	assert(IsActive);
 
@@ -4085,9 +4085,9 @@ ResultType TechnoClass::Take_Damage(int & damage, int distance, WarheadType warh
 				/*
 				**	The warhead to use is based on the weapon this object is equipped with.
 				*/
-				WarheadType wh = WARHEAD_HE;
+				WarheadTypeClass * wh = WarheadTypeClass::As_Pointer(WARHEAD_HE);
 				if (Techno_Type_Class()->PrimaryWeapon != NULL) {
-					wh = WarheadType(Techno_Type_Class()->PrimaryWeapon->WarheadPtr->ID);
+					wh = Techno_Type_Class()->PrimaryWeapon->WarheadPtr;
 				}
 
 				int damage = Techno_Type_Class()->MaxStrength;
@@ -6747,6 +6747,17 @@ bool TechnoTypeClass::Is_Two_Shooter(void) const
 	return(false);
 }
 
+bool TechnoTypeClass::HasWeaponEquipped(int which) const
+{
+	switch (which) {
+	case(0):
+		return (PrimaryWeapon != NULL);
+	case(1):
+		return (SecondaryWeapon != NULL);
+	}
+	return false;
+}
+
 
 /***********************************************************************************************
  * _Scale_To_256 -- Scales a 1..100 number into a 1..255 number.                               *
@@ -6792,33 +6803,36 @@ static inline int _Scale_To_256(int val)
  *=============================================================================================*/
 bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 {
-	if (ini.Is_Present(Name())) {
+	if (ini.Section_Present(Name())) {
+		char message[128];
+		sprintf(message, "ReadINI Techno %s ...\n", Name());
+		WWDebugString(message);
+		//GlyphX_Debug_Print(message);
 #ifdef FIXIT_NAME_OVERRIDE
 		char buffer[256];
-		int id = ((RTTI+1) * 100) + ID;
-
+		int id = ((RTTI + 1) * 100) + ID;
 		ini.Get_String(Name(), "Name", "", buffer, sizeof(buffer));
-		if (strlen(buffer) > 0)  {
+		if (strlen(buffer) > 0) {
 
 #if defined (GERMAN)||(FRENCH)
 
-		for(int xx=0; NewName[xx] != NULL; xx++){
-		    if(!strcmp(NewName[xx], buffer)){
-			memcpy(buffer, "", sizeof(buffer));
-			memcpy(buffer, NewName[xx+1], sizeof(buffer));
-			break;
-		   }
-		}
+			for (int xx = 0; NewName[xx] != NULL; xx++) {
+				if (!strcmp(NewName[xx], buffer)) {
+					memcpy(buffer, "", sizeof(buffer));
+					memcpy(buffer, NewName[xx + 1], sizeof(buffer));
+					break;
+				}
+			}
 #endif
 
 			/*
 			**	Insert the new name text into the buffer list.
 			*/
 			for (int index = 0; index < ARRAY_SIZE(NameOverride); index++) {
-				if (NameIDOverride[index] == 0)  {
+				if (NameIDOverride[index] == 0) {
 					NameOverride[index] = strdup(buffer);
 					NameIDOverride[index] = id;
-//					FullName = -(index+1);
+					//					FullName = -(index+1);
 					break;
 				}
 			}
@@ -6830,6 +6844,72 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		IsExploding = ini.Get_Bool(Name(), "Explodes", IsExploding);
 		PrimaryWeapon = ini.Get_WeaponType(Name(), "Primary");
 		SecondaryWeapon = ini.Get_WeaponType(Name(), "Secondary");
+		/*WeaponTypeClass* weaponptr = NULL;
+		if (ini.Get_String(Name(), "Primary", "", buffer, sizeof(buffer))) {
+			/*sprintf(message, "ReadINI Techno has pri weapon %s.\n", buffer);
+			WWDebugString(message);
+			sprintf(message, "ReadINI Techno searching Weapons array size %d.\n", Weapons.Count());
+			WWDebugString(message);
+			for (int index = 0; index < Weapons.Count(); index++) {
+				weaponptr = Weapons.Ptr(index);
+				sprintf(message, "ReadINI Techno DETECTED: %s .\n", weaponptr->Name());
+				WWDebugString(message);
+				if (stricmp(weaponptr->Name(), buffer) == 0) {
+					sprintf(message, "ReadINI Techno FOUND.\n");
+					WWDebugString(message);
+					break;
+				}
+				weaponptr = NULL;
+			}
+			weaponptr = ini.Get_WeaponType(Name(), "Secondary");
+			if (weaponptr == NULL)
+			{
+				sprintf(message, "ReadINI Techno could not find %s.\n", buffer);
+				WWDebugString(message);
+				//weaponptr = new WeaponTypeClass(buffer);
+			}
+			else
+				PrimaryWeapon = weaponptr;
+		}
+		if (ini.Get_String(Name(), "Secondary", "", buffer, sizeof(buffer))) {
+			sprintf(message, "ReadINI Techno has sec weapon %s.\n", buffer);
+			WWDebugString(message);
+			sprintf(message, "ReadINI Techno searching Weapons array size %d.\n", Weapons.Count());
+			WWDebugString(message);
+			for (int index = 0; index < Weapons.Count(); index++) {
+				weaponptr = Weapons.Ptr(index);
+				sprintf(message, "ReadINI Techno DETECTED: %s .\n", weaponptr->Name());
+				WWDebugString(message);
+				if (stricmp(weaponptr->Name(), buffer) == 0) {
+					sprintf(message, "ReadINI Techno FOUND.\n");
+					WWDebugString(message);
+					break;
+				}
+				weaponptr = NULL;
+			}
+			weaponptr = ini.Get_WeaponType(Name(), "Secondary");
+			if (weaponptr == NULL)
+			{
+				sprintf(message, "ReadINI Techno %s could not find %s.\n", Name(), buffer);
+				WWDebugString(message);
+				//weaponptr = new WeaponTypeClass(buffer);
+			}
+			else
+				SecondaryWeapon = weaponptr;
+		}
+		/*WeaponTypeClass* weaponptr = NULL;
+		weaponptr = ini.Get_WeaponType(Name(), "Primary");
+		if (weaponptr != NULL) {
+			sprintf(message, "ReadINI Techno has pri weapon %s.\n", weaponptr->Name());
+			WWDebugString(message);
+			PrimaryWeapon = weaponptr;
+		}
+		weaponptr = ini.Get_WeaponType(Name(), "Secondary");
+		if (weaponptr != NULL) {
+			sprintf(message, "ReadINI Techno has sec weapon %s.\n", weaponptr->Name());
+			WWDebugString(message);
+			SecondaryWeapon = weaponptr;
+		}*/
 		IsCloakable = ini.Get_Bool(Name(), "Cloakable", IsCloakable);
 		IsCrushable = ini.Get_Bool(Name(), "Crushable", IsCrushable);
 		IsScanner = ini.Get_Bool(Name(), "Sensors", IsScanner);

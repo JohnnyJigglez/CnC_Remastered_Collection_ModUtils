@@ -342,10 +342,10 @@ void LogicClass::AI(void)
 						obj->Clicked_As_Target(HOUSE_COUNT); // 2019/09/20 JAS - Added record of who clicked on the object, HOUSE_COUNT is used to mark for all houses
 						new AnimClass(ANIM_MINE_EXP1, obj->Center_Coord());
 					}
-					obj->Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+					obj->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_AP), 0, true);
 				}
 			} else {
-				obj->Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+				obj->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_AP), 0, true);
 			}
 #else
 			obj->Take_Damage(damage, 0, WARHEAD_AP, 0, true);

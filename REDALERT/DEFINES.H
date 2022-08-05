@@ -1356,7 +1356,9 @@ typedef enum BulletType : char {
 	BULLET_NUKE_DOWN,
 
 	BULLET_COUNT,
+	BULLET_MAX=127,
 	BULLET_FIRST=0
+	
 } BulletType;
 
 //PG inline BulletType operator++(BulletType &, int);
@@ -1473,7 +1475,8 @@ typedef enum StructType : char {
 #endif
 
 	STRUCT_COUNT,
-	STRUCT_FIRST=0
+	STRUCT_FIRST=0,
+	STRUCT_MAX=127
 } StructType;
 
 //PG inline StructType operator++(StructType &, int);
@@ -2339,7 +2342,8 @@ typedef enum AnimType : char {
 	ANIM_BEACON_VIRTUAL,		// Beacon (virtual).
 
 	ANIM_COUNT,
-	ANIM_FIRST=0
+	ANIM_FIRST=0,
+	ANIM_MAX=127
 } AnimType;
 
 
@@ -2679,14 +2683,15 @@ typedef enum WarheadType : char {
 	WARHEAD_MECHANICAL,		// repair weapon for vehicles
 #endif
 	WARHEAD_COUNT,
-	WARHEAD_FIRST=0
+	WARHEAD_FIRST=0,
+	WARHEAD_MAX=127
 } WarheadType;
 
 
 /**********************************************************************
 **	This enumerates the various weapon types. The weapon is characterized
 **	by the projectile it launches, the damage it does, and the rate of
-**	fire.
+**	fire.*/
 
 typedef enum WeaponType : char {
 	WEAPON_NONE=-1,
@@ -2745,8 +2750,9 @@ typedef enum WeaponType : char {
 
 
 	WEAPON_COUNT,
-	WEAPON_FIRST=0
-} WeaponType;*/
+	WEAPON_FIRST=0,
+	WEAPON_MAX=127
+} WeaponType;
 
 
 /**********************************************************************

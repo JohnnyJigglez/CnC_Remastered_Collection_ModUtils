@@ -349,6 +349,7 @@ bool TActionClass::operator() (HousesType house, ObjectClass * object, int id, C
 	*/
 	HouseClass * hptr = HouseClass::As_Pointer(house);
 	TriggerClass * trig = NULL;
+	WarheadTypeClass* wh = WarheadTypeClass::As_Pointer(WARHEAD_AP);
 	if (id != -1) {
 		trig = Triggers.Raw_Ptr(id);
 	}
@@ -697,7 +698,7 @@ bool TActionClass::operator() (HousesType house, ObjectClass * object, int id, C
 		case TACTION_DESTROY_OBJECT:
 			if (object) {
 				int damage = object->Strength;
-				object->Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+				object->Take_Damage(damage, 0, wh, 0, true);
 			} else {
 				success = false;
 			}
@@ -722,7 +723,7 @@ bool TActionClass::operator() (HousesType house, ObjectClass * object, int id, C
 					if (unit && unit->Trigger == trig) {
 						unit->Trigger = NULL;
 						int damage = unit->Strength;
-						unit->Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+						unit->Take_Damage(damage, 0, wh, 0, true);
 					}
 				}
 
@@ -732,7 +733,7 @@ bool TActionClass::operator() (HousesType house, ObjectClass * object, int id, C
 					if (infantry && infantry->Trigger == trig) {
 						infantry->Trigger = NULL;
 						int damage = infantry->Strength;
-						infantry->Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+						infantry->Take_Damage(damage, 0, wh, 0, true);
 					}
 				}
 
@@ -742,7 +743,7 @@ bool TActionClass::operator() (HousesType house, ObjectClass * object, int id, C
 					if (aircraft && aircraft->Trigger == trig) {
 						aircraft->Trigger = NULL;
 						int damage = aircraft->Strength;
-						aircraft->Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+						aircraft->Take_Damage(damage, 0, wh, 0, true);
 					}
 				}
 
@@ -752,7 +753,7 @@ bool TActionClass::operator() (HousesType house, ObjectClass * object, int id, C
 					if (building && building->Trigger == trig) {
 						building->Trigger = NULL;
 						int damage = building->Strength;
-						building->Take_Damage(damage, 0, WARHEAD_AP, 0, true);
+						building->Take_Damage(damage, 0, wh, 0, true);
 					}
 				}
 			}

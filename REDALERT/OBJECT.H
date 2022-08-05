@@ -44,6 +44,7 @@ class HouseClass;
 class BuildingClass;
 class RadioClass;
 class TriggerClass;
+class WarheadTypeClass;
 
 
 /**********************************************************************
@@ -235,7 +236,7 @@ class ObjectClass : public AbstractClass
 		*/
 		virtual bool In_Range(COORDINATE , int=0) const;
 		virtual int Weapon_Range(int =0) const;
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
 		virtual void Scatter(COORDINATE , bool forced=false, bool nokidding=false);
 		virtual bool Catch_Fire(void);
 		virtual void Fire_Out(void);

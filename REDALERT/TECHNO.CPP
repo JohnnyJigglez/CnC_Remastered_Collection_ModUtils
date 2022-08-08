@@ -6805,8 +6805,6 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ini.Section_Present(Name())) {
 		char message[128];
-		sprintf(message, "ReadINI Techno %s ...\n", Name());
-		WWDebugString(message);
 		//GlyphX_Debug_Print(message);
 #ifdef FIXIT_NAME_OVERRIDE
 		char buffer[256];
@@ -6838,12 +6836,17 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 			}
 		}
 #endif
-
+		sprintf(message, "TTC.ReadINI parsing %s ...\n", Name());
+		WWDebugString(message);
 		IsDoubleOwned = ini.Get_Bool(Name(), "DoubleOwned", IsDoubleOwned);
 		ThreatRange = ini.Get_Lepton(Name(), "GuardRange", ThreatRange);
 		IsExploding = ini.Get_Bool(Name(), "Explodes", IsExploding);
-		PrimaryWeapon = ini.Get_WeaponType(Name(), "Primary");
-		SecondaryWeapon = ini.Get_WeaponType(Name(), "Secondary");
+		PrimaryWeapon = ini.Get_WeaponType(Name(), "Primary", PrimaryWeapon);
+		sprintf(message, "TTC.ReadINI %s has pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+		WWDebugString(message);
+		SecondaryWeapon = ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon);
+		sprintf(message, "TTC.ReadINI %s has sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
+		WWDebugString(message);
 		/*WeaponTypeClass* weaponptr = NULL;
 		if (ini.Get_String(Name(), "Primary", "", buffer, sizeof(buffer))) {
 			/*sprintf(message, "ReadINI Techno has pri weapon %s.\n", buffer);

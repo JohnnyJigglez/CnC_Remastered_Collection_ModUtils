@@ -3828,7 +3828,6 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		ToBuild = ini.Get_RTTIType(Name(), "Build", ToBuild);
 		ExitCoordinate = ini.Get_Coord(Name(), "ExitCoord", ExitCoordinate);
 		char buffer[128];
-		//char xytoken[8];
 		if (ini.Get_String(Name(), "ExitList", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building has ExitList : %s \n", buffer);
 			WWDebugString(message);
@@ -3857,6 +3856,34 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 			tempexitlist[count] = REFRESH_EOL;
 			ExitList = (const short *)tempexitlist;
 		}
+		if (ini.Get_String(Name(), "OccupyList", "", buffer, sizeof(buffer))) {
+			sprintf(message, "BTC.Read_INI Building has OccupyList : %s \n", buffer);
+			WWDebugString(message);
+			short count = 0, rowcount = 0, colcount = 0;
+			char* coltoken = NULL;
+			char* rest = buffer;
+			static short tempoccupylist[17];
+			char* rowtoken = strtok_s(rest, "|", &rest);
+			while (rowtoken != NULL && rowcount < 4) {
+				coltoken = strtok(rowtoken, ",");
+				while(coltoken != NULL && colcount < 4) {
+					if (atoi(coltoken) == 1) {
+						tempoccupylist[count] = (rowcount * 128) + colcount;
+						count++;
+					}
+					colcount++;
+					coltoken = strtok(NULL, ",");
+				}
+				colcount = 0;
+				rowcount++;
+				rowtoken = strtok_s(rest, "|", &rest);
+			}
+			sprintf(message, "BTC.Read_INI Building occupies %d cells \n", count);
+			WWDebugString(message);
+			tempoccupylist[count] = REFRESH_EOL;
+			OccupyList = (const short*)tempoccupylist;
+		}
+
 		if (Power < 0) {
 			Drain = -Power;
 			Power = 0;

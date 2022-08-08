@@ -759,10 +759,11 @@ bool CCINIClass::Put_UnitType(char const * section, char const * entry, UnitType
  *   07/03/1996 JLB : Created.                                                                 *
  *   10/02/2021 JJ  : Updated to remove the WeaponType enum of the olden-code                  *
  *=============================================================================================*/
-WeaponTypeClass* CCINIClass::Get_WeaponType(char const* section, char const* entry) const
+const WeaponTypeClass* CCINIClass::Get_WeaponType(char const* section, char const* entry, WeaponTypeClass const * defvalue) const
 {
 	char buffer[32];
 	char message[128];
+
 	//static WeaponTypeClass weapon = NULL;
 	//static WeaponTypeClass * weaponptr = NULL;
 	//sprintf(message, "CCINIClass.GetWeaponType WeaponCountB %d .\n", Weapons.Count());
@@ -782,7 +783,7 @@ WeaponTypeClass* CCINIClass::Get_WeaponType(char const* section, char const* ent
 		WWDebugString(message);*/
 		return(WeaponTypeClass::From_Name(buffer));
 	}
-	return(NULL);
+	return(defvalue);
 }
 
 

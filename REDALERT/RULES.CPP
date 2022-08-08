@@ -738,7 +738,7 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 	static char const* const WT = "Weapons";
 	if (ini.Is_Present(WT)) {
 		for (int x = 0; x < ini.Entry_Count(WT); x++) {
-			new WeaponTypeClass(ini.Get_Value(WT, x));
+			new WeaponTypeClass(ini.Get_Entry(WT, x));
 		}
 	}
 
@@ -1053,9 +1053,7 @@ bool RulesClass::Objects(CCINIClass & ini)
 	/*
 	**	Fetch the game object values from the rules file.
 	*/
-	//char message[128];
-	//sprintf(message, "RulesClassObjects INIFILE: %s .\n", ini.);
-	//WWDebugString(message);
+
 	for (int index = 0; index < AnimTypes.Count(); index++) {
 		AnimTypes.Ptr(index)->Read_INI(ini);
 	}
@@ -1067,9 +1065,11 @@ bool RulesClass::Objects(CCINIClass & ini)
 	for (int proj = 0; proj < BulletTypes.Count(); proj++) {
 		BulletTypes.Ptr(proj)->Read_INI(ini);
 	}
+
 	for (int windex = 0; windex < Weapons.Count(); windex++) {
 		Weapons.Ptr(windex)->Read_INI(ini);
 	}
+
 	for (int uindex = 0; uindex < UnitTypes.Count(); uindex++) {
 		UnitTypes.Ptr(uindex)->Read_INI(ini);
 	}

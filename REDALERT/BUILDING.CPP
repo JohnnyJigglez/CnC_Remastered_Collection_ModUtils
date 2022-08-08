@@ -4818,7 +4818,7 @@ int BuildingClass::Mission_Unload(void)
 		};
 		enum {
 			DOOR_STAGES = 5,
-			DOOR_RATE = 16 //8
+			DOOR_RATE = 8
 		};
 		UnitClass * unit;
 		switch (Status) {

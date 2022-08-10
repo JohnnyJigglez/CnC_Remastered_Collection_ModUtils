@@ -655,6 +655,23 @@ TechnoClass::TechnoClass(RTTIType rtti, int id, HousesType house) :
 	} else {
 		IsOwnedByPlayer = House->IsHuman;
 	}
+	//TechnoTypeClass* ttc = Techno_Type_Class();
+	/*if (Techno_Type_Class() != NULL) {
+		if (Techno_Type_Class()->PrimaryWeapon != NULL) {
+			BurstShotsRemaining[0] = Techno_Type_Class()->PrimaryWeapon->Burst;
+		}
+		if (Techno_Type_Class()->SecondaryWeapon != NULL) {
+			BurstShotsRemaining[1] = Techno_Type_Class()->SecondaryWeapon->Burst;
+		}
+		/*
+		**	For two shooters, clear out the second shot flag -- it will be set the first time
+		**	the object fires. For non two shooters, set the flag since it will never be cleared
+		**	and the second shot flag tells the system that normal rearm times apply -- this is
+		**	what is desired for non two shooters.
+		
+		IsSecondShot = !(Techno_Type_Class()->Is_Two_Shooter());*/
+	
+//ttc = NULL;
 }
 
 
@@ -2718,7 +2735,7 @@ bool TechnoClass::Is_Ready_To_Cloak(void) const
 	if (Arm[0] != 0) {
 		return(false);
 	}
-	if (IsIndependentFire == true && (Arm[1] != 0)) {
+	if (IsIndependentFire && (Arm[1] != 0)) {
 		return(false);
 	}
 
@@ -2872,7 +2889,7 @@ FireErrorType TechnoClass::Can_Fire(TARGET target, int which) const
 	**	Don't allow firing if still rearming.
 	*/
 	if (Arm[0] != 0) return(FIRE_REARM);
-	if (Arm[1] != 0 && IsIndependentFire == true) return(FIRE_REARM);
+	if (Arm[1] != 0 && IsIndependentFire) return(FIRE_REARM);
 	/*
 	**	The target must be within range in order to allow firing.
 	*/
@@ -6452,8 +6469,12 @@ TechnoTypeClass::TechnoTypeClass(
 	SecondaryOffset(secondaryoffset),
 	SecondaryLateral(secondarylateral),
 	Points(0),
-    IsIndependentFire(false)
+    IsIndependentFire(false),
+	BuildSpeedBias(1)
 {
+	//char message[64];
+	//sprintf(message, "Instantiated TECHNO %s .\n", ininame);
+	//WWDebugString(message);
 }
 
 
@@ -6529,7 +6550,7 @@ extern int UnitBuildPenalty;
 
 int TechnoTypeClass::Time_To_Build(HousesType house) const
 {
-	int time = Cost * Rule.BuildSpeedBias * fixed(TICKS_PER_MINUTE, 1000);
+	int time = Cost * Rule.BuildSpeedBias * fixed(TICKS_PER_MINUTE, 1000) * BuildSpeedBias;
 
 	HouseClass* hptr = HouseClass::As_Pointer(house);
 	if (!hptr || !hptr->IsActive) {
@@ -6556,13 +6577,31 @@ int TechnoTypeClass::Time_To_Build(HousesType house) const
 				time /= 10;
 			}
 		}
-		
-		if (What_Am_I() == RTTI_BUILDINGTYPE || What_Am_I() == RTTI_INFANTRYTYPE) {
-			time *= hptr->BuildSpeedBias;
+		fixed tempbsb = 1;
+		switch (What_Am_I()) {
+			case RTTI_VESSELTYPE:
+				tempbsb = hptr->Class->BuildSpeedBiases[0];
+				break;
+			case RTTI_UNITTYPE:
+				tempbsb = hptr->Class->BuildSpeedBiases[1];
+				break;
+			case RTTI_INFANTRYTYPE:
+				tempbsb = hptr->Class->BuildSpeedBiases[2];
+				break;
+			case RTTI_AIRCRAFTTYPE:
+				tempbsb = hptr->Class->BuildSpeedBiases[3];
+				break;
+			case RTTI_BUILDINGTYPE:
+				tempbsb = hptr->Class->BuildSpeedBiases[4];
+				break;
 		}
-		else {
-			time *= hptr->BuildSpeedBias * fixed(UnitBuildPenalty, 100);	//UNIT_BUILD_BIAS;
-		}
+		time *= hptr->BuildSpeedBias * tempbsb;
+		//if (What_Am_I() == RTTI_BUILDINGTYPE || What_Am_I() == RTTI_INFANTRYTYPE) {
+		//	time *= hptr->BuildSpeedBias;
+		//}
+		//else {
+		//	time *= hptr->BuildSpeedBias * fixed(UnitBuildPenalty, 100);	//UNIT_BUILD_BIAS;
+		//}
 	}
 
 	/*
@@ -6596,7 +6635,7 @@ int TechnoTypeClass::Time_To_Build(HousesType house) const
 		// Hack: allow the multiple-factory bonus, but only up to two factories if
 		//			this is an AM<->AM game.
 		if (NewUnitsEnabled) {
-			time /= min(divisor, 2);
+			time /= min(divisor, Rule.FactoryLimit);
 		}
 		else {
 			time /= divisor;
@@ -6933,6 +6972,7 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		ROT = ini.Get_Int(Name(), "ROT", ROT);
 		MaxPassengers = ini.Get_Int(Name(), "Passengers", MaxPassengers);
 		IsIndependentFire = ini.Get_Bool(Name(), "IndependentFire", IsIndependentFire);
+		BuildSpeedBias = ini.Get_Fixed(Name(), "BuildTime", BuildSpeedBias);
 //Mono_Printf("before image=: %s\n",GraphicName);
 		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
 //Mono_Printf("after image=: %s\n",GraphicName);if(Random_Pick(0,4)) Keyboard->Get();

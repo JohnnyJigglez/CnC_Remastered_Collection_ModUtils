@@ -742,6 +742,7 @@ class RulesClass {
 		int AnimMax;
 		int AnimTypeMax;
 		int BuildingMax;
+		int BuildingTypeMax;
 		int BulletMax;
 		int FactoryMax;
 		int InfantryMax;
@@ -814,6 +815,12 @@ class RulesClass {
 		**	delay to get the effective build delay.
 		*/
 		fixed BuildSpeedBias;
+
+		/*
+		**	This is the overall build speed bias. Multiply this value by the normal build
+		**	delay to get the effective build delay.
+		*/
+		int FactoryLimit;
 
 		/*
 		**	Weapon type array pointer should go here. Dynamic type.

@@ -285,19 +285,19 @@ HouseTypeClass const * const HouseTypeClass::Pointers[HOUSE_COUNT] = {
  *   06/21/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
 HouseTypeClass::HouseTypeClass(
-				HousesType house,
-				char const * ini,
-				int fullname,
-				char const * ext,
-				int lemon,
-				PlayerColorType remapcolor,
-				char prefix) :
+	HousesType house,
+	char const* ini,
+	int fullname,
+	char const* ext,
+	int lemon,
+	PlayerColorType remapcolor,
+	char prefix) :
 	AbstractTypeClass(RTTI_HOUSETYPE, house, fullname, ini),
-//	RTTI(RTTI_HOUSETYPE),
-//	ID(house),
+	//	RTTI(RTTI_HOUSETYPE),
+	//	ID(house),
 	House(house),
-//	IniName(ini),
-//	FullName(fullname),
+	//	IniName(ini),
+	//	FullName(fullname),
 	Lemon(lemon),
 	RemapColor(remapcolor),
 	Prefix(prefix),
@@ -307,7 +307,8 @@ HouseTypeClass::HouseTypeClass(
 	ArmorBias(1),
 	ROFBias(1),
 	CostBias(1),
-	BuildSpeedBias(1)
+	BuildSpeedBias(1),
+	BuildSpeedBiases{1,1,1,1,1}
 {
 	strncpy(Suffix, ext, 3);
 	Suffix[3] = '\0';
@@ -517,6 +518,11 @@ bool HouseTypeClass::Read_INI(CCINIClass & ini)
 		ROFBias = ini.Get_Fixed(Name(), "ROF", ROFBias);
 		CostBias = ini.Get_Fixed(Name(), "Cost", CostBias);
 		BuildSpeedBias = ini.Get_Fixed(Name(), "BuildTime", BuildSpeedBias);
+		BuildSpeedBiases[0] = ini.Get_Fixed(Name(), "VesselBuildTime", BuildSpeedBiases[0]);
+		BuildSpeedBiases[1] = ini.Get_Fixed(Name(), "UnitBuildTime", BuildSpeedBiases[1]);
+		BuildSpeedBiases[2] = ini.Get_Fixed(Name(), "InfantryBuildTime", BuildSpeedBiases[2]);
+		BuildSpeedBiases[3] = ini.Get_Fixed(Name(), "AircraftBuildTime", BuildSpeedBiases[3]);
+		BuildSpeedBiases[4] = ini.Get_Fixed(Name(), "StructureBuildTime", BuildSpeedBiases[4]);
 		return(true);
 	}
 	return(false);

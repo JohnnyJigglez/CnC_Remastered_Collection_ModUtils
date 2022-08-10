@@ -249,7 +249,7 @@ bool Init_Game(int , char * [])
 	**	the rule parser routine (currently).
 	*/
 	HouseTypes.Set_Heap(HOUSE_COUNT);
-	BuildingTypes.Set_Heap(STRUCT_COUNT);
+	//BuildingTypes.Set_Heap(STRUCT_COUNT+1);
 	AircraftTypes.Set_Heap(AIRCRAFT_COUNT);
 	InfantryTypes.Set_Heap(INFANTRY_COUNT);
 	//BulletTypes.Set_Heap(BULLET_COUNT);
@@ -262,7 +262,7 @@ bool Init_Game(int , char * [])
 	SmudgeTypes.Set_Heap(SMUDGE_COUNT);
 
 	HouseTypeClass::Init_Heap();
-	BuildingTypeClass::Init_Heap();
+	//BuildingTypeClass::Init_Heap();
 	AircraftTypeClass::Init_Heap();
 	InfantryTypeClass::Init_Heap();
 	//BulletTypeClass::Init_Heap();

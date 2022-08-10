@@ -52,7 +52,7 @@ class WeaponTypeClass
 		void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		void operator delete(void * pointer);
-
+		static void Init_Heap(void);
 		char const * Name(void) const {return(IniName);}
 		bool Read_INI(CCINIClass & ini);
 		static WeaponTypeClass * As_Pointer(int index);

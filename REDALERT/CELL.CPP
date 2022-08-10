@@ -2326,7 +2326,7 @@ bool CellClass::Goodie_Check(FootClass * object)
 										ucount += hptr->QuantityV(j);
 									}
 									int bcount = 0;
-									for( j=0; j < STRUCT_COUNT; j++) {
+									for( j=0; j < BuildingTypes.Count(); j++) {
 										bcount += hptr->QuantityB(j);
 									}
 									ucount += bcount/2;	// weight buildings less

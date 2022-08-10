@@ -2189,6 +2189,7 @@ int BuildingClass::Exit_Object(TechnoClass * base)
  * HISTORY:                                                                                    *
  *   11/11/1994 JLB : Created.                                                                 *
  *   12/23/1994 JLB : Only updates for PLAYER buildings.                                       *
+ *   08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                          *
  *=============================================================================================*/
 void BuildingClass::Update_Buildables(void)
 {
@@ -2227,7 +2228,7 @@ void BuildingClass::Update_Buildables(void)
 				break;
 
 			case RTTI_BUILDINGTYPE:
-				for (i = STRUCT_FIRST; i < STRUCT_COUNT; i++) {
+				for (i = 0; i < BuildingTypes.Count(); i++) {
 					if (PlayerPtr->Can_Build(&BuildingTypeClass::As_Reference((StructType)i), ActLike)) {
 						if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
 							Sidebar_Glyphx_Add(RTTI_BUILDINGTYPE, i, House, buildable_via_capture);
@@ -4013,7 +4014,7 @@ int BuildingClass::Mission_Attack(void)
 
 		case FIRE_REARM:
 			PrimaryFacing.Set_Desired(Direction(TarCom));
-			return(Arm[(IsIndependentFire) ? primary : 0]);
+			return(Arm[IsIndependentFire ? primary : 0]);
 
 		case FIRE_BUSY:
 			return(1);

@@ -97,6 +97,9 @@ BulletTypeClass::BulletTypeClass(int bullettype, char const* name) :
 	Arming(0),
 	Tumble(0)
 {
+	//char message[64];
+	//sprintf(message, "Instantiated Projectile %s .\n", IniName);
+	//WWDebugString(message);
 }
 
 

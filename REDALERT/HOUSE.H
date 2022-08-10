@@ -132,6 +132,7 @@ class HouseClass {
 		fixed ROFBias;
 		fixed CostBias;
 		fixed BuildSpeedBias;
+		//fixed BuildSpeedBiases[5];
 		fixed RepairDelay;
 		fixed BuildDelay;
 

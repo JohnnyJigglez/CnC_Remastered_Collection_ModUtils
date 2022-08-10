@@ -106,6 +106,9 @@
  *=============================================================================================*/
 bool CCINIClass::Load(FileClass & file, bool withdigest)
 {
+	char message[128];
+	sprintf(message, "Loading %s \n", file.File_Name());
+	WWDebugString(message);
 	return(Load(FileStraw(file), withdigest));
 }
 
@@ -1492,11 +1495,12 @@ long CCINIClass::Get_Buildings(char const * section, char const * entry, long de
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/11/1996 JLB : Created.                                                                 *
+ *   08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                          *
  *=============================================================================================*/
 bool CCINIClass::Put_Buildings(char const * section, char const * entry, long value)
 {
 	char buffer[128] = "";
-	int maxi = (32 < STRUCT_COUNT) ? 32 : STRUCT_COUNT;
+	int maxi = (32 < BuildingTypes.Count()) ? 32 : BuildingTypes.Count();
 
 	for (StructType index = STRUCT_FIRST; index < maxi; index++) {
 		if ((value & (1L << index)) != 0) {

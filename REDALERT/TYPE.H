@@ -146,6 +146,7 @@ class HouseTypeClass : public AbstractTypeClass
 		fixed ROFBias;
 		fixed CostBias;
 		fixed BuildSpeedBias;
+		fixed BuildSpeedBiases[5];
 
 		//------------------------------------------------------------------------
 		HouseTypeClass(NoInitClass const & x) : AbstractTypeClass(x) {}
@@ -416,6 +417,12 @@ class TechnoTypeClass : public ObjectTypeClass
 		**	corresponds to the full strength of the object.
 		*/
 		unsigned IsExploding:1;
+
+		/*
+		**	This is the build speed bias, the time it takes to build this techno will
+		**	be multiplied by this number/
+		*/
+		fixed BuildSpeedBias;
 
 		/*
 		**	This specifies the zone that an object of this type should recognize. Zones
@@ -777,7 +784,7 @@ class BuildingTypeClass : public TechnoTypeClass {
 						short const * sizelist,
 						short const * overlap
 						);
-		BuildingTypeClass(int type, char const* ininame);
+		BuildingTypeClass(int btype, char const* ininame);
 		operator StructType(void) const {return(Type);};
 
 		static void * operator new(size_t);
@@ -786,7 +793,9 @@ class BuildingTypeClass : public TechnoTypeClass {
 
 		static void Init_Heap(void);
 		static BuildingTypeClass & As_Reference(StructType type);
+		static BuildingTypeClass& As_Reference(int index);
 		static StructType From_Name(char const * name);
+		static const BuildingTypeClass * BuildingType_From_Name(char const* name);
 		static void Init(TheaterType theater);
 		static void One_Time(void);
 		static void Prep_For_Add(void);

@@ -8810,6 +8810,7 @@ void DLLExportClass::Code_Pointers(void)
 *
 *
 * History: 9/10/2019 10:24AM - ST
+*     08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                          *
 **************************************************************************************************/
 void DLLExportClass::Decode_Pointers(void)
 {
@@ -8819,7 +8820,7 @@ void DLLExportClass::Decode_Pointers(void)
 		if (PlacementType[i]) {
 			StructType type = (StructType) reinterpret_cast<unsigned int>(PlacementType[i]);
 			PlacementType[i] = NULL;
-			if (type >= STRUCT_FIRST && type < STRUCT_COUNT) {
+			if (type >= 0 && type < BuildingTypes.Count()) {
 				
 				TechnoTypeClass const * tech = Fetch_Techno_Type(RTTI_BUILDINGTYPE, type);
 				if (tech) {

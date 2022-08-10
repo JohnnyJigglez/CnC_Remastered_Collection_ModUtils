@@ -253,10 +253,11 @@ HouseClass * HouseClass::As_Pointer(HousesType house)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   12/09/1994 JLB : Created.                                                                 *
+ *   08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                          *
  *=============================================================================================*/
 void HouseClass::One_Time(void)
 {
-	BuildChoice.Set_Heap(STRUCT_COUNT);
+	BuildChoice.Set_Heap(BuildingTypes.Count());
 }
 
 
@@ -293,6 +294,10 @@ DiffType HouseClass::Assign_Handicap(DiffType handicap)
 		RepairDelay = Rule.Diff[handicap].RepairDelay;
 		BuildDelay = Rule.Diff[handicap].BuildDelay;
 		BuildSpeedBias = hptr->BuildSpeedBias * Rule.Diff[handicap].BuildSpeedBias * Rule.GameSpeedBias;
+		//for (int x = 0; x < 5; x++) {
+		//	BuildSpeedBiases[x] = hptr->BuildSpeedBiases[x];
+		//}
+		
 	} else {
 		FirepowerBias = Rule.Diff[handicap].FirepowerBias;
 		GroundspeedBias = Rule.Diff[handicap].GroundspeedBias * Rule.GameSpeedBias;
@@ -548,106 +553,106 @@ HouseClass::HouseClass(HousesType house) :
 	IsParanoid(false),
 	IsToLook(true),
 	IsQueuedMovementToggle(false),
-	DidRepair(false),
-	IQ(Control.IQ),
-	State(STATE_BUILDUP),
-	JustBuiltStructure(STRUCT_NONE),
-	JustBuiltInfantry(INFANTRY_NONE),
-	JustBuiltUnit(UNIT_NONE),
-	JustBuiltAircraft(AIRCRAFT_NONE),
-	JustBuiltVessel(VESSEL_NONE),
-	Blockage(0),
-	RepairTimer(0),
-	AlertTime(0),
-	BorrowedTime(0),
-	BScan(0),
-	ActiveBScan(0),
-	OldBScan(0),
-	UScan(0),
-	ActiveUScan(0),
-	OldUScan(0),
-	IScan(0),
-	ActiveIScan(0),
-	OldIScan(0),
-	AScan(0),
-	ActiveAScan(0),
-	OldAScan(0),
-	VScan(0),
-	ActiveVScan(0),
-	OldVScan(0),
-	CreditsSpent(0),
-	HarvestedCredits(0),
-	StolenBuildingsCredits(0),
-	CurUnits(0),
-	CurBuildings(0),
-	CurInfantry(0),
-	CurVessels(0),
-	CurAircraft(0),
-	Tiberium(0),
-	Credits(0),
-	Capacity(0),
-	AircraftTotals(NULL),
-	InfantryTotals(NULL),
-	UnitTotals(NULL),
-	BuildingTotals(NULL),
-	VesselTotals(NULL),
-	DestroyedAircraft(NULL),
-	DestroyedInfantry(NULL),
-	DestroyedUnits(NULL),
-	DestroyedBuildings(NULL),
-	DestroyedVessels(NULL),
-	CapturedBuildings(NULL),
-	TotalCrates(NULL),
-	AircraftFactories(0),
-	InfantryFactories(0),
-	UnitFactories(0),
-	BuildingFactories(0),
-	VesselFactories(0),
-	Power(0),
-	Drain(0),
-	AircraftFactory(-1),
-	InfantryFactory(-1),
-	UnitFactory(-1),
-	BuildingFactory(-1),
-	VesselFactory(-1),
-	Radar(RADAR_NONE),
-	FlagLocation(TARGET_NONE),
-	FlagHome(0),
-	UnitsLost(0),
-	BuildingsLost(0),
-	WhoLastHurtMe(house),
-	StartLocationOverride(-1),
-	Center(0),
-	Radius(0),
-	LATime(0),
-	LAType(RTTI_NONE),
-	LAZone(ZONE_NONE),
-	LAEnemy(HOUSE_NONE),
-	ToCapture(TARGET_NONE),
-	RadarSpied(0),
-	PointTotal(0),
-	PreferredTarget(QUARRY_ANYTHING),
-	ScreenShakeTime(0),
-	Attack(0),
-	Enemy(HOUSE_NONE),
-	AITimer(0),
-	UnitToTeleport(0),
-	BuildStructure(STRUCT_NONE),
-	BuildUnit(UNIT_NONE),
-	BuildInfantry(INFANTRY_NONE),
-	BuildAircraft(AIRCRAFT_NONE),
-	BuildVessel(VESSEL_NONE),
-	NukeDest(0),
-	Allies(0),
-	DamageTime(TICKS_PER_MINUTE * Rule.DamageDelay),
-	TeamTime(TICKS_PER_MINUTE * Rule.TeamDelay),
-	TriggerTime(0),
-	SpeakAttackDelay(1),
-	SpeakPowerDelay(1),
-	SpeakMoneyDelay(1),
-	SpeakMaxedDelay(1),
-	RemapColor(Class->RemapColor),
-	DebugUnlockBuildables(false)
+DidRepair(false),
+IQ(Control.IQ),
+State(STATE_BUILDUP),
+JustBuiltStructure(STRUCT_NONE),
+JustBuiltInfantry(INFANTRY_NONE),
+JustBuiltUnit(UNIT_NONE),
+JustBuiltAircraft(AIRCRAFT_NONE),
+JustBuiltVessel(VESSEL_NONE),
+Blockage(0),
+RepairTimer(0),
+AlertTime(0),
+BorrowedTime(0),
+BScan(0),
+ActiveBScan(0),
+OldBScan(0),
+UScan(0),
+ActiveUScan(0),
+OldUScan(0),
+IScan(0),
+ActiveIScan(0),
+OldIScan(0),
+AScan(0),
+ActiveAScan(0),
+OldAScan(0),
+VScan(0),
+ActiveVScan(0),
+OldVScan(0),
+CreditsSpent(0),
+HarvestedCredits(0),
+StolenBuildingsCredits(0),
+CurUnits(0),
+CurBuildings(0),
+CurInfantry(0),
+CurVessels(0),
+CurAircraft(0),
+Tiberium(0),
+Credits(0),
+Capacity(0),
+AircraftTotals(NULL),
+InfantryTotals(NULL),
+UnitTotals(NULL),
+BuildingTotals(NULL),
+VesselTotals(NULL),
+DestroyedAircraft(NULL),
+DestroyedInfantry(NULL),
+DestroyedUnits(NULL),
+DestroyedBuildings(NULL),
+DestroyedVessels(NULL),
+CapturedBuildings(NULL),
+TotalCrates(NULL),
+AircraftFactories(0),
+InfantryFactories(0),
+UnitFactories(0),
+BuildingFactories(0),
+VesselFactories(0),
+Power(0),
+Drain(0),
+AircraftFactory(-1),
+InfantryFactory(-1),
+UnitFactory(-1),
+BuildingFactory(-1),
+VesselFactory(-1),
+Radar(RADAR_NONE),
+FlagLocation(TARGET_NONE),
+FlagHome(0),
+UnitsLost(0),
+BuildingsLost(0),
+WhoLastHurtMe(house),
+StartLocationOverride(-1),
+Center(0),
+Radius(0),
+LATime(0),
+LAType(RTTI_NONE),
+LAZone(ZONE_NONE),
+LAEnemy(HOUSE_NONE),
+ToCapture(TARGET_NONE),
+RadarSpied(0),
+PointTotal(0),
+PreferredTarget(QUARRY_ANYTHING),
+ScreenShakeTime(0),
+Attack(0),
+Enemy(HOUSE_NONE),
+AITimer(0),
+UnitToTeleport(0),
+BuildStructure(STRUCT_NONE),
+BuildUnit(UNIT_NONE),
+BuildInfantry(INFANTRY_NONE),
+BuildAircraft(AIRCRAFT_NONE),
+BuildVessel(VESSEL_NONE),
+NukeDest(0),
+Allies(0),
+DamageTime(TICKS_PER_MINUTE* Rule.DamageDelay),
+TeamTime(TICKS_PER_MINUTE* Rule.TeamDelay),
+TriggerTime(0),
+SpeakAttackDelay(1),
+SpeakPowerDelay(1),
+SpeakMoneyDelay(1),
+SpeakMaxedDelay(1),
+RemapColor(Class->RemapColor),
+DebugUnlockBuildables(false)
 {
 	/*
 	**	Explicit in-place construction of the super weapons is
@@ -1161,7 +1166,7 @@ void HouseClass::AI(void)
 		{
 			int iCount = 0;
 			int i;
-			for( i = 0; i != STRUCT_COUNT-3; ++i )
+			for( i = 0; i != BuildingTypes.Count()-3; ++i )
 			{
 				iCount += BQuantity[ i ];
 			}
@@ -8117,6 +8122,7 @@ void HouseClass::Check_Pertinent_Structures(void)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   4/23/2020 11:06PM ST : Created.                                                           *
+    08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                           *
  *=============================================================================================*/
 void HouseClass::Init_Unit_Trackers(void)
 {		
@@ -8124,16 +8130,16 @@ void HouseClass::Init_Unit_Trackers(void)
 		AircraftTotals = new UnitTrackerClass( (int) AIRCRAFT_COUNT);
 		InfantryTotals = new UnitTrackerClass( (int) INFANTRY_COUNT);
 		UnitTotals = new UnitTrackerClass ( (int) UNIT_COUNT);
-		BuildingTotals = new UnitTrackerClass ( (int) STRUCT_COUNT);
+		BuildingTotals = new UnitTrackerClass ( BuildingTypes.Count());
 		VesselTotals = new UnitTrackerClass ( (int) VESSEL_COUNT);
 
 		DestroyedAircraft = new UnitTrackerClass ( (int) AIRCRAFT_COUNT);
 		DestroyedInfantry = new UnitTrackerClass( (int) INFANTRY_COUNT);
 		DestroyedUnits = new UnitTrackerClass ( (int) UNIT_COUNT);
-		DestroyedBuildings = new UnitTrackerClass ( (int) STRUCT_COUNT);
+		DestroyedBuildings = new UnitTrackerClass (BuildingTypes.Count());
 		DestroyedVessels = new UnitTrackerClass ( (int) VESSEL_COUNT);
 
-		CapturedBuildings = new UnitTrackerClass ( (int) STRUCT_COUNT);
+		CapturedBuildings = new UnitTrackerClass (BuildingTypes.Count());
 		TotalCrates = new UnitTrackerClass ( CRATE_COUNT );
 	} else {
 		

@@ -263,6 +263,7 @@ RulesClass::RulesClass(void) :
 	IronCurtainDuration(fixed::_1_2),
 	BridgeStrength(1000),
 	BuildSpeedBias(1),
+	FactoryLimit(2),
 	C4Delay(".03"),
 	RepairThreshhold(1000),
 	PathDelay(".016"),
@@ -345,7 +346,6 @@ static void Difficulty_Get(CCINIClass & ini, DifficultyClass & diff, char const 
 bool RulesClass::Process(CCINIClass & ini)
 {
 	BStart(BENCH_RULES);
-
 	General(ini);
 	MPlayer(ini);
 	Recharge(ini);
@@ -466,6 +466,7 @@ bool RulesClass::General(CCINIClass & ini)
 		BallisticScatter = ini.Get_Lepton(GENERAL, "BallisticScatter", BallisticScatter);
 		BridgeStrength = ini.Get_Int(GENERAL, "BridgeStrength", BridgeStrength);
 		BuildSpeedBias = ini.Get_Fixed(GENERAL, "BuildSpeed", BuildSpeedBias);
+		FactoryLimit = ini.Get_Int(GENERAL, "FactoryLimit", FactoryLimit);
 		ConditionGreen = 1;
 		ConditionRed = ini.Get_Fixed(GENERAL, "ConditionRed", ConditionRed);
 		ConditionYellow = ini.Get_Fixed(GENERAL, "ConditionYellow", ConditionYellow);
@@ -614,6 +615,7 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		AnimMax = ini.Get_Int(MAXIMUMS, "Anim", AnimMax);
 		AnimTypeMax = ini.Get_Int(MAXIMUMS, "AnimType", AnimTypeMax);
 		BuildingMax = ini.Get_Int(MAXIMUMS, "Building", BuildingMax);
+		BuildingTypeMax = ini.Get_Int(MAXIMUMS, "BuildingType", BuildingTypeMax);
 		BulletMax = ini.Get_Int(MAXIMUMS, "Bullet", BulletMax);
 		FactoryMax = ini.Get_Int(MAXIMUMS, "Factory", FactoryMax);
 		InfantryMax = ini.Get_Int(MAXIMUMS, "Infantry", InfantryMax);
@@ -667,93 +669,42 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 	}
 	static char const* const BT = "Projectiles";
 	if (ini.Is_Present(BT)) {
+		char message[128];
+		sprintf(message, "Heap_Processing found %s Section with %d Entries.\n", BT, ini.Entry_Count(BT));
+		WWDebugString(message);
 		for (int x = 0; x < ini.Entry_Count(BT); x++) {
 			new BulletTypeClass(atoi(ini.Get_Entry(BT,x)),ini.Get_Value(BT, x));
 		}
 	}
-	/*if (Weapons.Count() == 0) {
-		Weapons.Set_Heap(WeaponMax);
-	}
-	static char const* const WT = "Weapons";
-	if (ini.Is_Present(WT)) {
-		for (int x = 0; x < ini.Entry_Count(WT); x++) {
-			new WeaponTypeClass(ini.Get_Value(WT, x));
-		}
-	}*/
-	
 	if (Weapons.Count() == 0) {
-	Weapons.Set_Heap(WeaponMax);
-	new WeaponTypeClass("Colt45");
-	new WeaponTypeClass("ZSU-23");
-	new WeaponTypeClass("Vulcan");
-	new WeaponTypeClass("Maverick");
-	new WeaponTypeClass("Camera");
-	new WeaponTypeClass("FireballLauncher");
-	new WeaponTypeClass("Sniper");
-	new WeaponTypeClass("ChainGun");
-	new WeaponTypeClass("Pistol");
-	new WeaponTypeClass("M1Carbine");
-	new WeaponTypeClass("Dragon");
-	new WeaponTypeClass("Hellfire");
-	new WeaponTypeClass("Grenade");
-	new WeaponTypeClass("75mm");
-	new WeaponTypeClass("90mm");
-	new WeaponTypeClass("105mm");
-	new WeaponTypeClass("120mm");
-	new WeaponTypeClass("TurretGun");
-	new WeaponTypeClass("MammothTusk");
-	new WeaponTypeClass("155mm");
-	new WeaponTypeClass("M60mg");
-	new WeaponTypeClass("Napalm");
-	new WeaponTypeClass("TeslaZap");
-	new WeaponTypeClass("Nike");
-	new WeaponTypeClass("8Inch");
-	new WeaponTypeClass("Stinger");
-	new WeaponTypeClass("TorpTube");
-	new WeaponTypeClass("2Inch");
-	new WeaponTypeClass("DepthCharge");
-	new WeaponTypeClass("ParaBomb");
-	new WeaponTypeClass("DogJaw");
-	new WeaponTypeClass("Heal");
-	new WeaponTypeClass("SCUD");
-	new WeaponTypeClass("Flamer");
-	new WeaponTypeClass("RedEye");
-
-#ifdef FIXIT_ANTS
-	new WeaponTypeClass("Mandible");
-#endif
-
-#ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-	new WeaponTypeClass("PortaTesla");
-	new WeaponTypeClass("GoodWrench");
-	new WeaponTypeClass("SubSCUD");
-	new WeaponTypeClass("TTankZap");
-	new WeaponTypeClass("APTusk");
-	new WeaponTypeClass("Democharge");
-#endif
-#ifdef FIXIT_CARRIER	//	checked - ajw 9/28/98
-	new WeaponTypeClass("AirAssault");
-#endif
+		Weapons.Set_Heap(AnimTypeMax);
+		WeaponTypeClass::Init_Heap();
 	}
 	static char const* const WT = "Weapons";
 	if (ini.Is_Present(WT)) {
+		char message[128];
+		sprintf(message, "Heap_Processing found %s Section with %d Entries.\n", WT, ini.Entry_Count(WT));
+		WWDebugString(message);
 		for (int x = 0; x < ini.Entry_Count(WT); x++) {
 			new WeaponTypeClass(ini.Get_Entry(WT, x));
 		}
 	}
-
-	return(true);
-
-	/*if (BuildingTypes.Count() == 0) {
-		BuildingTypes.Set_Heap(BuildingMax);
+	if (BuildingTypes.Count() == 0) {
+		BuildingTypes.Set_Heap(BuildingTypeMax);
 		BuildingTypeClass::Init_Heap();
 	}
 	static char const* const BDT = "Buildings";
 	if (ini.Is_Present(BDT)) {
+		char message[128];
+		sprintf(message, "Heap_Processing found %s Section with %d Entries.\n", BDT, ini.Entry_Count(BDT));
+		WWDebugString(message);
 		for (int x = 0; x < ini.Entry_Count(BDT); x++) {
 			new BuildingTypeClass(atoi(ini.Get_Entry(BDT, x)), ini.Get_Value(BDT, x));
 		}
-	}*/
+
+	}
+
+	return(true);
 }
 
 

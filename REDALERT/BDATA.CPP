@@ -2845,9 +2845,11 @@ BuildingTypeClass::BuildingTypeClass(
 	Size(size),
 	OccupyList(sizelist),
 	OverlapList(overlap),
-	BuildupData(0)
+	BuildupData(0) 
 {
-
+	//char message[64];
+	//sprintf(message, "Instantiated BTC %s .\n", ininame);
+	//WWDebugString(message);
 	Anims[BSTATE_CONSTRUCTION].Start = 0;
 	Anims[BSTATE_CONSTRUCTION].Count = 1;
 	Anims[BSTATE_CONSTRUCTION].Rate = 0;
@@ -2883,34 +2885,39 @@ BuildingTypeClass::BuildingTypeClass(
  * HISTORY:                                                                                    *
  *   08/04/2022 JJ : Created.                                                                  *
  *=============================================================================================*/
-BuildingTypeClass::BuildingTypeClass(int btype, char const* ininame) : BuildingTypeClass(static_cast<StructType>(btype),
+BuildingTypeClass::BuildingTypeClass(int btype, char const* ininame) : 
+	BuildingTypeClass(
+		static_cast<StructType>(btype),
 		TXT_NONE,
 		ininame,
 		FACING_NONE,
-		XYP_COORD(0, 0),
-	    REMAP_NONE,
+		XYP_Coord(0,0),
+		REMAP_NORMAL,
 		0x0000,
 		0x0000,
 		0x0000,
 		false,
+		false,
+		false,
+		false,
+		true,
+		false,
 		true,
 		true,
 		false,
 		false,
 		false,
 		true,
-		true,
-		false,
-		true,
-		false,
-		false,
 		RTTI_NONE,
 		DIR_N,
 		BSIZE_11,
 		NULL,
-		(short const *)List11,
-	    (short const *)NULL)
+		NULL,
+		NULL)
 {
+	//char message[64];
+	//sprintf(message, "Instantiated custom BTC %s .\n", ininame);
+	//WWDebugString(message);
 }
 
 
@@ -3089,6 +3096,7 @@ void BuildingTypeClass::Init_Heap(void)
  * HISTORY:                                                                                    *
  *   05/28/1994 JLB : Created.                                                                 *
  *   06/11/1994 JLB : Updated construction time and frame count logic.                         *
+ *   08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                          *
  *=============================================================================================*/
 void BuildingTypeClass::One_Time(void)
 {
@@ -3137,7 +3145,7 @@ void BuildingTypeClass::One_Time(void)
 		{STRUCT_AIRSTRIP,			BSTATE_IDLE,	0,	8,	3}
 	};
 
-	for (int sindex = STRUCT_FIRST; sindex < STRUCT_COUNT; sindex++) {
+	for (int sindex = 0; sindex < BuildingTypes.Count(); sindex++) {
 		char	fullname[_MAX_FNAME+_MAX_EXT];
 		char	buffer[_MAX_FNAME];
 		BuildingTypeClass const & building = As_Reference((StructType)sindex);
@@ -3213,11 +3221,12 @@ void BuildingTypeClass::One_Time(void)
  * HISTORY:                                                                                    *
  *   10/07/1992 JLB : Created.                                                                 *
  *   05/02/1994 JLB : Converted to member function.                                            *
+ *   08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                          *
  *=============================================================================================*/
 StructType BuildingTypeClass::From_Name(char const * name)
 {
 	if (name != NULL) {
-		for (int classid = STRUCT_FIRST; classid < STRUCT_COUNT; classid++) {
+		for (int classid = 0; classid < BuildingTypes.Count(); classid++) {
 			if (stricmp(As_Reference((StructType)classid).IniName, name) == 0) {
 				return((StructType)classid);
 			}
@@ -3388,13 +3397,14 @@ void BuildingTypeClass::Init_Anim(BStateType state, int start, int count, int ra
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   01/21/1995 JLB : Created.                                                                 *
+ *   08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                          *
  *=============================================================================================*/
 void BuildingTypeClass::Init(TheaterType theater)
 {
 	if (theater != LastTheater) {
 		char fullname[_MAX_FNAME+_MAX_EXT];
 
-		for (int sindex = STRUCT_FIRST; sindex < STRUCT_COUNT; sindex++) {
+		for (int sindex = 0; sindex < BuildingTypes.Count(); sindex++) {
 			BuildingTypeClass const * classptr = &As_Reference((StructType)sindex);
 
 			if (classptr->IsTheater) {
@@ -3465,7 +3475,59 @@ void BuildingTypeClass::Dimensions(int &width, int &height) const
  *=============================================================================================*/
 BuildingTypeClass & BuildingTypeClass::As_Reference(StructType type)
 {
-	return(*BuildingTypes.Ptr(type));
+	static BuildingTypeClass* btc = NULL;
+	for (int index = 0; index < BuildingTypes.Count(); index++) {
+		btc = BuildingTypes.Ptr(index);
+		if (btc->Type == type)
+			return *btc;
+	}
+	return(*btc);
+}
+
+/***********************************************************************************************
+ * BuildingTypeClass::As_Reference -- Fetches reference to the building type specified.        *
+ *                                                                                             *
+ *    This routine will fetch a reference to the BuildingTypeClass as indicated by the         *
+ *    building type number specified.                                                          *
+ *                                                                                             *
+ * INPUT:   type  -- The building type number to convert into a BuildingTypeClass reference.   *
+ *                                                                                             *
+ * OUTPUT:  Returns with a reference to the building type class as indicated by the            *
+ *          parameter.                                                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   01/23/1995 JLB : Created.                                                                 *
+ *=============================================================================================*/
+BuildingTypeClass& BuildingTypeClass::As_Reference(int index)
+{
+	return(*BuildingTypes.Ptr(index));
+}
+
+const BuildingTypeClass* BuildingTypeClass::BuildingType_From_Name(char const* name)
+{
+	if (name == NULL) return(NULL);
+	//char message[128];
+	//sprintf(message, "WeaponTypeClass.FromName Entry: %s .\n", name);
+	//WWDebugString(message);
+	static BuildingTypeClass* btc = NULL;
+	//for (int index = 0; index < Weapons.Count(); index++) {
+	//	sprintf(message, "WeaponTypeClass.FromName ITERATE: %s .\n", Weapons.Ptr(index)->Name());
+	//	WWDebugString(message);
+	//}
+	for (int index = 0; index < BuildingTypes.Count(); index++) {
+		btc = BuildingTypes.Ptr(index);
+		//sprintf(message, "WeaponTypeClass.FromName DETECTED: %s .\n", weapon->Name());
+		//WWDebugString(message);
+		if (stricmp(btc->Name(), name) == 0) {
+			//sprintf(message, "WeaponTypeClass.FromName FOUND.\n");
+			//WWDebugString(message);
+			return(btc);
+		}
+	}
+	return(NULL);
+
 }
 
 
@@ -3810,7 +3872,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (TechnoTypeClass::Read_INI(ini)) {
 		char message[128];
-		sprintf(message, "BTC.Read_INI parsing %s .\n", Name());
+		sprintf(message, "BTC.Read_INI parsing %s .\n", IniName);
 		WWDebugString(message);
 		Speed = ini.Get_Bool(Name(), "WaterBound", (Speed == SPEED_FLOAT)) ? SPEED_FLOAT : SPEED_NONE;
 		Capacity = ini.Get_Int(Name(), "Storage", Capacity);
@@ -3827,6 +3889,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		IsRegulated = ini.Get_Bool(Name(), "Regulated", IsRegulated);
 		ToBuild = ini.Get_RTTIType(Name(), "Build", ToBuild);
 		ExitCoordinate = ini.Get_Coord(Name(), "ExitCoord", ExitCoordinate);
+		Size = static_cast<BSizeType>(ini.Get_Int(Name(), "Size", Size));
 		char buffer[128];
 		if (ini.Get_String(Name(), "ExitList", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building has ExitList : %s \n", buffer);
@@ -3883,7 +3946,15 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 			tempoccupylist[count] = REFRESH_EOL;
 			OccupyList = (const short*)tempoccupylist;
 		}
-
+		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
+			sprintf(message, "BTC.Read_INI Building has Logic : %s \n", buffer);
+			WWDebugString(message);
+			StructType stype = From_Name(buffer);
+			if (stype != STRUCT_NONE)
+				Type = stype;
+			sprintf(message, "BTC.Read_INI Building has ID %d and Type %d . \n", ID,(int)Type);
+			WWDebugString(message);
+		}
 		if (Power < 0) {
 			Drain = -Power;
 			Power = 0;

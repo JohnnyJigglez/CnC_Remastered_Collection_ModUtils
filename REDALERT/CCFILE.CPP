@@ -69,9 +69,6 @@ CCFileClass::CCFileClass(char const * filename) :
 	Position(0)
 {
 	CCFileClass::Set_Name(filename);
-	char message[128];
-	sprintf(message, "Instantiated %s \n", filename);
-	WWDebugString(message);
 }
 
 

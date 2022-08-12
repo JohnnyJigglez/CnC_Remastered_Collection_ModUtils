@@ -2845,11 +2845,12 @@ BuildingTypeClass::BuildingTypeClass(
 	Size(size),
 	OccupyList(sizelist),
 	OverlapList(overlap),
-	BuildupData(0) 
+	BuildupData(0)
 {
 	//char message[64];
 	//sprintf(message, "Instantiated BTC %s .\n", ininame);
 	//WWDebugString(message);
+
 	Anims[BSTATE_CONSTRUCTION].Start = 0;
 	Anims[BSTATE_CONSTRUCTION].Count = 1;
 	Anims[BSTATE_CONSTRUCTION].Rate = 0;
@@ -2869,6 +2870,31 @@ BuildingTypeClass::BuildingTypeClass(
 	Anims[BSTATE_AUX2].Start = 0;
 	Anims[BSTATE_AUX2].Count = 1;
 	Anims[BSTATE_AUX2].Rate = 0;
+
+	int width[BSIZE_COUNT] = {
+		1,
+		2,
+		1,
+		2,
+		2,
+		3,
+		3,
+		4,
+		5
+	};
+	int height[BSIZE_COUNT] = {
+		1,
+		1,
+		2,
+		2,
+		3,
+		2,
+		3,
+		2,
+		5
+	};
+	SizeWidth = width[Size];
+	SizeHeight = height[Size];
 }
 
 /***********************************************************************************************
@@ -3633,18 +3659,7 @@ short const * BuildingTypeClass::Overlap_List(void) const
  *=============================================================================================*/
 int BuildingTypeClass::Width(void) const
 {
-	static int width[BSIZE_COUNT] = {
-		1,
-		2,
-		1,
-		2,
-		2,
-		3,
-		3,
-		4,
-		5
-	};
-	return(width[Size]);
+	return(SizeWidth);
 }
 
 
@@ -3664,18 +3679,7 @@ int BuildingTypeClass::Width(void) const
  *=============================================================================================*/
 int BuildingTypeClass::Height(bool bib) const
 {
-	static int height[BSIZE_COUNT] = {
-		1,
-		1,
-		2,
-		2,
-		3,
-		2,
-		3,
-		2,
-		5
-	};
-	return(height[Size] + ((bib && IsBibbed) ? 1 : 0));
+	return(SizeHeight + ((bib && IsBibbed) ? 1 : 0));
 }
 
 
@@ -3872,6 +3876,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (TechnoTypeClass::Read_INI(ini)) {
 		char message[128];
+		char buffer[128];
 		sprintf(message, "BTC.Read_INI parsing %s .\n", IniName);
 		WWDebugString(message);
 		Speed = ini.Get_Bool(Name(), "WaterBound", (Speed == SPEED_FLOAT)) ? SPEED_FLOAT : SPEED_NONE;
@@ -3889,8 +3894,25 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		IsRegulated = ini.Get_Bool(Name(), "Regulated", IsRegulated);
 		ToBuild = ini.Get_RTTIType(Name(), "Build", ToBuild);
 		ExitCoordinate = ini.Get_Coord(Name(), "ExitCoord", ExitCoordinate);
-		Size = static_cast<BSizeType>(ini.Get_Int(Name(), "Size", Size));
-		char buffer[128];
+		
+		if (ini.Get_String(Name(), "Size", "", buffer, sizeof(buffer))) {
+			sprintf(message, "BTC.Read_INI Building (%d,%d) has Size : %s \n", Width(), Height(), buffer);
+			WWDebugString(message);
+			short size[2];
+			char* token = strtok(buffer, ",");
+			if (token != NULL) {
+				size[0] = atoi(token);
+				token = strtok(NULL, ",");
+				if (token != NULL)
+					size[1] = atoi(token);
+			}
+			if (size[0] > 0 && size[1] > 0 && size[0] < 6 && size[1] < 6) {
+				SizeWidth = size[0];
+				SizeHeight = size[1];
+			}
+			sprintf(message, "BTC.Read_INI Building now has Size (%d,%d) \n", Width(), Height());
+		}
+		//Size = static_cast<BSizeType>(ini.Get_Int(Name(), "Size", Size));
 		if (ini.Get_String(Name(), "ExitList", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building has ExitList : %s \n", buffer);
 			WWDebugString(message);

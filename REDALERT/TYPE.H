@@ -619,6 +619,15 @@ class BuildingTypeClass : public TechnoTypeClass {
 		unsigned IsFake:1;
 
 		/*
+		** Width of the building, on the xcoord.
+		*/
+		short SizeWidth;
+		/*
+		** Height of the building, on the ycoord.
+		*/
+		short SizeHeight;
+
+		/*
 		**	This flag controls whether the building is equiped with a dirt
 		**	bib or not. A building with a bib has a dirt patch automatically
 		**	attached to the structure when it is placed.

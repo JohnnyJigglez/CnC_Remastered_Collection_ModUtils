@@ -1601,7 +1601,7 @@ bool UnitClass::Try_To_Deploy(void)
 			**	unit, just mark it as not deploying.
 			*/
 			Mark(MARK_UP);
-			BuildingClass * building = new BuildingClass(STRUCT_CONST, House->Class->House);
+			BuildingClass * building = new BuildingClass(BuildingTypeClass::As_Pointer(STRUCT_CONST), House->Class->House);
 			if (building != NULL) {
 				if (building->Unlimbo(Adjacent_Cell(Coord, FACING_NW))) {
 
@@ -2757,7 +2757,7 @@ int UnitClass::Mission_Unload(void)
 					if (Ammo > 0) {
 						if (!Map[Center_Coord()].Cell_Building()) {
 							Mark(MARK_UP);
-							BuildingClass * building = new BuildingClass((House->ActLike == HOUSE_USSR || House->ActLike == HOUSE_UKRAINE || House->ActLike == HOUSE_BAD) ? STRUCT_APMINE : STRUCT_AVMINE, House->Class->House);
+							BuildingClass * building = new BuildingClass(BuildingTypeClass::As_Pointer((House->ActLike == HOUSE_USSR || House->ActLike == HOUSE_UKRAINE || House->ActLike == HOUSE_BAD) ? STRUCT_APMINE : STRUCT_AVMINE), House->Class->House);
 							if (building != NULL) {
 								ScenarioInit = true;
 								if (building->Unlimbo(Coord)) {

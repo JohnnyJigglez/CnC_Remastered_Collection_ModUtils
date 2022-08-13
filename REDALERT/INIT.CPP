@@ -267,7 +267,7 @@ bool Init_Game(int , char * [])
 	InfantryTypeClass::Init_Heap();
 	//BulletTypeClass::Init_Heap();
 	//AnimTypeClass::Init_Heap();
-	UnitTypeClass::Init_Heap();
+	//UnitTypeClass::Init_Heap();
 	VesselTypeClass::Init_Heap();
 	TemplateTypeClass::Init_Heap();
 	TerrainTypeClass::Init_Heap();

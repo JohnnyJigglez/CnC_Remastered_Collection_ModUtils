@@ -3174,7 +3174,7 @@ void BuildingTypeClass::One_Time(void)
 	for (int sindex = 0; sindex < BuildingTypes.Count(); sindex++) {
 		char	fullname[_MAX_FNAME+_MAX_EXT];
 		char	buffer[_MAX_FNAME];
-		BuildingTypeClass const & building = As_Reference((StructType)sindex);
+		BuildingTypeClass const& building = *(BuildingTypes.Ptr(sindex));
 		/*
 		**	Fetch the sidebar cameo image for this building.
 		*/
@@ -3212,6 +3212,10 @@ void BuildingTypeClass::One_Time(void)
 		*/
 		_makepath(fullname, NULL, NULL, building.Graphic_Name(), ".SHP");
 		((void const *&)building.ImageData) = MFCD::Retrieve(fullname);
+		sprintf(buffer, "%s2", building.Graphic_Name());
+		_makepath(fullname, NULL, NULL, buffer, ".SHP");
+		((void const*&)building.OverlayData) = MFCD::Retrieve(fullname);
+
 	}
 
 	// Try to load weap2.shp and tesla coil's lightning shapes
@@ -3232,7 +3236,7 @@ void BuildingTypeClass::One_Time(void)
 
 
 /***********************************************************************************************
- * Struct_From_Name -- Find BData structure from its name.                                     *
+ * BuildingTypeClass::From_Name -- Find BData structure from its name.                         *
  *                                                                                             *
  *    This routine will convert an ASCII name for a building class into                        *
  *    the actual building class it represents.                                                 *
@@ -3251,13 +3255,11 @@ void BuildingTypeClass::One_Time(void)
  *=============================================================================================*/
 StructType BuildingTypeClass::From_Name(char const * name)
 {
-	if (name != NULL) {
-		for (int classid = 0; classid < BuildingTypes.Count(); classid++) {
-			if (stricmp(As_Reference((StructType)classid).IniName, name) == 0) {
-				return((StructType)classid);
-			}
-		}
-	}
+	if (name == NULL)
+		return(STRUCT_NONE);
+	BuildingTypeClass* btc = Class_From_Name(name);
+	if (btc != NULL)
+		return(btc->Type);
 	return(STRUCT_NONE);
 }
 
@@ -3342,7 +3344,7 @@ bool BuildingTypeClass::Create_And_Place(CELL cell, HousesType house) const
 {
 	BuildingClass * ptr;
 
-	ptr = new BuildingClass(Type, house);
+	ptr = new BuildingClass(this, house);
 	if (ptr != NULL) {
 		return(ptr->Unlimbo(Cell_Coord(cell), DIR_N));
 	}
@@ -3374,7 +3376,7 @@ ObjectClass * BuildingTypeClass::Create_One_Of(HouseClass * house) const
 	if (house != NULL) {
 		htype = house->Class->House;
 	}
-	return(new BuildingClass(Type, htype));
+	return(new BuildingClass(this , htype));
 }
 
 
@@ -3431,7 +3433,7 @@ void BuildingTypeClass::Init(TheaterType theater)
 		char fullname[_MAX_FNAME+_MAX_EXT];
 
 		for (int sindex = 0; sindex < BuildingTypes.Count(); sindex++) {
-			BuildingTypeClass const * classptr = &As_Reference((StructType)sindex);
+			BuildingTypeClass const* classptr = BuildingTypes.Ptr(sindex);
 
 			if (classptr->IsTheater) {
 				_makepath(fullname, NULL, NULL, classptr->Graphic_Name(), Theaters[theater].Suffix);
@@ -3511,6 +3513,33 @@ BuildingTypeClass & BuildingTypeClass::As_Reference(StructType type)
 }
 
 /***********************************************************************************************
+ * BuildingTypeClass::As_Pointer   -- Fetches pointer to the building type specified.          *
+ *                                                                                             *
+ *    This routine will fetch a reference to the BuildingTypeClass as indicated by the         *
+ *    building type number specified.                                                          *
+ *                                                                                             *
+ * INPUT:   type  -- The building type number to convert into a BuildingTypeClass reference.   *
+ *                                                                                             *
+ * OUTPUT:  Returns with a reference to the building type class as indicated by the            *
+ *          parameter.                                                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   01/23/1995 JLB : Created.                                                                 *
+ *=============================================================================================*/
+BuildingTypeClass * BuildingTypeClass::As_Pointer(StructType type)
+{
+	static BuildingTypeClass* btc = NULL;
+	for (int index = 0; index < BuildingTypes.Count(); index++) {
+		btc = BuildingTypes.Ptr(index);
+		if (btc->Type == type)
+			break;
+	}
+	return(btc);
+}
+
+/***********************************************************************************************
  * BuildingTypeClass::As_Reference -- Fetches reference to the building type specified.        *
  *                                                                                             *
  *    This routine will fetch a reference to the BuildingTypeClass as indicated by the         *
@@ -3530,29 +3559,34 @@ BuildingTypeClass& BuildingTypeClass::As_Reference(int index)
 {
 	return(*BuildingTypes.Ptr(index));
 }
-
-const BuildingTypeClass* BuildingTypeClass::BuildingType_From_Name(char const* name)
+/***********************************************************************************************
+ * BuildingTypeClass::Class_From_Name -- Fetch building type class pointer for specified name. *
+ *                                                                                             *
+ *    This routine converts an ASCII representation of a building class and                    *
+ *    converts it into a pointer to the real object                                            *
+ *                                                                                             *
+ * INPUT:   name  -- ASCII name representing a building class.                                 *
+ *                                                                                             *
+ * OUTPUT:  Returns with the actual building type class pointer that the string                *
+ *          represents.                                                                        *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/08/2022 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+BuildingTypeClass* BuildingTypeClass::Class_From_Name(char const* name)
 {
 	if (name == NULL) return(NULL);
-	//char message[128];
-	//sprintf(message, "WeaponTypeClass.FromName Entry: %s .\n", name);
-	//WWDebugString(message);
+
 	static BuildingTypeClass* btc = NULL;
-	//for (int index = 0; index < Weapons.Count(); index++) {
-	//	sprintf(message, "WeaponTypeClass.FromName ITERATE: %s .\n", Weapons.Ptr(index)->Name());
-	//	WWDebugString(message);
-	//}
+
 	for (int index = 0; index < BuildingTypes.Count(); index++) {
 		btc = BuildingTypes.Ptr(index);
-		//sprintf(message, "WeaponTypeClass.FromName DETECTED: %s .\n", weapon->Name());
-		//WWDebugString(message);
-		if (stricmp(btc->Name(), name) == 0) {
-			//sprintf(message, "WeaponTypeClass.FromName FOUND.\n");
-			//WWDebugString(message);
-			return(btc);
-		}
+		if (stricmp(btc->Name(), name) == 0)
+			break;
 	}
-	return(NULL);
+	return(btc);
 
 }
 
@@ -3986,7 +4020,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 	return(false);
 }
 /***********************************************************************************************
- * BuildingTypeClass::RTTIType_From_Name -- Given a name, this finds the corresponding anim type   *
+ * BuildingTypeClass::RTTIType_From_Name -- Given a name, this finds the corresponding anim type*
  *                                      class.												   *
  *                                                                                             *
  *    This routine will convert the supplied ASCII name into the animation type that it        *

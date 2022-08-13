@@ -6101,14 +6101,15 @@ int HouseClass::AI_Unit(void)
 		*/
 		int bestval = -1;
 		int bestcount = 0;
-		UnitType bestlist[UNIT_COUNT];
-		for (UnitType utype = UNIT_FIRST; utype < UNIT_COUNT; utype++) {
-			if (counter[utype] > 0 && Can_Build(&UnitTypeClass::As_Reference(utype), Class->House) && UnitTypeClass::As_Reference(utype).Cost_Of() <= Available_Money()) {
+		UnitType bestlist[UNITT_MAX];//this is a list of unit ids, not logical types... oh well. TODO Fix alll this logic later so custom units are considered
+		for (int utype = 0; utype < UnitTypes.Count(); utype++) {
+			UnitTypeClass* uclass = UnitTypes.Ptr(utype);
+			if (counter[utype] > 0 && Can_Build(uclass, Class->House) && uclass->Cost_Of() <= Available_Money()) {
 				if (bestval == -1 || bestval < counter[utype]) {
 					bestval = counter[utype];
 					bestcount = 0;
 				}
-				bestlist[bestcount++] = utype;
+				bestlist[bestcount++] = uclass->Type;
 			}
 		}
 

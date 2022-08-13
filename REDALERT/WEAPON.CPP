@@ -301,7 +301,7 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 
 
 /***********************************************************************************************
- * Weapon_From_Name -- Conver ASCII name to weapon type ID number.                             *
+ * Weapon_From_Name -- Conver ASCII name to weapon type pointer                                *
  *                                                                                             *
  *    This will find the weapon whos name matches that specified and then it will return the   *
  *    weapon ID number associated with it.                                                     *

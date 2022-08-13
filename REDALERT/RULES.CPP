@@ -237,6 +237,7 @@ RulesClass::RulesClass(void) :
 	AnimMax(100),
 	AnimTypeMax(200),
 	BuildingMax(500),
+	BuildingTypeMax(127),
 	BulletMax(40),
 	FactoryMax(20),
 	InfantryMax(500),
@@ -248,6 +249,7 @@ RulesClass::RulesClass(void) :
 	TerrainMax(500),
 	TriggerMax(60),
 	UnitMax(500),
+	UnitTypeMax(127),
 	VesselMax(100),
 	ProjectileMax(20),
 	WeaponMax(20),
@@ -627,6 +629,7 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		TerrainMax = ini.Get_Int(MAXIMUMS, "Terrain", TerrainMax);
 		TriggerMax = ini.Get_Int(MAXIMUMS, "Trigger", TriggerMax);
 		UnitMax = ini.Get_Int(MAXIMUMS, "Unit", UnitMax);
+		UnitTypeMax = ini.Get_Int(MAXIMUMS, "UnitType", UnitTypeMax);
 		VesselMax = ini.Get_Int(MAXIMUMS, "Vessel", VesselMax);
 		ProjectileMax = ini.Get_Int(MAXIMUMS, "Projectile", ProjectileMax);
 		WeaponMax = ini.Get_Int(MAXIMUMS, "Weapon", WeaponMax);
@@ -700,6 +703,20 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		WWDebugString(message);
 		for (int x = 0; x < ini.Entry_Count(BDT); x++) {
 			new BuildingTypeClass(atoi(ini.Get_Entry(BDT, x)), ini.Get_Value(BDT, x));
+		}
+
+	}
+	if (UnitTypes.Count() == 0) {
+		UnitTypes.Set_Heap(UnitTypeMax);
+		UnitTypeClass::Init_Heap();
+	}
+	static char const* const UT = "Vehicles";
+	if (ini.Is_Present(UT)) {
+		char message[128];
+		sprintf(message, "Heap_Processing found %s Section with %d Entries.\n", UT, ini.Entry_Count(UT));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(UT); x++) {
+			new UnitTypeClass(atoi(ini.Get_Entry(UT, x)), ini.Get_Value(UT, x));
 		}
 
 	}

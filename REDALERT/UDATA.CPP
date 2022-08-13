@@ -862,6 +862,54 @@ UnitTypeClass::UnitTypeClass(
 	Speed = SPEED_WHEEL;
 }
 
+/***********************************************************************************************
+ * UnitTypeClass::UnitTypeClass -- This is the constructor for the building types.             *
+ *                                                                                             *
+ *    This is the constructor used to create the building types.                               *
+ *                                                                                             *
+ * INPUT:   see below...                                                                       *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/11/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+UnitTypeClass::UnitTypeClass(int utype, char const* ininame) :
+							UnitTypeClass(static_cast<UnitType>(utype),
+							TXT_NONE,
+							ininame,
+							ANIM_FRAG1,
+							REMAP_NORMAL,
+							0x0030,
+							0x0030,
+							0x0000,
+							0x0030,
+							0x0000,
+							false,//goodie
+							false,//usename
+							false,//squisher
+							false,//harvester
+							false,//invisible
+							false,//insignificant
+							false,//turret
+							false,//radarrotater
+							false,//hasfireanim
+							false,//turretlocked
+							false,//gigundo
+							false,//constantanim
+						    false,//jammer
+							false,//gapper
+							32,
+							0,
+							MISSION_HUNT)
+				    {
+						char message[64];
+						sprintf(message, "Instantiated custom Vehicle %s .\n", ininame);
+						WWDebugString(message);
+					}
+
 
 /***********************************************************************************************
  * UnitTypeClass::operator new -- Allocates an object from the unit type class heap.           *
@@ -976,17 +1024,46 @@ void UnitTypeClass::Init_Heap(void)
  * HISTORY:                                                                                    *
  *   10/07/1992 JLB : Created.                                                                 *
  *   05/02/1994 JLB : Converted to member function.                                            *
+ *   08/11/2022 JJ  : Updated to use functionality that is new unit aware                      *
  *=============================================================================================*/
 UnitType UnitTypeClass::From_Name(char const * name)
 {
-	if (name != NULL) {
-		for (UnitType classid = UNIT_FIRST; classid < UNIT_COUNT; classid++) {
-			if (stricmp(As_Reference(classid).IniName, name) == 0) {
-				return(classid);
-			}
+	if(name == NULL)
+		return(UNIT_NONE);
+	UnitTypeClass* utc = Class_From_Name(name);
+	if (utc == NULL)
+		return(UNIT_NONE);
+	return(utc->Type);
+}
+
+/***********************************************************************************************
+ * UnitTypeClass::Class_From_Name -- Fetch unit type class pointer for specified name.         *
+ *                                                                                             *
+ *    This routine converts an ASCII representation of a unit class and                        *
+ *    converts it into a real unit class number.                                               *
+ *                                                                                             *
+ * INPUT:   name  -- ASCII name representing a unit class.                                     *
+ *                                                                                             *
+ * OUTPUT:  Returns with the actual unit class pointer that the string                         *
+ *          represents.                                                                        *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/11/2022 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+UnitTypeClass * UnitTypeClass::Class_From_Name(char const* name)
+{
+	static UnitTypeClass* utc = NULL;
+	if (name == NULL)
+		return utc;
+	for (int index = 0; index < UnitTypes.Count(); index++) {
+		utc = UnitTypes.Ptr(index);
+		if (stricmp(utc->Name(), name) == 0) {
+			return(utc);
 		}
 	}
-	return(UNIT_NONE);
+	return(NULL);
 }
 
 
@@ -1067,10 +1144,11 @@ void UnitTypeClass::Prep_For_Add(void)
  *=============================================================================================*/
 void UnitTypeClass::One_Time(void)
 {
-	for (UnitType index = UNIT_FIRST; index < UNIT_COUNT; index++) {
+	for (int index = 0; index < UnitTypes.Count(); index++) {
 		char	fullname[_MAX_FNAME+_MAX_EXT];
 		char	buffer[_MAX_FNAME];
-		UnitTypeClass const & uclass = As_Reference(index);
+		//UnitTypeClass const & uclass = As_Reference(index);
+		UnitTypeClass const& uclass = *UnitTypes.Ptr(index);
 		CCFileClass	file;
 
 		void const * ptr;		// Shape pointer and set pointer.
@@ -1193,9 +1271,9 @@ ObjectClass * UnitTypeClass::Create_One_Of(HouseClass * house) const
  * UnitTypeClass::As_Reference -- Fetches a reference to the unit type class specified.        *
  *                                                                                             *
  *    Use this routine to return a reference to the UnitTypeClass object as indicated by       *
- *    the unit type number specified.                                                          *
+ *    the unit type specified.                                                                 *
  *                                                                                             *
- * INPUT:   type  -- The unit type number to convert into a UnitTypeClass object reference.    *
+ * INPUT:   type  -- The unit type to convert into a UnitTypeClass object reference.           *
  *                                                                                             *
  * OUTPUT:  Returns with a reference to the unit type class object specified.                  *
  *                                                                                             *
@@ -1203,10 +1281,40 @@ ObjectClass * UnitTypeClass::Create_One_Of(HouseClass * house) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   01/23/1995 JLB : Created.                                                                 *
+ *   08/11/2022 JJ  : Updated to support additional units                                      *
  *=============================================================================================*/
 UnitTypeClass & UnitTypeClass::As_Reference(UnitType type)
 {
-	return(*UnitTypes.Ptr(type));
+	UnitTypeClass * ut = NULL;
+	if (type == UNIT_NONE)
+		return(*ut);
+	for (int index = 0; index < UnitTypes.Count(); index++) {
+		ut = UnitTypes.Ptr(index);
+		if (ut->Type == type)
+			break;
+	}
+	return(*ut);
+}
+
+/***********************************************************************************************
+ * UnitTypeClass::As_Pointer -- Give a unit type ID, fetch pointer to unit type object.        *
+ *                                                                                             *
+ *    This routine will convert an index specified into a pointer to the unit type             *
+ *    object it represents.                                                                    *
+ *                                                                                             *
+ * INPUT:   index   -- The unit type object ID to convert to a pointer.                        *
+ *                                                                                             *
+ * OUTPUT:  Returns with a pointer to the unit type class object that is represented by the    *
+ *          unit ID specified. If no match could be found, then NULL is returned.              *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/11/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+UnitTypeClass* UnitTypeClass::As_Pointer(int index)
+{
+	return(UnitTypes.Ptr(index));
 }
 
 
@@ -1361,7 +1469,16 @@ bool UnitTypeClass::Read_INI(CCINIClass & ini)
 	if (TechnoTypeClass::Read_INI(ini)) {
 		IsNoFireWhileMoving = ini.Get_Bool(IniName, "NoMovingFire", IsNoFireWhileMoving);
 		Speed = ini.Get_Bool(IniName, "Tracked", (Speed == SPEED_TRACK)) ? SPEED_TRACK : SPEED_WHEEL;
-
+		char buffer[64], message[128];
+		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
+			sprintf(message, "UTC.Read_INI %s has Logic : %s \n", Name(),buffer);
+			WWDebugString(message);
+			UnitType utype = From_Name(buffer);
+			if (utype != UNIT_NONE)
+				Type = utype;
+			sprintf(message, "UTC.Read_INI has ID %d and Type %d . \n", ID, (int)Type);
+			WWDebugString(message);
+		}
 		/*
 		**	If this unit can drive over walls, then mark it as recognizing the crusher zone.
 		*/

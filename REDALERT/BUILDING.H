@@ -59,7 +59,9 @@ class BuildingClass : public TechnoClass
 		/*
 		**	This points to the control data that gives this building its characteristics.
 		*/
-		CCPtr<BuildingTypeClass> Class;
+	    const BuildingTypeClass * Class;
+		//short Class;
+		//CCPtr<BuildingTypeClass> Class;
 
 		/*
 		**	If this building is in the process of producing something, then this
@@ -214,14 +216,16 @@ class BuildingClass : public TechnoClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
-		BuildingClass(StructType type, HousesType house);
+		BuildingClass(const BuildingTypeClass * btype, HousesType house);
+		//BuildingClass(const BuildingTypeClass* btc, HousesType house);
 #ifdef FIXIT_MULTI_SAVE
-		BuildingClass(NoInitClass const & x) : TechnoClass(x), Class(x), Factory(x), CountDown(x), PlacementDelay(x) {};
+		BuildingClass(NoInitClass const & x) : TechnoClass(x), Class(NULL), Factory(x), CountDown(x), PlacementDelay(x) {};
 #else
 		BuildingClass(NoInitClass const & x) : TechnoClass(x), Class(x), CountDown(x), PlacementDelay(x) {};
 #endif
 		virtual ~BuildingClass(void);
-		operator StructType(void) const {return Class->Type;};
+		//const BuildingTypeClass* BuildingClass::ClassPtr(void) { return BuildingTypes.Ptr(ClassID); };
+		operator StructType(void) const {return (Class->Type);};
 
 		/*---------------------------------------------------------------------
 		**	Member function prototypes.
@@ -229,7 +233,7 @@ class BuildingClass : public TechnoClass
 		static void Init(void);
 
 		TARGET Target_Scan(void);
-		BuildingTypeClass::AnimControlType const * Fetch_Anim_Control(void) {return (&Class->Anims[BState]);};
+		BuildingTypeClass::AnimControlType const * Fetch_Anim_Control(void) {return (&(Class->Anims[BState]));};
 
 		/*
 		**	Query functions.

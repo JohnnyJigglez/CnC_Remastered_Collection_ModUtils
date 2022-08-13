@@ -2176,6 +2176,7 @@ extern bool MPSuperWeaponDisable;
  *   05/22/1995 JLB : Created.                                                                 *
  *   07/08/1995 JLB : Added a bunch of goodies to the crates.                                  *
  *   06/17/1996 JLB : Revamped for Red Alert                                                   *
+ *   08/11/2022 JJ  : Updated to support custom units                                          *
  *=============================================================================================*/
 bool CellClass::Goodie_Check(FootClass * object)
 {
@@ -2313,7 +2314,7 @@ bool CellClass::Goodie_Check(FootClass * object)
 								HouseClass * hptr = Houses.Ptr(i + HOUSE_MULTI1);
 								if (hptr != NULL && !hptr->IsDefeated) {
 									int j;
-									for( j=0; j < UNIT_COUNT; j++) {
+									for( j=0; j < UnitTypes.Count(); j++) {
 										ucount += hptr->QuantityU(j);
 									}
 									for( j=0; j < INFANTRY_COUNT; j++) {
@@ -2481,6 +2482,7 @@ crate_money:
 
 				/*
 				**	Check for special unit type override value.
+				* TODO update this so that unitCrates can specific even custom units
 				*/
 				if (Rule.UnitCrateType != UNIT_NONE) {
 					utp = &UnitTypeClass::As_Reference(Rule.UnitCrateType);
@@ -2492,7 +2494,7 @@ crate_money:
 				while (utp == NULL) {
 #ifdef FIXIT_ANTS
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-					UnitType utype = Random_Pick(UNIT_FIRST, (UnitType)(UNIT_RA_COUNT-1 -3));
+					UnitType utype = Random_Pick(UNIT_FIRST, static_cast<UnitType>(UnitTypes.Count()-1));
 #else
 					UnitType utype = Random_Pick(UNIT_FIRST, (UnitType)(UNIT_COUNT-1 -3));
 #endif

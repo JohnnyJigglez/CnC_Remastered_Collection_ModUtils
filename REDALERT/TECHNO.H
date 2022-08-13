@@ -65,6 +65,11 @@ class TechnoClass :	public RadioClass,
 		unsigned IsUseless:1;
 
 		/*
+		** This is the index into the TechnoTypeClass' heap;
+		*/
+		short ClassID;
+
+		/*
 		**	This flag will be true if the object has been damaged with malice.
 		**	Damage received due to friendly fire or wear and tear does not count.
 		**	The computer is not allowed to sell a building unless it has been
@@ -294,6 +299,7 @@ class TechnoClass :	public RadioClass,
 		virtual ActionType What_Action(CELL cell) const;
 		virtual ActionType What_Action(ObjectClass const * target) const;
 		virtual BuildingClass * Find_Docking_Bay(StructType b, bool friendly) const;
+		//virtual const TechnoTypeClass* ClassPtr(void) { return(NULL); };
 		virtual CELL Find_Exit_Cell(TechnoClass const * techno) const;
 		virtual FireDataType Fire_Data(int) const;
 		virtual COORDINATE Fire_Coord(int which) const;

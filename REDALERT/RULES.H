@@ -754,6 +754,7 @@ class RulesClass {
 		int TerrainMax;
 		int TriggerMax;
 		int UnitMax;
+		int UnitTypeMax;
 		int VesselMax;
 		int ProjectileMax;
 		int WeaponMax;

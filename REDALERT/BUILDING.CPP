@@ -493,12 +493,14 @@ void BuildingClass::Draw_It(int x, int y, WindowNumberType window) const
 		/*
 		**	Draw the weapon factory custom overlay graphic.
 		*/
-		if ( (*this == STRUCT_WEAP || *this == STRUCT_FAKEWEAP)) {
+		if ( (*this == STRUCT_WEAP || *this == STRUCT_FAKEWEAP) && this->Class->OverlayData) {
 			int shapenum = Door_Stage();
 			if (Health_Ratio() <= Rule.ConditionYellow) shapenum += 4;
 			// Added override shape file name. ST - 8/1/2019 5:24PM
 			//Techno_Draw_Object(Class->WarFactoryOverlay, shapenum, x, y, window);
-			Techno_Draw_Object_Virtual(Class->WarFactoryOverlay, shapenum, x, y, window, DIR_N, 0x0100, "WEAP2");
+			char buffer[32];
+			sprintf(buffer, "%s2", Class->Graphic_Name());
+			Techno_Draw_Object_Virtual(Class->OverlayData, shapenum, x, y, window, DIR_N, 0x0100, buffer);
 		}
 
 		/*
@@ -1599,9 +1601,8 @@ void BuildingClass::operator delete(void *ptr)
  *   04/21/1994 JLB : Created.                                                                 *
  *   08/07/1995 JLB : Fixed act like value to match expected value.                            *
  *=============================================================================================*/
-BuildingClass::BuildingClass(StructType type, HousesType house) :
+BuildingClass::BuildingClass(const BuildingTypeClass * btype, HousesType house) :
 	TechnoClass(RTTI_BUILDING, Buildings.ID(this), house),
-	Class(BuildingTypes.Ptr((int)type)),
 	Factory(0),
 	ActLike(House->ActLike),
 	IsToRebuild(false),
@@ -1626,12 +1627,14 @@ BuildingClass::BuildingClass(StructType type, HousesType house) :
 	WhomToRepay(TARGET_NONE),
 	AnimToTrack(TARGET_NONE),
 	LastStrength(0),
-	PlacementDelay(0)
+	PlacementDelay(0),
+	Class(btype)
 {
 	House->Tracking_Add(this);
-	IsSecondShot = !Class->Is_Two_Shooter();
+	//const TechnoTypeClass * ttc = BuildingTypes.Ptr(ClassID);
+	IsSecondShot = Class->Is_Two_Shooter();
 	Strength = Class->MaxStrength;
-	IsIndependentFire = Class->IsIndependentFire;
+	//IsIndependentFire = ttc->IsIndependentFire;
 	Ammo = Class->MaxAmmo;
 	if (Class->PrimaryWeapon != NULL) {
 		BurstShotsRemaining[0] = Class->PrimaryWeapon->Burst;
@@ -1644,14 +1647,8 @@ BuildingClass::BuildingClass(StructType type, HousesType house) :
 	**	is due to the lack of buildup animation.
 	*/
 	if (Class->Get_Buildup_Data() != NULL) {
-//	if (!Class->IsBuildable) {
 		IsAllowedToSell = false;
 	}
-
-//	if (Session.Type == GAME_INTERNET) {
-//		House->BuildingTotals->Increment_Unit_Total( (int) type);
-//	}
-
 }
 
 
@@ -2229,7 +2226,8 @@ void BuildingClass::Update_Buildables(void)
 
 			case RTTI_BUILDINGTYPE:
 				for (i = 0; i < BuildingTypes.Count(); i++) {
-					if (PlayerPtr->Can_Build(&BuildingTypeClass::As_Reference((StructType)i), ActLike)) {
+					//if (PlayerPtr->Can_Build(&BuildingTypeClass::As_Reference((StructType)i), ActLike)) {
+					if (PlayerPtr->Can_Build(BuildingTypes.Ptr(i), ActLike)) {
 						if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
 							Sidebar_Glyphx_Add(RTTI_BUILDINGTYPE, i, House, buildable_via_capture);
 						} else {
@@ -2240,8 +2238,9 @@ void BuildingClass::Update_Buildables(void)
 				break;
 
 			case RTTI_UNITTYPE:
-				for (u = UNIT_FIRST; u < UNIT_COUNT; u++) {
-					if (PlayerPtr->Can_Build(&UnitTypeClass::As_Reference((UnitType)u), ActLike)) {
+				for (u = 0; u < UnitTypes.Count(); u++) {
+					//if (PlayerPtr->Can_Build(&UnitTypeClass::As_Reference((UnitType)u), ActLike)) {
+					if (PlayerPtr->Can_Build(UnitTypes.Ptr(u), ActLike)) {
 						if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
 							Sidebar_Glyphx_Add(RTTI_UNITTYPE, u, House, buildable_via_capture);
 						} else {
@@ -5344,7 +5343,7 @@ void BuildingClass::Read_INI(CCINIClass & ini)
 {
 	BuildingClass			* b;			// Working unit pointer.
 	HousesType				bhouse;		// Building house.
-	StructType				classid;		// Building type.
+	const BuildingTypeClass*		classid;		// Building type.
 	CELL						cell;			// Cell of building.
 	char						buf[128];
 	char						* trigname;	// building's trigger's name
@@ -5367,9 +5366,9 @@ void BuildingClass::Read_INI(CCINIClass & ini)
 		/*
 		**	2nd token: building name.
 		*/
-		classid = BuildingTypeClass::From_Name(strtok(NULL, ","));
-
-		if (bhouse != HOUSE_NONE && classid != STRUCT_NONE) {
+		//classid = BuildingTypeClass::From_Name(strtok(NULL, ","));
+		classid = BuildingTypeClass::Class_From_Name(strtok(NULL, ","));
+		if (bhouse != HOUSE_NONE && classid != NULL) {
 			int	strength;
 			DirType facing;
 
@@ -6093,3 +6092,7 @@ unsigned BuildingClass::Spied_By() const
 
 	return spiedby;
 }
+
+//BuildingTypeClass* BuildingClass::ClassPtr(void) {
+//	return BuildingTypes.Ptr(ClassID);
+//}

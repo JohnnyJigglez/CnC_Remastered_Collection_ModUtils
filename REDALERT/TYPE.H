@@ -760,6 +760,13 @@ class BuildingTypeClass : public TechnoTypeClass {
 		} AnimControlType;
 		AnimControlType Anims[BSTATE_COUNT];
 
+		/*
+		**	These point to the overlay imagery for this object type. Since the shape imagery
+		**	exists in a separate file, the data is filled in after this object is constructed.
+		**	The "mutable" keyword allows easy modification to this otherwise const object.
+		*/
+		void const* OverlayData;
+
 		/*---------------------------------------------------------------------------
 		**	This is the building type explicit constructor.
 		*/
@@ -802,9 +809,10 @@ class BuildingTypeClass : public TechnoTypeClass {
 
 		static void Init_Heap(void);
 		static BuildingTypeClass & As_Reference(StructType type);
+		static BuildingTypeClass * As_Pointer(StructType type);
 		static BuildingTypeClass& As_Reference(int index);
 		static StructType From_Name(char const * name);
-		static const BuildingTypeClass * BuildingType_From_Name(char const* name);
+		static BuildingTypeClass * Class_From_Name(char const* name);
 		static void Init(TheaterType theater);
 		static void One_Time(void);
 		static void Prep_For_Add(void);
@@ -972,6 +980,7 @@ class UnitTypeClass : public TechnoTypeClass
 		**	This is the explicit unit class constructor.
 		*/
 		UnitTypeClass(NoInitClass const & x) : TechnoTypeClass(x) {}
+		UnitTypeClass(int utype, char const* ininame);
 		UnitTypeClass	(
 						UnitType type,
 						int name,
@@ -1008,7 +1017,9 @@ class UnitTypeClass : public TechnoTypeClass
 
 		static void Init_Heap(void);
 		static UnitType From_Name(char const * name);
+		static UnitTypeClass* Class_From_Name(char const* name);
 		static UnitTypeClass & As_Reference(UnitType type);
+		static UnitTypeClass * As_Pointer(int index);
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 		static void Prep_For_Add(void);

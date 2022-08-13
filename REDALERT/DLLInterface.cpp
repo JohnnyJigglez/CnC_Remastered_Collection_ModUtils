@@ -8059,7 +8059,7 @@ void DLLExportClass::Debug_Spawn_All(int x, int y)
 
 		if (building_type.Get_Ownable() && building_type.Level != -1) {
 				
-			BuildingClass * building = new BuildingClass(building_type, house);
+			BuildingClass * building = new BuildingClass(&building_type, house);
 			if (building) {
 				
 				try_x = origin_x;
@@ -8228,11 +8228,10 @@ void DLLExportClass::Debug_Spawn_Unit(const char *object_name, int x, int y, boo
 	/*
 	** What is this thing?
 	*/
-
 	StructType structure_type = BuildingTypeClass::From_Name(object_name);
 	if (structure_type != STRUCT_NONE) {
 		
-		BuildingClass * building = new BuildingClass(structure_type, house);
+		BuildingClass * building = new BuildingClass(BuildingTypeClass::Class_From_Name(object_name), house);
 		if (building) {
 			if (!building->Unlimbo(Cell_Coord(cell))) {
 				delete building;

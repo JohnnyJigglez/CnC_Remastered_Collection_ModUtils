@@ -110,10 +110,13 @@ bool CarryoverClass::Create(void) const
 {
 	TechnoClass * techno = 0;
 	TechnoTypeClass const * ttype = 0;
+	UnitTypeClass utype = UnitTypeClass::As_Reference(Type.Unit);
+	BuildingTypeClass btype = BuildingTypeClass::As_Reference(Type.Building);
 
 	switch (RTTI) {
 		case RTTI_UNIT:
-			ttype = &UnitTypeClass::As_Reference(Type.Unit);
+			//UnitTypeClass utype = UnitTypeClass::As_Reference(Type.Unit);
+			ttype = &utype;
 			techno = new UnitClass(Type.Unit, House);
 			break;
 
@@ -123,8 +126,9 @@ bool CarryoverClass::Create(void) const
 			break;
 
 		case RTTI_BUILDING:
-			ttype = &BuildingTypeClass::As_Reference(Type.Building);
-			techno = new BuildingClass(Type.Building, House);
+			//BuildingTypeClass btype = BuildingTypeClass::As_Reference(Type.Building);
+			ttype = &btype;
+			techno = new BuildingClass(&btype, House);
 			break;
 
 		case RTTI_VESSEL:

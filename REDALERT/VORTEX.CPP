@@ -704,7 +704,7 @@ void ChronalVortexClass::Zap_Target (void)
 		/*
 		** Create a temporary techno object se we can access the lightning ability of the tesla.
 		*/
-		TechnoClass *temptech = new BuildingClass (STRUCT_TESLA, HOUSE_GOOD);
+		TechnoClass *temptech = new BuildingClass(BuildingTypeClass::As_Pointer(STRUCT_TESLA), HOUSE_GOOD);
 		if (temptech != NULL) {
 			temptech->Coord = here;
 			ObjectClass * obj = As_Object(TargetObject);

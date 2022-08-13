@@ -1647,6 +1647,7 @@ typedef enum UnitType : char {
 #endif
 
 	UNIT_COUNT,
+	UNITT_MAX=127,
 	UNIT_FIRST=0
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 ,

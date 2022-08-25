@@ -420,7 +420,7 @@ class TechnoTypeClass : public ObjectTypeClass
 
 		/*
 		**	This is the build speed bias, the time it takes to build this techno will
-		**	be multiplied by this number/
+		**	be multiplied by this number.
 		*/
 		fixed BuildSpeedBias;
 
@@ -958,7 +958,7 @@ class UnitTypeClass : public TechnoTypeClass
 		**	is facing used to reach the center point of the turret. This distance is
 		**	in leptons.
 		*/
-		signed char TurretOffset;
+		//signed char TurretOffset;
 
 		/*
 		**	This value is used to provide the unit with a default mission order when

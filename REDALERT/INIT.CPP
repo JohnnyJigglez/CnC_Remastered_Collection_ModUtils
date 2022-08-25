@@ -241,7 +241,7 @@ bool Init_Game(int , char * [])
 	**	Register and cache any secondary mixfiles.
 	*/
 	Init_Secondary_Mixfiles();
-
+	
 	/*
 	**	This is a special hack to initialize the heaps that must be in place before the
 	**	rules file is processed. These heaps should properly be allocated as a consequence
@@ -254,7 +254,7 @@ bool Init_Game(int , char * [])
 	InfantryTypes.Set_Heap(INFANTRY_COUNT);
 	//BulletTypes.Set_Heap(BULLET_COUNT);
 	//AnimTypes.Set_Heap(ANIM_COUNT);
-	UnitTypes.Set_Heap(UNIT_COUNT);
+	//UnitTypes.Set_Heap(UNIT_COUNT);
 	VesselTypes.Set_Heap(VESSEL_COUNT);
 	TemplateTypes.Set_Heap(TEMPLATE_COUNT);
 	TerrainTypes.Set_Heap(TERRAIN_COUNT);

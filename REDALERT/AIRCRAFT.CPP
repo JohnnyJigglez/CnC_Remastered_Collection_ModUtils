@@ -2322,7 +2322,7 @@ ActionType AircraftClass::What_Action(ObjectClass const * target) const
 		action = ACTION_NONE;
 	}
 
-	if (action == ACTION_ATTACK && Class->PrimaryWeapon == NULL) {
+	if (action == ACTION_ATTACK && Class->PrimaryWeapon == NULL && Class->SecondaryWeapon == NULL) {
 		action = ACTION_NONE;
 	}
 
@@ -2386,7 +2386,7 @@ ActionType AircraftClass::What_Action(CELL cell) const
 		action = ACTION_NOMOVE;
 	}
 
-	if (action == ACTION_ATTACK && Class->PrimaryWeapon == NULL) {
+	if (action == ACTION_ATTACK && Class->PrimaryWeapon == NULL && Class->SecondaryWeapon == NULL) {
 		action = ACTION_NONE;
 	}
 

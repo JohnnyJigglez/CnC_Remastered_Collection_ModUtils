@@ -3701,7 +3701,7 @@ ActionType TechnoClass::What_Action(CELL cell) const
 	/*
 	**	Disable recognizing the <CTRL> key forced fire option when dealing with buildings.
 	*/
-	if (What_Am_I() == RTTI_BUILDING) ctrldown = false;
+	//if (What_Am_I() == RTTI_BUILDING) ctrldown = false;
 
 	/*
 	**	Disable recognizing the <CTRL> key forced fire option when dealing with submarines.
@@ -6972,11 +6972,17 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		ROT = ini.Get_Int(Name(), "ROT", ROT);
 		MaxPassengers = ini.Get_Int(Name(), "Passengers", MaxPassengers);
 		IsIndependentFire = ini.Get_Bool(Name(), "IndependentFire", IsIndependentFire);
+		IsTurretEquipped = ini.Get_Bool(Name(), "Turret", IsTurretEquipped);
 		BuildSpeedBias = ini.Get_Fixed(Name(), "BuildTime", BuildSpeedBias);
-//Mono_Printf("before image=: %s\n",GraphicName);
 		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
-//Mono_Printf("after image=: %s\n",GraphicName);if(Random_Pick(0,4)) Keyboard->Get();
-
+		HorizontalOffset = ini.Get_Int(Name(), "HOffset", HorizontalOffset); 		
+		VerticalOffset = ini.Get_Int(Name(), "VOffset", VerticalOffset);			
+		PrimaryOffset = ini.Get_Int(Name(), "PrimaryOffset", PrimaryOffset);			
+		PrimaryLateral = ini.Get_Int(Name(), "PrimaryLateral", PrimaryLateral);			
+		SecondaryOffset = ini.Get_Int(Name(), "SecondaryOffset", SecondaryOffset);
+		SecondaryLateral = ini.Get_Int(Name(), "SecondaryLateral", SecondaryLateral);
+		Rotation = ini.Get_Int(Name(), "Rotation", Rotation);
+		
 		IsLeader = false;
 		if (PrimaryWeapon != NULL && PrimaryWeapon->Attack > 0) {
 			IsLeader = true;

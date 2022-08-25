@@ -851,7 +851,7 @@ UnitTypeClass::UnitTypeClass(
 	IsGapper(is_gapper),
 	IsNoFireWhileMoving(false),
 	Type(type),
-	TurretOffset(toffset),
+	//TurretOffset(toffset),
 	Mission(order),
 	Explosion(exp),
 	MaxSize(0)
@@ -882,10 +882,10 @@ UnitTypeClass::UnitTypeClass(int utype, char const* ininame) :
 							ininame,
 							ANIM_FRAG1,
 							REMAP_NORMAL,
-							0x0030,
-							0x0030,
 							0x0000,
-							0x0030,
+							0x0000,
+							0x0000,
+							0x0000,
 							0x0000,
 							false,//goodie
 							false,//usename

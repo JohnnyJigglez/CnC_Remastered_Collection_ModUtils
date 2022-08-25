@@ -254,6 +254,9 @@ MixFileClass<T>::MixFileClass(char const * filename, PKey const * key) :
 	**	Attach to list of mixfiles.
 	*/
 	List.Add_Tail(this);
+	char dbgmessage[256];
+	sprintf(dbgmessage, "MIXFILE Constructed %s with %d items \n", filename, Count);
+	WWDebugString(dbgmessage);
 }
 
 
@@ -280,6 +283,11 @@ void const * MixFileClass<T>::Retrieve(char const * filename)
 {
 	void * ptr = 0;
 	Offset(filename, &ptr);
+	if (ptr) {
+		char message[64];
+		sprintf(message, "MFC Retrieved %s \n", filename);
+		WWDebugString(message);
+	}
 	return(ptr);
 };
 
@@ -549,9 +557,11 @@ assert(filename != NULL);//BG
 	**	Sweep through all registered mixfiles, trying to find the file in question.
 	*/
 	ptr = List.First();
+	//char dbgmessage[256];
 	while (ptr->Is_Valid()) {
 		SubBlock * block;
-
+		//sprintf(dbgmessage, "MixFile.Offset checking mixfile %s for asset %s \n", ptr->Filename,filename);
+		//WWDebugString(dbgmessage);
 		/*
 		**	Binary search for the file in this mixfile. If it is found, then extract the
 		**	appropriate information and store it in the locations provided and then return.

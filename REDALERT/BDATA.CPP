@@ -3177,7 +3177,7 @@ void BuildingTypeClass::One_Time(void)
 		BuildingTypeClass const& building = *(BuildingTypes.Ptr(sindex));
 		/*
 		**	Fetch the sidebar cameo image for this building.
-		*/
+		
 		if (building.Level != -1) {
 //		if (building.IsBuildable) {
 			sprintf(buffer, "%sICON", building.Graphic_Name());
@@ -3188,7 +3188,7 @@ void BuildingTypeClass::One_Time(void)
 
 			_makepath(fullname, NULL, NULL, buffer, ".SHP");
 			((void const *&)building.CameoData) = MFCD::Retrieve(fullname);
-		}
+		}*/
 
 		/*
 		**	Fetch the construction animation for this building.
@@ -3196,7 +3196,11 @@ void BuildingTypeClass::One_Time(void)
 		sprintf(buffer, "%sMAKE", building.Graphic_Name());
 		_makepath(fullname, NULL, NULL, buffer, ".SHP");
 		void const * dataptr;
+		char message[64];
+		sprintf(message, "BData.ONETIME acquiring %s \n", fullname);
+		WWDebugString(message);
 		dataptr = MFCD::Retrieve(fullname);
+		//CCFileClass(fullname);
 		((void const *&)building.BuildupData) = dataptr;
 		if (dataptr != NULL) {
 			int timedelay = 1;
@@ -3211,9 +3215,13 @@ void BuildingTypeClass::One_Time(void)
 		**	Fetch the normal game shape for this building.
 		*/
 		_makepath(fullname, NULL, NULL, building.Graphic_Name(), ".SHP");
+		sprintf(message, "BData.ONETIME acquiring %s \n", fullname);
+		WWDebugString(message);
 		((void const *&)building.ImageData) = MFCD::Retrieve(fullname);
 		sprintf(buffer, "%s2", building.Graphic_Name());
 		_makepath(fullname, NULL, NULL, buffer, ".SHP");
+		sprintf(message, "BData.ONETIME acquiring %s \n", fullname);
+		WWDebugString(message);
 		((void const*&)building.OverlayData) = MFCD::Retrieve(fullname);
 
 	}
@@ -3928,6 +3936,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		IsRegulated = ini.Get_Bool(Name(), "Regulated", IsRegulated);
 		ToBuild = ini.Get_RTTIType(Name(), "Build", ToBuild);
 		ExitCoordinate = ini.Get_Coord(Name(), "ExitCoord", ExitCoordinate);
+		StartFace = (DirType)(ini.Get_Int(Name(), "InitialD", StartFace));
 		
 		if (ini.Get_String(Name(), "Size", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building (%d,%d) has Size : %s \n", Width(), Height(), buffer);
@@ -4020,15 +4029,15 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 	return(false);
 }
 /***********************************************************************************************
- * BuildingTypeClass::RTTIType_From_Name -- Given a name, this finds the corresponding anim type*
- *                                      class.												   *
+ * BuildingTypeClass::RTTIType_From_Name -- Given a name, this finds the corresponding rtti    *
+ *                                      											           *
  *                                                                                             *
- *    This routine will convert the supplied ASCII name into the animation type that it        *
+ *    This routine will convert the supplied ASCII name into the rtti type that it             *
  *    represents.                                                                              *
  *                                                                                             *
  * INPUT:   name  -- Pointer to the ASCII name to convert.                                     *
  *                                                                                             *
- * OUTPUT:  Returns with the animation type class that matches the name specified. If no match *
+ * OUTPUT:  Returns with the RTTItype enum that matches the name specified. If no match        *
  *          could be found, then NULL is returned.                                             *
  *                                                                                             *
  * WARNINGS:   none                                                                            *

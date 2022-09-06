@@ -2871,7 +2871,7 @@ BuildingTypeClass::BuildingTypeClass(
 	Anims[BSTATE_AUX2].Count = 1;
 	Anims[BSTATE_AUX2].Rate = 0;
 
-	int width[BSIZE_COUNT] = {
+	short width[BSIZE_COUNT] = {
 		1,
 		2,
 		1,
@@ -2882,7 +2882,7 @@ BuildingTypeClass::BuildingTypeClass(
 		4,
 		5
 	};
-	int height[BSIZE_COUNT] = {
+	short height[BSIZE_COUNT] = {
 		1,
 		1,
 		2,
@@ -4035,7 +4035,8 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 				count++;
 			}
 			tempexitlist[count] = REFRESH_EOL;
-			ExitList = (const short *)tempexitlist;
+			memcpy(ExitListData, tempexitlist, (sizeof(tempexitlist) / 16) * (count + 1));
+			ExitList = (short *)ExitListData;
 		}
 		if (ini.Get_String(Name(), "OccupyList", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building has OccupyList : %s \n", buffer);

@@ -656,7 +656,7 @@ int BuildingClass::Shape_Number(void) const
 
 				/*
 				**	Special render stage for silos. The stage is dependent on the current
-				**	Tiberium collected as it relates to Tiberium capacity.
+				**	Tiberium collected as it relates to Tiberium capacity. TODO: detach this logic from the unique building type class
 				*/
 				if (*this == STRUCT_STORAGE) {
 
@@ -2967,8 +2967,8 @@ COORDINATE BuildingClass::Center_Coord(void) const
 {
 	assert(Buildings.ID(this) == ID);
 	assert(IsActive);
-
-	return(Coord_Add(Coord, CenterOffset[Class->Size]));
+	//return(Coord_Add(Coord, CenterOffset[Class->Size]));
+	return(Coord_Add(Coord, XY_Coord((Class->SizeWidth) * 128, (Class->SizeHeight) * 128)));
 }
 
 

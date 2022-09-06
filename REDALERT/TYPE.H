@@ -887,6 +887,12 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	to determine building placement legality and terrain passibility.
 		*/
 		short OccupyListData[36] = { REFRESH_EOL };
+		/*
+		**	This is a pointer to a list of offsets (from the upper left corner) that
+		**	are used to indicate the building's "footprint". This footprint is used
+		**	to determine building placement legality and terrain passibility.
+		*/
+		short ExitListData[16] = { REFRESH_EOL };
 
 		/*
 		**	Buildings can often times overlap a cell but not actually "occupy" it for

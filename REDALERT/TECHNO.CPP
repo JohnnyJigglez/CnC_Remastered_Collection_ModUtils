@@ -131,6 +131,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include	"function.h"
+#include	"TYPE.H"
 
 
 /***************************************************************************
@@ -2024,7 +2025,7 @@ int TechnoClass::Evaluate_Just_Cell(CELL cell) const
 	**	If the weapon cannot deal with ground based targets, then don't consider
 	**	this a valid cell target.
 	*/
-	if (ttype->PrimaryWeapon->Bullet && !ttype->PrimaryWeapon->Bullet->IsAntiGround) {
+	if (ttype->PrimaryWeapon->Bullet && ttype->PrimaryWeapon->Bullet->IsAntiGround) {
 		BEnd(BENCH_EVAL_WALL);
 		return(0);
 	}
@@ -4556,9 +4557,8 @@ void TechnoClass::Techno_Draw_Object(void const * shapefile, int shapenum, int x
 		if (Height > 0) {
 			shadow = Map.UnitShadowAir;
 		}
-
 		y -= Lepton_To_Pixel(Height);
-
+		
 		/*
 		** If they're viewing a spy, and the spy belongs to some other house,
 		** make it look like an infantryman from our house

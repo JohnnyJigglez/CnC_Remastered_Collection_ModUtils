@@ -35,13 +35,14 @@
 
 #ifndef WEAPON_H
 #define WEAPON_H
-
+#include <vector>
 
 /**********************************************************************
 **	This is the constant data associated with a weapon. Some objects
 **	can have multiple weapons and this class is used to isolate and
 **	specify this data in a convenient and selfcontained way.
 */
+//std::vector<WeaponTypeClass*> Weapons;
 class WeaponTypeClass
 {
 	public:
@@ -49,15 +50,17 @@ class WeaponTypeClass
 		WeaponTypeClass(NoInitClass const &) {}
 		~WeaponTypeClass(void);
 
-		void * operator new(size_t);
-		static void * operator new(size_t , void * ptr) {return(ptr);};
+		//void* operator new(size_t);
+		void* operator new(size_t t);
+		//static void * operator new(size_t , void * ptr) {return(ptr);};
+		static void* operator new(size_t, void* ptr);
 		void operator delete(void * pointer);
 		static void Init_Heap(void);
 		char const * Name(void) const {return(IniName);}
 		bool Read_INI(CCINIClass & ini);
 		static WeaponTypeClass * As_Pointer(int index);
-		static WeaponTypeClass * From_Name(char const* name);
-		static int ID_From_Name(char const* name);
+		static WeaponTypeClass * As_Pointer(char const* name);
+		static int As_Int(char const* name);
 		void Code_Pointers(void) {}
 		void Decode_Pointers(void) {}
 		ThreatType Allowed_Threats(void) const;
@@ -117,7 +120,7 @@ class WeaponTypeClass
 		/*
 		**	Projectile Type that the weapon uses.
 		*/
-		BulletTypeClass * Bullet;
+		CCPtr<BulletTypeClass> Bullet;
 
 		/*
 		**	This is the damage (explosive load) to be assigned to the projectile that
@@ -133,7 +136,7 @@ class WeaponTypeClass
 		/*
 		**	Warhead Type to attach to the projectile.
 		*/
-		WarheadTypeClass * WarheadPtr;
+		CCPtr<WarheadTypeClass> WarheadPtr;
 
 		/*
 		**	Objects that fire (which can be buildings as well) will fire at a

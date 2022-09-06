@@ -166,6 +166,27 @@ void const * ObjectClass::Get_Image_Data(void) const
 
 
 /***********************************************************************************************
+ * ObjectClass::Get_Secondary_Image_Data -- Fetches secondary image data to use for this object.*
+ *                                                                                             *
+ *    This routine will return with a pointer to the secondary image date that should be used when *
+ *    this object is drawn.                                                                    *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  Returns with a pointer to the shape data for this object.                          *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/24/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+void const* ObjectClass::Get_Secondary_Image_Data(void) const
+{
+	return(Class_Of().Get_Secondary_Image_Data());
+}
+
+
+/***********************************************************************************************
  * ObjectClass::Name -- Fetches the identification name of this object.                        *
  *                                                                                             *
  *    This routine will return a pointer to the identifier name for this object. This name     *
@@ -2194,7 +2215,8 @@ ObjectTypeClass::ObjectTypeClass(
 	Armor(ARMOR_NONE),
 	MaxStrength(0),
 	ImageData(0),
-	RadarIcon(0)
+	RadarIcon(0),
+	Scale(1.0)
 {
 	/*
 	** Init the DimensionData rect. Not sure how this was ever working before without being allocated. It was just trashing

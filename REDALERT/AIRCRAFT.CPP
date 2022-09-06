@@ -780,7 +780,7 @@ int AircraftClass::Mission_Hunt(void)
 							**	Force the target to be the actual target if this aircraft is
 							**	equipped with homing projectile.
 							*/
-							if (Class->PrimaryWeapon->Bullet != NULL && Class->PrimaryWeapon->Bullet->ROT > 0) {
+							if (Class->PrimaryWeapon->Bullet && Class->PrimaryWeapon->Bullet->ROT > 0) {
 								targ = TarCom;
 							}
 						}
@@ -4017,8 +4017,8 @@ FireErrorType AircraftClass::Can_Fire(TARGET target, int which) const
 		return(FIRE_AMMO);
 	}
 
-	bool camera = (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsCamera);
-	bool fudge = (Passenger || (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->Bullet != NULL && Class->PrimaryWeapon->Bullet->IsParachuted));
+	bool camera = (Class->PrimaryWeapon && Class->PrimaryWeapon->IsCamera);
+	bool fudge = (Passenger || (Class->PrimaryWeapon && Class->PrimaryWeapon->Bullet && Class->PrimaryWeapon->Bullet->IsParachuted));
 
 	if (fudge && !camera && !Ammo && !Passenger) {
 		return(FIRE_AMMO);

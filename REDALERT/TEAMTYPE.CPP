@@ -1715,7 +1715,7 @@ void TeamTypeClass::Fill_In(char * name, char * entry)
 		/*
 		**	See if this is an infantry name
 		*/
-		InfantryType i_id = InfantryTypeClass::From_Name(p1);
+		InfantryType i_id = InfantryTypeClass::As_Type(p1);
 		if (i_id != INFANTRY_NONE) {
 			otype = &InfantryTypeClass::As_Reference(i_id);
 		} else {
@@ -1723,7 +1723,7 @@ void TeamTypeClass::Fill_In(char * name, char * entry)
 			/*
 			**	See if this is a unit name
 			*/
-			UnitType u_id = UnitTypeClass::From_Name(p1);
+			UnitType u_id = UnitTypeClass::As_Type(p1);
 			if (u_id != UNIT_NONE) {
 				otype = &UnitTypeClass::As_Reference(u_id);
 			} else {

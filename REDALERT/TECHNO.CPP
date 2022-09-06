@@ -357,7 +357,7 @@ int TechnoClass::What_Weapon_Should_I_Use(TARGET target) const
 	*/
 	int w1 = 0;
 	WeaponTypeClass const * wptr = ttype->PrimaryWeapon;
-	if (wptr != NULL && wptr->WarheadPtr != NULL) w1 = wptr->WarheadPtr->Modifier[armor] * 1000;
+	if (wptr != NULL && wptr->WarheadPtr) w1 = wptr->WarheadPtr->Modifier[armor] * 1000;
 	if (In_Range(target, 0)) w1 *= 2;
 	FireErrorType ok = Can_Fire(target, 0);
 	if (ok == FIRE_CANT || ok == FIRE_ILLEGAL) w1 = 0;
@@ -367,7 +367,7 @@ int TechnoClass::What_Weapon_Should_I_Use(TARGET target) const
 	*/
 	int w2 = 0;
 	wptr = ttype->SecondaryWeapon;
-	if (wptr != NULL && wptr->WarheadPtr != NULL) w2 = wptr->WarheadPtr->Modifier[armor] * 1000;
+	if (wptr != NULL && wptr->WarheadPtr) w2 = wptr->WarheadPtr->Modifier[armor] * 1000;
 	if (In_Range(target, 1)) w2 *= 2;
 	ok = Can_Fire(target, 1);
 	if (ok == FIRE_CANT || ok == FIRE_ILLEGAL) w2 = 0;
@@ -2015,7 +2015,7 @@ int TechnoClass::Evaluate_Just_Cell(CELL cell) const
 	**	See if the object has a weapon that can damage walls.
 	*/
 	TechnoTypeClass const * ttype = (TechnoTypeClass const *)Techno_Type_Class();
-	if (ttype->PrimaryWeapon == NULL || ttype->PrimaryWeapon->WarheadPtr == NULL) {
+	if (ttype->PrimaryWeapon == NULL || !ttype->PrimaryWeapon->WarheadPtr) {
 		BEnd(BENCH_EVAL_WALL);
 		return(0);
 	}
@@ -2024,7 +2024,7 @@ int TechnoClass::Evaluate_Just_Cell(CELL cell) const
 	**	If the weapon cannot deal with ground based targets, then don't consider
 	**	this a valid cell target.
 	*/
-	if (ttype->PrimaryWeapon->Bullet != NULL && !ttype->PrimaryWeapon->Bullet->IsAntiGround) {
+	if (ttype->PrimaryWeapon->Bullet && !ttype->PrimaryWeapon->Bullet->IsAntiGround) {
 		BEnd(BENCH_EVAL_WALL);
 		return(0);
 	}
@@ -3610,7 +3610,7 @@ ActionType TechnoClass::What_Action(ObjectClass const * object) const
 		*/
 		TechnoTypeClass const * ttype = Techno_Type_Class();
 		if (Is_Weapon_Equipped() &&
-				ttype->PrimaryWeapon->Bullet != NULL &&
+				ttype->PrimaryWeapon->Bullet &&
 				ttype->PrimaryWeapon->Bullet->IsSubSurface &&
 				Map[object->Target_Coord()].Land_Type() != LAND_WATER) {
 
@@ -4520,7 +4520,7 @@ VisualType TechnoClass::Visual_Character(bool raw) const
  *   07/08/1995 JLB : Created.                                                                 *
  *   01/11/1996 JLB : Added rotation and scaling.                                              *
  *=============================================================================================*/
-void TechnoClass::Techno_Draw_Object(void const * shapefile, int shapenum, int x, int y, WindowNumberType window, DirType rotation, int scale) const
+void TechnoClass::Techno_Draw_Object(void const * shapefile, int shapenum, int x, int y, WindowNumberType window, DirType rotation, int scale, const char* shape_name) const
 {
 	assert(IsActive);
 
@@ -4598,25 +4598,25 @@ void TechnoClass::Techno_Draw_Object(void const * shapefile, int shapenum, int x
 		switch (visual) {
 			case VISUAL_NORMAL:
 				// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
-				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, SHAPE_CENTER|SHAPE_WIN_REL|SHAPE_FADING|SHAPE_GHOST, remap, shadow, rotation, scale);
+				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, SHAPE_CENTER|SHAPE_WIN_REL|SHAPE_FADING|SHAPE_GHOST, remap, shadow, rotation, scale, 0, 0, shape_name);
 				break;
 
 			case VISUAL_INDISTINCT:
 			case VISUAL_DARKEN:
 				// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
-				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, SHAPE_FADING|SHAPE_CENTER|SHAPE_WIN_REL, remap, Map.FadingShade, rotation, scale);
+				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, SHAPE_FADING|SHAPE_CENTER|SHAPE_WIN_REL, remap, Map.FadingShade, rotation, scale,0,0, shape_name);
 				break;
 
 			case VISUAL_SHADOWY:
 			case VISUAL_RIPPLE:
 				// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
-				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, SHAPE_PREDATOR|SHAPE_FADING|SHAPE_CENTER|SHAPE_WIN_REL, NULL, Map.FadingShade, rotation, scale);
+				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, SHAPE_PREDATOR|SHAPE_FADING|SHAPE_CENTER|SHAPE_WIN_REL, NULL, Map.FadingShade, rotation, scale, 0, 0, shape_name);
 				break;
 
 			case VISUAL_HIDDEN:
 				// Server still needs to "render" hidden objects to the virtual window, so objects get created properly - SKY
 				if (window == WINDOW_VIRTUAL) {
-					CC_Draw_Shape(this, shapefile, shapenum, x, y, window, SHAPE_PREDATOR|SHAPE_FADING|SHAPE_CENTER|SHAPE_WIN_REL, NULL, Map.FadingShade, rotation, scale);
+					CC_Draw_Shape(this, shapefile, shapenum, x, y, window, SHAPE_PREDATOR|SHAPE_FADING|SHAPE_CENTER|SHAPE_WIN_REL, NULL, Map.FadingShade, rotation, scale, 0, 0, shape_name);
 				}
 				break;
 		}
@@ -5392,7 +5392,7 @@ bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 	**	don't allow retaliation.
 	*/
 	TechnoTypeClass const * ttype = Techno_Type_Class();
-	if (ttype->PrimaryWeapon->WarheadPtr != NULL &&
+	if (ttype->PrimaryWeapon->WarheadPtr &&
 		ttype->PrimaryWeapon->WarheadPtr->Modifier[source->Techno_Type_Class()->Armor] == 0) {
 			return(false);
 	}
@@ -5421,7 +5421,7 @@ bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 	/*
 	**	If a human house is not allowed to retaliate automatically, then don't
 	*/
-	if (House->IsHuman && !Rule.IsSmartDefense && (What_Am_I() != RTTI_INFANTRY || *((InfantryClass*)this) != INFANTRY_TANYA || source->What_Am_I() != RTTI_INFANTRY)) return(false);
+	if (House->IsHuman && !Rule.IsSmartDefense && (What_Am_I() != RTTI_INFANTRY || source->What_Am_I() != RTTI_INFANTRY)) return(false);
 
 	/*
 	**	If this object is part of a team that prevents retaliation then don't allow retaliation.
@@ -5438,7 +5438,7 @@ bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 		fixed source_val = 0;
 		int primary = What_Weapon_Should_I_Use(source->As_Target());
 		WeaponTypeClass const * weapon = (primary == 0) ? source->Techno_Type_Class()->PrimaryWeapon : source->Techno_Type_Class()->SecondaryWeapon;
-		if (weapon != NULL && weapon->WarheadPtr != NULL && In_Range(source, primary)) {
+		if (weapon != NULL && weapon->WarheadPtr && In_Range(source, primary)) {
 			source_val = weapon->WarheadPtr->Modifier[Techno_Type_Class()->Armor];
 		}
 
@@ -5447,7 +5447,7 @@ bool TechnoClass::Is_Allowed_To_Retaliate(TechnoClass const * source) const
 		if (tech != NULL) {
 			primary = What_Weapon_Should_I_Use(tech->As_Target());
 			weapon = (primary == 0) ? source->Techno_Type_Class()->PrimaryWeapon : source->Techno_Type_Class()->SecondaryWeapon;
-			if (weapon != NULL && weapon->WarheadPtr != NULL && In_Range(tech, primary)) {
+			if (weapon != NULL && weapon->WarheadPtr && In_Range(tech, primary)) {
 				current_val = weapon->WarheadPtr->Modifier[Techno_Type_Class()->Armor];
 			}
 		}
@@ -6886,72 +6886,6 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		SecondaryWeapon = ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon);
 		sprintf(message, "TTC.ReadINI %s has sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
 		WWDebugString(message);
-		/*WeaponTypeClass* weaponptr = NULL;
-		if (ini.Get_String(Name(), "Primary", "", buffer, sizeof(buffer))) {
-			/*sprintf(message, "ReadINI Techno has pri weapon %s.\n", buffer);
-			WWDebugString(message);
-			sprintf(message, "ReadINI Techno searching Weapons array size %d.\n", Weapons.Count());
-			WWDebugString(message);
-			for (int index = 0; index < Weapons.Count(); index++) {
-				weaponptr = Weapons.Ptr(index);
-				sprintf(message, "ReadINI Techno DETECTED: %s .\n", weaponptr->Name());
-				WWDebugString(message);
-				if (stricmp(weaponptr->Name(), buffer) == 0) {
-					sprintf(message, "ReadINI Techno FOUND.\n");
-					WWDebugString(message);
-					break;
-				}
-				weaponptr = NULL;
-			}
-			weaponptr = ini.Get_WeaponType(Name(), "Secondary");
-			if (weaponptr == NULL)
-			{
-				sprintf(message, "ReadINI Techno could not find %s.\n", buffer);
-				WWDebugString(message);
-				//weaponptr = new WeaponTypeClass(buffer);
-			}
-			else
-				PrimaryWeapon = weaponptr;
-		}
-		if (ini.Get_String(Name(), "Secondary", "", buffer, sizeof(buffer))) {
-			sprintf(message, "ReadINI Techno has sec weapon %s.\n", buffer);
-			WWDebugString(message);
-			sprintf(message, "ReadINI Techno searching Weapons array size %d.\n", Weapons.Count());
-			WWDebugString(message);
-			for (int index = 0; index < Weapons.Count(); index++) {
-				weaponptr = Weapons.Ptr(index);
-				sprintf(message, "ReadINI Techno DETECTED: %s .\n", weaponptr->Name());
-				WWDebugString(message);
-				if (stricmp(weaponptr->Name(), buffer) == 0) {
-					sprintf(message, "ReadINI Techno FOUND.\n");
-					WWDebugString(message);
-					break;
-				}
-				weaponptr = NULL;
-			}
-			weaponptr = ini.Get_WeaponType(Name(), "Secondary");
-			if (weaponptr == NULL)
-			{
-				sprintf(message, "ReadINI Techno %s could not find %s.\n", Name(), buffer);
-				WWDebugString(message);
-				//weaponptr = new WeaponTypeClass(buffer);
-			}
-			else
-				SecondaryWeapon = weaponptr;
-		}
-		/*WeaponTypeClass* weaponptr = NULL;
-		weaponptr = ini.Get_WeaponType(Name(), "Primary");
-		if (weaponptr != NULL) {
-			sprintf(message, "ReadINI Techno has pri weapon %s.\n", weaponptr->Name());
-			WWDebugString(message);
-			PrimaryWeapon = weaponptr;
-		}
-		weaponptr = ini.Get_WeaponType(Name(), "Secondary");
-		if (weaponptr != NULL) {
-			sprintf(message, "ReadINI Techno has sec weapon %s.\n", weaponptr->Name());
-			WWDebugString(message);
-			SecondaryWeapon = weaponptr;
-		}*/
 		IsCloakable = ini.Get_Bool(Name(), "Cloakable", IsCloakable);
 		IsCrushable = ini.Get_Bool(Name(), "Crushable", IsCrushable);
 		IsScanner = ini.Get_Bool(Name(), "Sensors", IsScanner);
@@ -6982,7 +6916,8 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		SecondaryOffset = ini.Get_Int(Name(), "SecondaryOffset", SecondaryOffset);
 		SecondaryLateral = ini.Get_Int(Name(), "SecondaryLateral", SecondaryLateral);
 		Rotation = ini.Get_Int(Name(), "Rotation", Rotation);
-		
+		Scale = ini.Get_Float(Name(), "Scale", Scale);
+		ini.Get_String(Name(), "SecondaryImage", SecondaryGraphicName, SecondaryGraphicName, sizeof(SecondaryGraphicName));
 		IsLeader = false;
 		if (PrimaryWeapon != NULL && PrimaryWeapon->Attack > 0) {
 			IsLeader = true;
@@ -6991,7 +6926,7 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		/*
 		**	Check to see what zone this object should recognize.
 		*/
-		if (PrimaryWeapon != NULL && PrimaryWeapon->WarheadPtr != NULL && PrimaryWeapon->WarheadPtr->IsWallDestroyer) {
+		if (PrimaryWeapon != NULL && PrimaryWeapon->WarheadPtr && PrimaryWeapon->WarheadPtr->IsWallDestroyer) {
 			MZone = MZONE_DESTROYER;
 		}
 		if (Speed == SPEED_FLOAT) {

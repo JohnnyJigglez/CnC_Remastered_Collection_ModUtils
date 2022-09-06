@@ -1026,11 +1026,12 @@ void UnitTypeClass::Init_Heap(void)
  *   05/02/1994 JLB : Converted to member function.                                            *
  *   08/11/2022 JJ  : Updated to use functionality that is new unit aware                      *
  *=============================================================================================*/
-UnitType UnitTypeClass::From_Name(char const * name)
+UnitType UnitTypeClass::As_Type(char const * name)
 {
+
 	if(name == NULL)
 		return(UNIT_NONE);
-	UnitTypeClass* utc = Class_From_Name(name);
+	UnitTypeClass* utc = As_Pointer(name);
 	if (utc == NULL)
 		return(UNIT_NONE);
 	return(utc->Type);
@@ -1052,16 +1053,13 @@ UnitType UnitTypeClass::From_Name(char const * name)
  * HISTORY:                                                                                    *
  *   08/11/2022 JJ  : Created.                                                                 *
  *=============================================================================================*/
-UnitTypeClass * UnitTypeClass::Class_From_Name(char const* name)
+UnitTypeClass * UnitTypeClass::As_Pointer(char const* name)
 {
-	static UnitTypeClass* utc = NULL;
 	if (name == NULL)
-		return utc;
+		return NULL;
 	for (int index = 0; index < UnitTypes.Count(); index++) {
-		utc = UnitTypes.Ptr(index);
-		if (stricmp(utc->Name(), name) == 0) {
-			return(utc);
-		}
+		if (stricmp(UnitTypes.Ptr(index)->Name(), name) == 0)
+			return(UnitTypes.Ptr(index));
 	}
 	return(NULL);
 }
@@ -1197,6 +1195,11 @@ void UnitTypeClass::One_Time(void)
 		}
 
 		((int &)uclass.MaxSize) = max(largest, 8);
+		if (uclass.Secondary_Graphic_Name() != NULL) {
+			_makepath(fullname, NULL, NULL, uclass.Secondary_Graphic_Name(), ".SHP");
+			((void const*&)uclass.SecondaryImageData) = MFCD::Retrieve(fullname);
+		}
+		
 	}
 
 	/*
@@ -1285,15 +1288,7 @@ ObjectClass * UnitTypeClass::Create_One_Of(HouseClass * house) const
  *=============================================================================================*/
 UnitTypeClass & UnitTypeClass::As_Reference(UnitType type)
 {
-	UnitTypeClass * ut = NULL;
-	if (type == UNIT_NONE)
-		return(*ut);
-	for (int index = 0; index < UnitTypes.Count(); index++) {
-		ut = UnitTypes.Ptr(index);
-		if (ut->Type == type)
-			break;
-	}
-	return(*ut);
+	return(*UnitTypeClass::As_Pointer(type));
 }
 
 /***********************************************************************************************
@@ -1312,7 +1307,7 @@ UnitTypeClass & UnitTypeClass::As_Reference(UnitType type)
  * HISTORY:                                                                                    *
  *   08/11/2022 JJ : Created.                                                                  *
  *=============================================================================================*/
-UnitTypeClass* UnitTypeClass::As_Pointer(int index)
+UnitTypeClass* UnitTypeClass::As_Pointer(short index)
 {
 	return(UnitTypes.Ptr(index));
 }
@@ -1469,11 +1464,23 @@ bool UnitTypeClass::Read_INI(CCINIClass & ini)
 	if (TechnoTypeClass::Read_INI(ini)) {
 		IsNoFireWhileMoving = ini.Get_Bool(IniName, "NoMovingFire", IsNoFireWhileMoving);
 		Speed = ini.Get_Bool(IniName, "Tracked", (Speed == SPEED_TRACK)) ? SPEED_TRACK : SPEED_WHEEL;
+		IsCrateGoodie = ini.Get_Bool(IniName, "CrateGoodie", IsCrateGoodie);
+		IsCrusher = ini.Get_Bool(IniName, "Crusher", IsCrusher);
+		IsToHarvest = ini.Get_Bool(IniName, "Harvest", IsToHarvest);
+		IsRadarEquipped = ini.Get_Bool(IniName, "Radar", IsRadarEquipped);
+		IsFireAnim = ini.Get_Bool(IniName, "FireAnim", IsFireAnim);
+		IsLockTurret = ini.Get_Bool(IniName, "LockTurret", IsLockTurret);
+		IsGigundo = ini.Get_Bool(IniName, "Gigundo", IsGigundo);
+		IsAnimating = ini.Get_Bool(IniName, "Animating", IsAnimating);
+		IsJammer = ini.Get_Bool(IniName, "Jammer", IsJammer);
+		IsGapper = ini.Get_Bool(IniName, "Gapper", IsGapper);
+		Mission = ini.Get_Mission(IniName, "Mission", Mission);
+		Explosion = ini.Get_AnimType(IniName, "Explosion", Explosion);
 		char buffer[64], message[128];
 		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
 			sprintf(message, "UTC.Read_INI %s has Logic : %s \n", Name(),buffer);
 			WWDebugString(message);
-			UnitType utype = From_Name(buffer);
+			UnitType utype = UnitTypeClass::As_Type(buffer);
 			if (utype != UNIT_NONE)
 				Type = utype;
 			sprintf(message, "UTC.Read_INI has ID %d and Type %d . \n", ID, (int)Type);

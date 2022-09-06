@@ -189,6 +189,13 @@ class ObjectTypeClass : public AbstractTypeClass
 		char GraphicName[_MAX_FNAME];
 
 		/*
+		**	This is the base name of the graphic data associated with this object
+		**	type. If the graphic name is a null string, then there is no graphic
+		**	associated with this object type.
+		*/
+		char SecondaryGraphicName[_MAX_FNAME];
+
+		/*
 		**	Is this object squashable by heavy vehicles?  If it is, then the vehicle
 		**	can travel over this object and destroy it in the process.
 		*/
@@ -260,6 +267,13 @@ class ObjectTypeClass : public AbstractTypeClass
 		void const * ImageData;
 
 		/*
+		**	These point to the secondary shape imagery for this object type. Since the shape imagery
+		**	exists in a separate file, the data is filled in after this object is constructed.
+		**	The "mutable" keyword allows easy modification to this otherwise const object.
+		*/
+		void const* SecondaryImageData;
+
+		/*
 		**	Points to the dimension data for each shape in the image list. By using this
 		**	data, the minimum number of cells will be redrawn when the object changes shape.
 		*/
@@ -269,6 +283,11 @@ class ObjectTypeClass : public AbstractTypeClass
 		**	This points to the radar imagery for this object.
 		*/
 		void const * RadarIcon;
+
+		/*
+		* This is the scale we will apply to the image of this object
+		*/
+		float Scale;
 
 		//--------------------------------------------------------------------
 		ObjectTypeClass(NoInitClass const & x) : AbstractTypeClass(x) {}
@@ -289,6 +308,7 @@ class ObjectTypeClass : public AbstractTypeClass
 
 		bool Is_Foot(void) const {return(RTTI == RTTI_INFANTRYTYPE || RTTI == RTTI_UNITTYPE || RTTI == RTTI_VESSELTYPE || RTTI == RTTI_AIRCRAFTTYPE);};
 		char const * Graphic_Name(void) const {if (GraphicName[0] != '\0') return(GraphicName); return(Name());}
+		char const* Secondary_Graphic_Name(void) const { if (SecondaryGraphicName[0] != '\0') return(SecondaryGraphicName); return(NULL); }
 		virtual int Max_Pips(void) const;
 		virtual void Dimensions(int &width, int &height) const;
 		virtual bool Create_And_Place(CELL , HousesType =HOUSE_NONE) const = 0;
@@ -300,6 +320,7 @@ class ObjectTypeClass : public AbstractTypeClass
 		virtual BuildingClass * Who_Can_Build_Me(bool intheory, bool legal, HousesType house) const;
 		virtual void const * Get_Cameo_Data(void) const;
 		void const * Get_Image_Data(void) const {return ImageData;};
+		void const* Get_Secondary_Image_Data(void) const { return SecondaryImageData; };
 		void const * Get_Radar_Data(void) const {return RadarIcon;};
 
 		#ifdef SCENARIO_EDITOR
@@ -713,8 +734,8 @@ class BuildingTypeClass : public TechnoTypeClass {
 		short const * ExitList;
 
 		/*
-		**	This is the structure type identifier. It can serve as a unique
-		**	identification number for building types.
+		**	This is the structure type LOGICAL identifier. It serves currently as
+		* method to inform internal logic that this structure should behave/treated like Type.
 		*/
 		StructType Type;
 
@@ -808,15 +829,21 @@ class BuildingTypeClass : public TechnoTypeClass {
 		static void operator delete(void * ptr);
 
 		static void Init_Heap(void);
-		static BuildingTypeClass & As_Reference(StructType type);
-		static BuildingTypeClass * As_Pointer(StructType type);
+
+		static BuildingTypeClass& As_Reference(StructType type);
+		static BuildingTypeClass& As_Reference(char const* name);
 		static BuildingTypeClass& As_Reference(int index);
-		static StructType From_Name(char const * name);
-		static BuildingTypeClass * Class_From_Name(char const* name);
+
+		static BuildingTypeClass* As_Pointer(StructType type);
+		static BuildingTypeClass* As_Pointer(char const * name);
+		static BuildingTypeClass* As_Pointer(int index);
+
 		static void Init(TheaterType theater);
 		static void One_Time(void);
 		static void Prep_For_Add(void);
 
+		StructType As_Type(void);
+		//static BuildingTypeClass * Class_From_Name(char const* name);
 		int Width(void) const;
 		int Height(bool bib=false) const;
 
@@ -854,6 +881,12 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	to determine building placement legality and terrain passibility.
 		*/
 		short const * OccupyList;
+		/*
+		**	This is a pointer to a list of offsets (from the upper left corner) that
+		**	are used to indicate the building's "footprint". This footprint is used
+		**	to determine building placement legality and terrain passibility.
+		*/
+		short OccupyListData[36] = { REFRESH_EOL };
 
 		/*
 		**	Buildings can often times overlap a cell but not actually "occupy" it for
@@ -1016,10 +1049,11 @@ class UnitTypeClass : public TechnoTypeClass
 		static void operator delete(void * ptr);
 
 		static void Init_Heap(void);
-		static UnitType From_Name(char const * name);
-		static UnitTypeClass* Class_From_Name(char const* name);
+		static UnitType As_Type(char const * name);
 		static UnitTypeClass & As_Reference(UnitType type);
-		static UnitTypeClass * As_Pointer(int index);
+		static UnitTypeClass* As_Pointer(short index);
+		static UnitTypeClass* As_Pointer(char const* name);
+		//static UnitTypeClass* As_Pointer(UnitType type);
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 		static void Prep_For_Add(void);
@@ -1268,14 +1302,17 @@ class InfantryTypeClass : public TechnoTypeClass
 						int pronelaunch,
 						unsigned char const * override_remap,
 						int horizontaloffset=0);
+		InfantryTypeClass(int itype, const char* name);
 
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
 
 		static void Init_Heap(void);
-		static InfantryType From_Name(char const * name);
+		static InfantryType As_Type(char const * name);
 		static InfantryTypeClass & As_Reference(InfantryType type);
+		static InfantryTypeClass * As_Pointer(InfantryType type);
+		static InfantryTypeClass * As_Pointer(char const* name);
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 		static void Prep_For_Add(void);
@@ -1400,6 +1437,26 @@ class AircraftTypeClass : public TechnoTypeClass
 ** Bullets and other projectiles need some specific information according
 **	to their type.
 */
+const char BULLET_NAMES[BULLET_COUNT][16] = {
+"Invisible",
+"Cannon",
+"Ack",
+"Torpedo",
+"FROG",
+"HeatSeeker",
+"LaserGuided",
+"Lobbed",
+"Bomblet",
+"Ballistic",
+"Parachute",
+"Fireball",
+"LeapDog",
+"Catapult",
+"AAMissile",
+"GPSSatellite",
+"NukeUp",
+"NukeDown"
+};
 class BulletTypeClass : public ObjectTypeClass
 {
 	public:
@@ -1549,7 +1606,7 @@ class BulletTypeClass : public ObjectTypeClass
 
 		//---------------------------------------------------------------------
 		BulletTypeClass(NoInitClass const & x) : ObjectTypeClass(x) {}
-		BulletTypeClass(int bullettype, char const * name);
+		BulletTypeClass(short bullettype, char const * name);
 
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
@@ -1558,7 +1615,7 @@ class BulletTypeClass : public ObjectTypeClass
 		static void Init_Heap(void);
 		static BulletTypeClass & As_Reference(BulletType type);
 		static BulletTypeClass* As_Pointer(BulletType bullet);
-		static BulletTypeClass* From_Name(char const* name);
+		static BulletTypeClass* As_Pointer(char const* name);
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 
@@ -1902,6 +1959,9 @@ class AnimTypeClass : public ObjectTypeClass
 
 		static AnimTypeClass & As_Reference(AnimType type);
 		static AnimTypeClass * As_Pointer(AnimType type);
+		static AnimTypeClass * As_Pointer(const char * name);
+		//static AnimTypeClass * As_Pointer(int index);
+		static AnimType As_Type(const char* name);
 		static void Init(TheaterType theater);
 		static void One_Time(void);
 

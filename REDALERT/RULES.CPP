@@ -237,7 +237,7 @@ RulesClass::RulesClass(void) :
 	AnimMax(100),
 	AnimTypeMax(200),
 	BuildingMax(500),
-	BuildingTypeMax(127),
+	BuildingTypeMax(100),
 	BulletMax(40),
 	FactoryMax(20),
 	InfantryMax(500),
@@ -249,11 +249,11 @@ RulesClass::RulesClass(void) :
 	TerrainMax(500),
 	TriggerMax(60),
 	UnitMax(500),
-	UnitTypeMax(127),
+	UnitTypeMax(100),
 	VesselMax(100),
-	ProjectileMax(20),
-	WeaponMax(20),
-	WarheadMax(20),
+	ProjectileMax(100),
+	WeaponMax(100),
+	WarheadMax(100),
 	TrigTypeMax(80),
 	CloseEnoughDistance(0x0280),
 	StrayDistance(0x0200),
@@ -647,78 +647,43 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 	**	be initialized as necessary.
 	*/
 	if (AnimTypes.Count() == 0) {
-		AnimTypes.Set_Heap(AnimTypeMax);
-		AnimTypeClass::Init_Heap();
-	}
-	static char const* const AT = "Animations";
-	if (ini.Is_Present(AT)) {
-		for (int x = 0; x < ini.Entry_Count(AT); x++) {
-			new AnimTypeClass(atoi(ini.Get_Entry(AT, x)), ini.Get_Value(AT, x));
+		if(AnimTypes.Set_Heap(AnimTypeMax)){
+			AnimTypeClass::Init_Heap();
+			CCPtr<AnimTypeClass>::Set_Heap(&AnimTypes);
 		}
 	}
-
+	
 	if (Warheads.Count() == 0) {
 		Warheads.Set_Heap(WarheadMax);
+		WarheadTypeClass::Init_Heap();
 	}
-	static char const* const WH = "Warheads";
-	if (ini.Is_Present(WH)) {
-		for (int x = 0; x < ini.Entry_Count(WH); x++) {
-			new WarheadTypeClass(atoi(ini.Get_Entry(WH, x)),ini.Get_Value(WH,x));
-		}
-	}
-
 	if (BulletTypes.Count() == 0) {
 		BulletTypes.Set_Heap(ProjectileMax);
+		BulletTypeClass::Init_Heap();
 	}
-	static char const* const BT = "Projectiles";
-	if (ini.Is_Present(BT)) {
-		char message[128];
-		sprintf(message, "Heap_Processing found %s Section with %d Entries.\n", BT, ini.Entry_Count(BT));
-		WWDebugString(message);
-		for (int x = 0; x < ini.Entry_Count(BT); x++) {
-			new BulletTypeClass(atoi(ini.Get_Entry(BT,x)),ini.Get_Value(BT, x));
-		}
-	}
-	if (Weapons.Count() == 0) {
-		Weapons.Set_Heap(AnimTypeMax);
+	if (Weapons.size() == 0) {
+		//Weapons.Set_Heap(WeaponMax);
 		WeaponTypeClass::Init_Heap();
-	}
-	static char const* const WT = "Weapons";
-	if (ini.Is_Present(WT)) {
-		char message[128];
-		sprintf(message, "Heap_Processing found %s Section with %d Entries.\n", WT, ini.Entry_Count(WT));
-		WWDebugString(message);
-		for (int x = 0; x < ini.Entry_Count(WT); x++) {
-			new WeaponTypeClass(ini.Get_Entry(WT, x));
-		}
 	}
 	if (BuildingTypes.Count() == 0) {
 		BuildingTypes.Set_Heap(BuildingTypeMax);
 		BuildingTypeClass::Init_Heap();
 	}
-	static char const* const BDT = "Buildings";
-	if (ini.Is_Present(BDT)) {
-		char message[128];
-		sprintf(message, "Heap_Processing found %s Section with %d Entries.\n", BDT, ini.Entry_Count(BDT));
-		WWDebugString(message);
-		for (int x = 0; x < ini.Entry_Count(BDT); x++) {
-			new BuildingTypeClass(atoi(ini.Get_Entry(BDT, x)), ini.Get_Value(BDT, x));
-		}
-
-	}
 	if (UnitTypes.Count() == 0) {
 		UnitTypes.Set_Heap(UnitTypeMax);
 		UnitTypeClass::Init_Heap();
 	}
-	static char const* const UT = "Vehicles";
-	if (ini.Is_Present(UT)) {
-		char message[128];
-		sprintf(message, "Heap_Processing found %s Section with %d Entries.\n", UT, ini.Entry_Count(UT));
-		WWDebugString(message);
-		for (int x = 0; x < ini.Entry_Count(UT); x++) {
-			new UnitTypeClass(atoi(ini.Get_Entry(UT, x)), ini.Get_Value(UT, x));
-		}
-
+	if (VesselTypes.Count() == 0) {
+		VesselTypes.Set_Heap(50);
+		VesselTypeClass::Init_Heap();
+	}
+	if (InfantryTypes.Count() == 0) {
+		InfantryTypes.Set_Heap(100);
+		InfantryTypeClass::Init_Heap();
+	}
+	if (AircraftTypes.Count() == 0) {
+		AircraftTypes.Set_Heap(50);
+		AircraftTypeClass::Init_Heap();
 	}
 
 	return(true);
@@ -818,7 +783,7 @@ bool RulesClass::Powerups(CCINIClass & ini)
 				token = strtok(NULL, ",");
 				if (token) {
 					strtrim(token);
-					CrateAnims[crate] = Anim_From_Name(token);
+					CrateAnims[crate] = AnimTypeClass::As_Type(token);
 				}
 
 				/*
@@ -1021,73 +986,148 @@ bool RulesClass::Objects(CCINIClass & ini)
 	/*
 	**	Fetch the game object values from the rules file.
 	*/
-
+	char message[128];
+	static char const* const AT = "NewAnimations";
+	if (ini.Is_Present(AT)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", AT, ini.Entry_Count(AT));
+		WWDebugString(message);
+		sprintf(message, "Animations Heap at %d of %d\n", AnimTypes.Count(),AnimTypes.Length());
+		WWDebugString(message);
+		AnimTypeClass* atc = NULL;
+		for (int x = 0; x < ini.Entry_Count(AT); x++) {
+			atc = AnimTypeClass::As_Pointer(ini.Get_Value(AT, x));
+			if (!atc)
+				new AnimTypeClass(atoi(ini.Get_Entry(AT, x)), ini.Get_Value(AT, x));
+		}
+	}
 	for (int index = 0; index < AnimTypes.Count(); index++) {
 		AnimTypes.Ptr(index)->Read_INI(ini);
+		sprintf(message, "Animations Heap has %s with ID %d\n", AnimTypes.Ptr(index)->Name(), AnimTypes.Ptr(index)->ID);
+		WWDebugString(message);
 	}
 
+	static char const* const WH = "NewWarheads";
+	if (ini.Is_Present(WH)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", WH, ini.Entry_Count(WH));
+		WWDebugString(message);
+		sprintf(message, "Warheads Heap at %d of %d\n", Warheads.Count(), Warheads.Length());
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(WH); x++) {
+			if (WarheadTypeClass::As_Pointer(ini.Get_Value(WH, x)) == NULL)
+				new WarheadTypeClass(atoi(ini.Get_Entry(WH, x)), ini.Get_Value(WH, x));
+		}
+	}
 	for (int whindex = 0; whindex < Warheads.Count(); whindex++) {
 		Warheads.Ptr(whindex)->Read_INI(ini);
+		sprintf(message, "Warheads Heap has %s with ID %d\n", Warheads.Ptr(whindex)->Name(), Warheads.Ptr(whindex)->ID);
+		WWDebugString(message);
 	}
 
+	static char const* const BT = "NewProjectiles";
+	if (ini.Is_Present(BT)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", BT, ini.Entry_Count(BT));
+		WWDebugString(message);
+		sprintf(message, "Projectiles Heap at %d of %d\n", BulletTypes.Count(), BulletTypes.Length());
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(BT); x++) {
+			if (BulletTypeClass::As_Pointer(ini.Get_Value(BT, x)) == NULL) {
+				new BulletTypeClass(atoi(ini.Get_Entry(BT, x)), ini.Get_Value(BT, x));
+			}
+		}
+	}
 	for (int proj = 0; proj < BulletTypes.Count(); proj++) {
 		BulletTypes.Ptr(proj)->Read_INI(ini);
+		sprintf(message, "Projectiles Heap has %s with ID %d\n", BulletTypes.Ptr(proj)->Name(), BulletTypes.Ptr(proj)->ID);
+		WWDebugString(message);
 	}
 
-	for (int windex = 0; windex < Weapons.Count(); windex++) {
-		Weapons.Ptr(windex)->Read_INI(ini);
+	static char const* const WT = "NewWeapons";
+	if (ini.Is_Present(WT)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", WT, ini.Entry_Count(WT));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(WT); x++) {
+			if(WeaponTypeClass::As_Pointer(ini.Get_Entry(WT, x)) == NULL)
+				new WeaponTypeClass(ini.Get_Entry(WT, x));
+		}
+	}
+	for (int windex = 0; windex < (int)Weapons.size(); windex++) {
+		Weapons.at(windex)->Read_INI(ini);
+		sprintf(message, "Weapons Vector has %s with ID %d\n", Weapons.at(windex)->Name(), Weapons.at(windex)->ID);
+		WWDebugString(message);
 	}
 
+	static char const* const UT = "NewVehicles";
+	if (ini.Is_Present(UT)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", UT, ini.Entry_Count(UT));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(UT); x++) {
+			if(UnitTypeClass::As_Pointer(ini.Get_Value(UT, x)) == NULL)
+				new UnitTypeClass(atoi(ini.Get_Entry(UT, x)), ini.Get_Value(UT, x));
+		}
+	}
 	for (int uindex = 0; uindex < UnitTypes.Count(); uindex++) {
 		UnitTypes.Ptr(uindex)->Read_INI(ini);
 	}
-
+	static char const* const TR = "NewTroops";
+	if (ini.Is_Present(TR)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", TR, ini.Entry_Count(TR));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(TR); x++) {
+			if (InfantryTypeClass::As_Pointer(ini.Get_Value(TR, x)) == NULL)
+				new InfantryTypeClass(atoi(ini.Get_Entry(TR, x)), ini.Get_Value(TR, x));
+		}
+	}
 	for (int iindex = 0; iindex < InfantryTypes.Count(); iindex++) {
 		InfantryTypes.Ptr(iindex)->Read_INI(ini);
 	}
-
+	/*static char const* const NV = "NewVessels";
+	if (ini.Is_Present(NV)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", NV, ini.Entry_Count(NV));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(NV); x++) {
+			if (VesselTypeClass::As_Pointer(ini.Get_Value(NV, x)) == NULL)
+				new VesselTypeClass(atoi(ini.Get_Entry(NV, x)), ini.Get_Value(NV, x));
+		}
+	}*/
 	for (int vindex = 0; vindex < VesselTypes.Count(); vindex++) {
 		VesselTypes.Ptr(vindex)->Read_INI(ini);
 	}
-
+	/*static char const* const AC = "NewAircraft";
+	if (ini.Is_Present(AC)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", AC, ini.Entry_Count(AC));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(AC); x++) {
+			if (AircraftTypeClass::As_Pointer(ini.Get_Value(AC, x)) == NULL)
+				new AircraftTypeClass(atoi(ini.Get_Entry(AC, x)), ini.Get_Value(AC, x));
+		}
+	}*/
 	for (int aindex = 0; aindex < AircraftTypes.Count(); aindex++) {
 		AircraftTypes.Ptr(aindex)->Read_INI(ini);
 	}
 
+	static char const* const BDT = "NewBuildings";
+	if (ini.Is_Present(BDT)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", BDT, ini.Entry_Count(BDT));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(BDT); x++) {
+			BuildingTypeClass * btc = BuildingTypeClass::As_Pointer(ini.Get_Value(BDT, x));
+			if(btc == NULL)
+				new BuildingTypeClass(atoi(ini.Get_Entry(BDT, x)), ini.Get_Value(BDT, x));
+			else {
+				sprintf(message, "RulesClass.Objects found %s .\n", btc->Name());
+				WWDebugString(message);
+			}
+		}
+	}
 	for (int bindex = 0; bindex < BuildingTypes.Count(); bindex++) {
 		BuildingTypes.Ptr(bindex)->Read_INI(ini);
 	}
-	//char message[128];
-	//sprintf(message, "RulesClassObjects Number of Weapons: %d .\n", Weapons.Count());
-	//WWDebugString(message);
-	/*for (int windex = 0; windex < Weapons.Count(); windex++) {
-		Weapons.Ptr(windex)->Read_INI(ini);
-	}*/
-	///*Reparse for only those weapons that were added by a unit but they were not in the weapons section*/
-	//for (int index = 0; index < Weapons.Count(); index++) {
-	//		WeaponTypeClass* ptr = Weapons.Ptr(index);
-	//	if (!ptr->WarheadPtr && !ptr->Bullet) {
-	//		ptr->Read_INI(ini);
-	//	}
-	//}
-	///*Reparse for only those warheads that were added by a weapon but they were not in the warheads section*/
-	//for (int index = 0; index < Warheads.Count(); index++) {
-	//	if (!Warheads.Ptr(index)->IsReadfromINI)
-	//		Warheads.Ptr(index)->Read_INI(ini);
-	//}
-	///*Reparse for only those projectiles that were added by a weapon but they were not in the projectiles section*/
-	//for (int index = 0; index < BulletTypes.Count(); index++) {
-	//	if (!BulletTypes.Ptr(index)->IsReadfromINI)
-	//		BulletTypes.Ptr(index)->Read_INI(ini);
-	//}
-
 	/*
 	**	Fetch the house attribute override values.
 	*/
 	for (HousesType house = HOUSE_FIRST; house < HOUSE_COUNT; house++) {
 		HouseTypeClass::As_Reference(house).Read_INI(ini);
 	}
-
 	/*
 	**	Fetch the mission control values.
 	*/
@@ -1096,7 +1136,6 @@ bool RulesClass::Objects(CCINIClass & ini)
 		miss->Mission = mission;
 		miss->Read_INI(ini);
 	}
-
 	return(true);
 }
 

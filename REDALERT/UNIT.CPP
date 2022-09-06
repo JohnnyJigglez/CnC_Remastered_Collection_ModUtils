@@ -2122,6 +2122,7 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 
 	int			shapenum;		// Working shape number.
 	void const	* shapefile;		// Working shape file pointer.
+	void const * tshapefile;		// Working turret shape file pointer.
 	int			facing = Dir_To_32(PrimaryFacing);
 	int			tfacing = Dir_To_32(SecondaryFacing);
 	DirType		rotation = DIR_N;
@@ -2131,6 +2132,8 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 	**	Verify the legality of the unit class.
 	*/
 	shapefile = Get_Image_Data();
+	scale *= Class->Scale;
+	
 	if (shapefile == NULL) return;
 
 	/*
@@ -2161,7 +2164,7 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 				int x2 = x, y2 = y;
 				shapenum = 32 + (Frame & 7);
 				Class->Turret_Adjust(PrimaryFacing, x2, y2);
-				Techno_Draw_Object(shapefile, shapenum, x2, y2, window);
+				Techno_Draw_Object(shapefile, shapenum, x2, y2, window,DIR_N,scale);
 			} else {
 //#ifdef FIXIT_PHASETRANSPORT	//	checked - ajw 9/28/98
 //				if (*this == UNIT_PHASE) {
@@ -2174,9 +2177,9 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 //#endif
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 				if (*this == UNIT_TESLATANK) {
-					Techno_Draw_Object(shapefile, shapenum, x, y, window);
+					Techno_Draw_Object(shapefile, shapenum, x, y, window, DIR_N, scale);
 				} else {
-					Techno_Draw_Object(shapefile, shapenum, x, y-5, window);
+					Techno_Draw_Object(shapefile, shapenum, x, y-5, window, DIR_N, scale);
 				}
 #else
 				Techno_Draw_Object(shapefile, shapenum, x, y-5, window);
@@ -2191,7 +2194,7 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 		if (/*!Class->IsChunkyShape &&*/ Class->IsTurretEquipped) {
 			int xx = x;
 			int yy = y;
-
+			tshapefile = Get_Secondary_Image_Data();
 			/*
 			**	Determine which turret shape to use. This depends on if there
 			**	is any firing animation in progress.
@@ -2214,7 +2217,10 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 			/*
 			**	Actually perform the draw. Overlay an optional shimmer effect as necessary.
 			*/
-			Techno_Draw_Object(shapefile, shapenum, xx, yy, window);
+			if(tshapefile == NULL)
+				Techno_Draw_Object(shapefile, shapenum, xx, yy, window, DIR_N, scale);
+			else
+				Techno_Draw_Object(tshapefile, shapenum, xx, yy, window,DIR_N, scale,Class->SecondaryGraphicName);
 		}
 	}
 
@@ -4877,7 +4883,8 @@ void UnitClass::Read_INI(CCINIClass & ini)
 
 		inhouse = HouseTypeClass::From_Name(strtok(buf, ","));
 		if (inhouse != HOUSE_NONE) {
-			classid = UnitTypeClass::From_Name(strtok(NULL, ","));
+			//instead of calling the type field we call the ID of the UTC because Type might be overridden - JJ
+			classid = static_cast<UnitType>(UnitTypeClass::As_Pointer(strtok(NULL, ","))->ID);
 
 			if (classid != UNIT_NONE) {
 

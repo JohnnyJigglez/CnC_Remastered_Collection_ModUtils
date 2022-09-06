@@ -46,6 +46,34 @@
 */
 TFixedIHeapClass<WarheadTypeClass> Warheads;
 
+/***********************************************************************************************
+ * WarheadTypeClass::Init_Heap -- Initialize the warhead type class heap.                      *
+ *                                                                                             *
+ *    This initializes the warhead type class heap by pre-allocated all the known warhead types.*
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   Only call this once and call it before processing the rules.ini file.           *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/29/2022 JJ : Created.                                                                 *
+ *=============================================================================================*/
+void WarheadTypeClass::Init_Heap(void)
+{
+	//char message[128];
+	//static char warheadpreop[WARHEAD_COUNT][16] = {"SA","HE","AP","Fire","HollowPoint","Super","Organic","Nuke","Mechanical"};
+	for(unsigned short index = WARHEAD_FIRST; index < WARHEAD_COUNT; index++){
+		new WarheadTypeClass(index,(const char *)(&WARHEAD_NAMES[index]));
+	}
+	/*for (unsigned short index = 0; index < Warheads.Count(); index++) {
+		sprintf(message, "WTC.Init_Heap Loaded Warhead %s .\n", Warheads.Ptr(index)->Name());
+		WWDebugString(message);
+	}*/
+	
+}
+
 
 /***********************************************************************************************
  * WarheadTypeClass::WarheadTypeClass -- Default constructor for warhead objects.              *
@@ -63,8 +91,8 @@ TFixedIHeapClass<WarheadTypeClass> Warheads;
  * HISTORY:                                                                                    *
  *   07/19/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WarheadTypeClass::WarheadTypeClass(int warheadtype, char const* name) :
-	Type(static_cast<WarheadType>(warheadtype)),
+WarheadTypeClass::WarheadTypeClass(short wtype, char const* name) :
+	Type(static_cast<WarheadType>(wtype)),
 	ID(Warheads.ID(this)),
 	IniName(name),
 	SpreadFactor(1),
@@ -80,6 +108,9 @@ WarheadTypeClass::WarheadTypeClass(int warheadtype, char const* name) :
 	for (ArmorType armor = ARMOR_FIRST; armor < ARMOR_COUNT; armor++) {
 		Modifier[armor] = 1;
 	}
+	char message[128];
+	sprintf(message, "Instantiated Warhead %s .\n", Name());
+	WWDebugString(message);
 }
 
 /***********************************************************************************************
@@ -136,16 +167,16 @@ WarheadTypeClass::~WarheadTypeClass(void)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/16/2021 JJ  : Created.                                                                 *
- *=============================================================================================*/
+ *=============================================================================================
 WarheadType Warhead_From_Name(char const* name)
 {
 	if(name == NULL) return(WARHEAD_NONE);
-	WarheadTypeClass* ptr = WarheadTypeClass::From_Name(name);
+	WarheadTypeClass* ptr = WarheadTypeClass::As_Pointer(name);
 	if(ptr == NULL)
 		return(WARHEAD_NONE);
 	return ptr->Type;
 
-}
+}*/
 
 /***********************************************************************************************
  * WarheadTypeClass_From_Name -- Convert ASCII name to warheadtype class pointer.               *
@@ -163,7 +194,7 @@ WarheadType Warhead_From_Name(char const* name)
  * HISTORY:                                                                                    *
  *   09/27/2021 JJ  : Created.                                                                 *
  *=============================================================================================*/
-WarheadTypeClass* WarheadTypeClass::From_Name(char const* name)
+WarheadTypeClass* WarheadTypeClass::As_Pointer(char const* name)
 {
 	if (name == NULL) return(NULL);
 
@@ -264,9 +295,11 @@ WarheadTypeClass * WarheadTypeClass::As_Pointer(WarheadType warhead)
  *=============================================================================================*/
 bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 {
+	char message[128];
+	//sprintf(message, "WTC.Read_INI ENTRY WarheadType %s ...\n", Name());
+	//WWDebugString(message);
 	if (ini.Section_Present(Name())) {
-		char message[128];
-		sprintf(message, "ReadINI WarheadType %s ...\n", Name());
+		sprintf(message, "WTC.Read_INI parsing WarheadType %s ...\n", Name());
 		WWDebugString(message);
 		SpreadFactor = ini.Get_Int(Name(), "Spread", SpreadFactor);
 		IsWallDestroyer = ini.Get_Bool(Name(), "Wall", IsWallDestroyer);

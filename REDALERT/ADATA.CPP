@@ -2357,6 +2357,9 @@ AnimTypeClass::AnimTypeClass(
 	VirtualName(virtualname),
 	VirtualAnim(virtualanim)
 {
+	char message[64];
+	sprintf(message, "Instantiated Animation %s with ID: %d .\n", IniName, ID);
+	WWDebugString(message);
 }
 /***********************************************************************************************
  * AnimTypeClass::AnimTypeClass -- Constructor for animation types.                            *
@@ -2373,7 +2376,7 @@ AnimTypeClass::AnimTypeClass(
  * HISTORY:                                                                                    *
  *   09/27/2021 JJ : Created.                                                                 *
  *=============================================================================================*/
-AnimTypeClass::AnimTypeClass(int animtype,	char const * name):
+AnimTypeClass::AnimTypeClass(int animtype, char const * name):
 	ObjectTypeClass(RTTI_ANIMTYPE,
 			AnimTypes.ID(this),
 			true,
@@ -2412,6 +2415,9 @@ AnimTypeClass::AnimTypeClass(int animtype,	char const * name):
 	VirtualName(NULL),
 	VirtualAnim(ANIM_NONE)
 {
+	char message[64];
+	sprintf(message, "Instantiated Custom Animation %s .\n", IniName);
+	WWDebugString(message);
 }
 
 /***********************************************************************************************
@@ -2478,6 +2484,7 @@ void AnimTypeClass::Init_Heap(void)
 	**	are specified in the AnimType enumeration. This is necessary because the heap
 	**	allocation block index serves double duty as the type number index.
 	*/
+	
 	new AnimTypeClass(FBall1);
 	new AnimTypeClass(FireBallFade);
 	new AnimTypeClass(Frag1);
@@ -2665,14 +2672,14 @@ void AnimTypeClass::Init(TheaterType theater)
  * HISTORY:                                                                                    *
  *   07/06/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-char const * Anim_Name(AnimType anim)
+/*char const* Anim_Name(AnimType anim)
 {
 	if (anim == ANIM_NONE) return("");
 	AnimTypeClass* atc = AnimTypeClass::As_Pointer(anim);
 	if (atc != NULL)
 		return(atc->Name());
 	return("");
-}
+}*/
 
 
 /***********************************************************************************************
@@ -2715,10 +2722,40 @@ AnimTypeClass & AnimTypeClass::As_Reference(AnimType type)
 AnimTypeClass * AnimTypeClass::As_Pointer(AnimType type)
 {
 	if (type == ANIM_NONE) { return(NULL); }
-
+	AnimTypeClass* atc;
 	for (int anim = 0; anim < AnimTypes.Count(); anim++) {
-		if (AnimTypes.Ptr(anim)->Type == type) {
-			return(AnimTypes.Ptr(anim));
+		atc = AnimTypes.Ptr(anim);
+		if (atc->Type == type) {
+			return(atc);
+		}
+	}
+	return(NULL);
+}
+
+/***********************************************************************************************
+ * AnimTypeClass::As_Pointer -- Fetch a pointer to the animation type specified.               *
+ *                                                                                             *
+ *    This routine will convert the animation type specified into a pointer to the           *
+ *    animation type class object.                                                             *
+ *                                                                                             *
+ * INPUT:   type  -- The animation type to convert into a pointer.                           *
+ *                                                                                             *
+ * OUTPUT:  Returns with a pointer to the animation type class object.                       *
+ *                                                                                             *
+ * WARNINGS:   Be sure that the animation type specified is legal. If it isn't then the        *
+ *             results of this routine are undefined.                                          *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/23/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+AnimTypeClass * AnimTypeClass::As_Pointer(const char * name)
+{
+	if (name == NULL || !strlen(name)) return(NULL);
+	AnimTypeClass * atc;
+	for (int index = 0; index < AnimTypes.Count(); index++) {
+		atc = AnimTypes.Ptr(index);
+		if (stricmp(atc->Name(), name) == 0) {
+			return(atc);
 		}
 	}
 	return(NULL);
@@ -2741,10 +2778,10 @@ AnimTypeClass * AnimTypeClass::As_Pointer(AnimType type)
  *   07/06/1996 JLB : Created.                                                                 *
  *   09/21/2021 JJ  : Modified to use heap and moved to the ADATA.CPP                          *
  *=============================================================================================*/
-AnimType Anim_From_Name(char const* name)
+AnimType AnimTypeClass::As_Type(char const* name)
 {
-	if (name == NULL) return ANIM_NONE;
-	AnimTypeClass* atc = AnimType_From_Name(name);
+	if (name == NULL) return(ANIM_NONE);
+	AnimTypeClass* atc = AnimTypeClass::As_Pointer(name);
 	if (atc != NULL)
 		return(atc->Type);
 	return(ANIM_NONE);
@@ -2767,7 +2804,7 @@ AnimType Anim_From_Name(char const* name)
  * HISTORY:                                                                                    *
  *   09/21/2021 JJ  : Created.                                                                 *
  *=============================================================================================*/
-AnimTypeClass * AnimType_From_Name(char const* name)
+/*AnimTypeClass* AnimType_From_Name(char const* name)
 {
 	if (name == NULL) return(NULL);
 
@@ -2777,7 +2814,7 @@ AnimTypeClass * AnimType_From_Name(char const* name)
 		}
 	}
 	return(NULL);
-}
+}*/
 
 /***********************************************************************************************
  * AnimTypeClass::Read_INI -- Fetch the anim type data from the INI database.              *
@@ -2798,6 +2835,9 @@ bool AnimTypeClass::Read_INI(CCINIClass& ini)
 {
 
 	if (ini.Is_Present(Name())) {
+		char message[128];
+		sprintf(message, "ATC.Read_INI parsing AnimType %s ...\n", Name());
+		WWDebugString(message);
 		IsNormalized = ini.Get_Bool(Name(), "Normalized", IsNormalized);
 		IsGroundLayer = ini.Get_Bool(Name(), "GroundLayer", IsGroundLayer);
 		IsTranslucent = ini.Get_Bool(Name(), "Translucent", IsTranslucent);

@@ -588,11 +588,52 @@ bool CCINIClass::Put_VocType(char const * section, char const * entry, VocType v
  * HISTORY:                                                                                    *
  *   07/03/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-AnimType CCINIClass::Get_AnimType(char const * section, char const * entry, AnimType defvalue) const
+AnimType CCINIClass::Get_AnimType(char const * section, char const * entry, AnimType defvalue=ANIM_NONE) const
 {
 	char buffer[128];
-	Get_String(section, entry, Anim_Name(defvalue), buffer, sizeof(buffer));
-	return(Anim_From_Name(buffer));
+	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+		return(AnimTypeClass::As_Type(buffer));
+	}
+	return(defvalue);
+}
+
+/***********************************************************************************************
+ * CCINIClass::Get_Mission -- Fetch an MissionType from the INI database.                      *
+ *                                                                                             *
+ *    This routine scans the supplied entry for the section specified. This is used for        *
+ *    internal database maintenance.                                                           *
+ *                                                                                             *
+ * INPUT:   section  -- The section to search for the entry under.                             *
+ *                                                                                             *
+ *          entry    -- The entry to search for.                                               *
+ *                                                                                             *
+ *          defvalue -- The default MissionType to use if the entry could not be located.      *
+ *                                                                                             *
+ * OUTPUT:  Returns with the Mission type specified in the database. If it could not be found, *
+ *          then the default value is returned.                                                *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/29/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+MissionType CCINIClass::Get_Mission(char const* section, char const* entry, MissionType defvalue = MISSION_NONE) const
+{
+	char buffer[16];
+	MissionType mtype = defvalue;
+	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+		if (strcmpi(buffer, "GUARD"))
+			mtype = MISSION_GUARD;
+		if (strcmpi(buffer, "ATTACK"))
+			mtype = MISSION_ATTACK;
+		if (strcmpi(buffer, "HARVEST"))
+			mtype = MISSION_HARVEST;
+		if (strcmpi(buffer, "HUNT"))
+			mtype = MISSION_HUNT;
+		if (strcmpi(buffer, "SLEEP"))
+			mtype = MISSION_SLEEP;
+	}
+	return(mtype);
 }
 
 /***********************************************************************************************
@@ -618,8 +659,8 @@ AnimType CCINIClass::Get_AnimType(char const * section, char const * entry, Anim
 AnimTypeClass * CCINIClass::Get_Anim(char const * section, char const * entry) const
 {
 	char buffer[128];
-	Get_String(section, entry, Anim_Name(ANIM_NONE), buffer, sizeof(buffer));
-	return(AnimType_From_Name(buffer));
+	Get_String(section, entry, "", buffer, sizeof(buffer));
+	return(AnimTypeClass::As_Pointer(buffer));
 }
 
 /***********************************************************************************************
@@ -646,7 +687,7 @@ bool CCINIClass::Put_AnimType(char const * section, char const * entry, AnimType
 	if (value == ANIM_NONE) {
 		return(Put_String(section, entry, "<none>"));
 	}
-	return(Put_String(section, entry, Anim_Name(value)));
+	return(Put_String(section, entry, AnimTypeClass::As_Pointer(value)->Name()));
 }
 
 /***********************************************************************************************
@@ -727,7 +768,7 @@ UnitType CCINIClass::Get_UnitType(char const * section, char const * entry, Unit
 		def = UnitTypeClass::As_Reference(defvalue).Name();
 	}
 	Get_String(section, entry, def, buffer, sizeof(buffer));
-	return(UnitTypeClass::From_Name(buffer));
+	return(UnitTypeClass::As_Type(buffer));
 }
 
 
@@ -766,25 +807,10 @@ const WeaponTypeClass* CCINIClass::Get_WeaponType(char const* section, char cons
 {
 	char buffer[32];
 	char message[128];
-
-	//static WeaponTypeClass weapon = NULL;
-	//static WeaponTypeClass * weaponptr = NULL;
-	//sprintf(message, "CCINIClass.GetWeaponType WeaponCountB %d .\n", Weapons.Count());
-	//WWDebugString(message);
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
 		sprintf(message, "CCINIClass.Get_WeaponType parsed %s for %s : %s \n", entry, section, buffer);
 		WWDebugString(message);
-		/*weaponptr = WeaponTypeClass::From_Name(buffer);
-		if (weaponptr == NULL) {
-			weaponptr = new WeaponTypeClass(buffer);
-			sprintf(message, "CCINIClass.GetWeaponType new Weapon generated with name: %s .\n", weaponptr->Name());
-			WWDebugString(message);
-		}
-		sprintf(message, "CCINIClass.GetWeaponType WeaponCountA %d .\n", Weapons.Count());
-		WWDebugString(message);
-		sprintf(message, "CCINIClass.GetWeaponType obtained %s .\n", weaponptr->Name());
-		WWDebugString(message);*/
-		return(WeaponTypeClass::From_Name(buffer));
+		return(WeaponTypeClass::As_Pointer(buffer));
 	}
 	return(defvalue);
 }
@@ -810,10 +836,10 @@ const WeaponTypeClass* CCINIClass::Get_WeaponType(char const* section, char cons
  *=============================================================================================*/
 bool CCINIClass::Put_WeaponType(char const * section, char const * entry, int index)
 {
-	if (index < 0 || index > Weapons.Count()-1) {
+	if (index < 0 || index > (int)Weapons.size()-1) {
 		return(Put_String(section, entry, "<none>"));
 	}
-	return(Put_String(section, entry, Weapons.Ptr(index)->Name()));
+	return(Put_String(section, entry, Weapons.at(index)->Name()));
 }
 
 
@@ -841,7 +867,9 @@ WarheadType CCINIClass::Get_WarheadType(char const * section, char const * entry
 {
 	char buffer[128];
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		return(Warhead_From_Name(buffer));
+		WarheadTypeClass * warhead = WarheadTypeClass::As_Pointer(buffer);
+		if (warhead != NULL)
+			return(warhead->Type);
 	}
 	return(defvalue);
 }
@@ -953,9 +981,10 @@ bool CCINIClass::Put_OverlayType(char const * section, char const * entry, Overl
 BulletType CCINIClass::Get_BulletType(char const * section, char const * entry, BulletType defvalue) const
 {
 	char buffer[128];
-	
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		return(Bullet_From_Name(buffer));
+		BulletTypeClass* projectile = BulletTypeClass::As_Pointer(buffer);
+		if (projectile != NULL)
+			return(projectile->Type);
 	}
 	return(defvalue);
 }
@@ -1460,7 +1489,7 @@ long CCINIClass::Get_Buildings(char const * section, char const * entry, long de
 		pre = 0;
 		char * token = strtok(buffer, ",");
 		while (token != NULL && *token != '\0') {
-			StructType building = BuildingTypeClass::From_Name(token);
+			StructType building = BuildingTypeClass::As_Pointer(token)->As_Type();
 			if (building != STRUCT_NONE) {
 				pre |= (1L << building);
 			}

@@ -41,6 +41,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include	"function.h"
+#include    "TYPE.H"
 
 
 
@@ -61,7 +62,7 @@
  *   07/17/1996 JLB : Uses correct default values.                                             *
  *   09/25/2021 JJ  : now Type identifier is specified as part of the instantiation            *
  *=============================================================================================*/
-BulletTypeClass::BulletTypeClass(int bullettype, char const* name) :
+BulletTypeClass::BulletTypeClass(short bullettype, char const* name) :
 		ObjectTypeClass(	RTTI_BULLETTYPE,
 								BulletTypes.ID(this),
 								true,
@@ -97,9 +98,9 @@ BulletTypeClass::BulletTypeClass(int bullettype, char const* name) :
 	Arming(0),
 	Tumble(0)
 {
-	//char message[64];
-	//sprintf(message, "Instantiated Projectile %s .\n", IniName);
-	//WWDebugString(message);
+	char message[128];
+	sprintf(message, "Instantiated Projectile %s .\n", Name());
+	WWDebugString(message);
 }
 
 
@@ -171,6 +172,10 @@ void BulletTypeClass::Init_Heap(void)
 	**and maybe someday I'll wrote the code that sorts an assumed-unsorted list so we can get on with our lives
 	**and not hold onto so many pointers when we instantiate the BULLET class and other classes like it.
 	*/
+	for (unsigned short index = BULLET_FIRST; index < BULLET_COUNT; index++) {
+		new BulletTypeClass(index, (const char*)(&BULLET_NAMES[index]));
+	}
+	/*
 	new BulletTypeClass(0,"Invisible");	//	BULLET_INVISIBLE
 	new BulletTypeClass(1,"Cannon");		//	BULLET_CANNON
 	new BulletTypeClass(2,"Ack");			//	BULLET_ACK
@@ -188,7 +193,7 @@ void BulletTypeClass::Init_Heap(void)
 	new BulletTypeClass(15, "AAMissile");	//	BULLET_AAMISSILE
 	new BulletTypeClass(16, "GPSSatellite");//	BULLET_GPS_SATELLITE
 	new BulletTypeClass(17, "NukeUp");		//	BULLET_NUKE_UP
-	new BulletTypeClass(18, "NukeDown");		//	BULLET_NUKE_DOWN
+	new BulletTypeClass(18, "NukeDown");		//	BULLET_NUKE_DOWN*/
 }
 
 
@@ -307,7 +312,7 @@ bool BulletTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ini.Is_Present(Name())) {
 		char message[128];
-		sprintf(message, "ReadINI BulletType %s ...\n", Name());
+		sprintf(message, "BTC.Read_INI parsing BulletType %s ...\n", Name());
 		WWDebugString(message);
 		Arming = ini.Get_Int(Name(), "Arm", Arming);
 		ROT = ini.Get_Int(Name(), "ROT", ROT);
@@ -351,12 +356,12 @@ bool BulletTypeClass::Read_INI(CCINIClass & ini)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/16/2021 JJ : Created.                                                                 *
- *=============================================================================================*/
+ *=============================================================================================
 BulletType Bullet_From_Name(char const* name)
 {
 	if (!name) return(BULLET_NONE);
-	return BulletTypeClass::From_Name(name)->Type;
-}
+	return BulletTypeClass::As_Pointer(name)->Type;
+}*/
 
 /***********************************************************************************************
  * BulletTC_From_Name -- Convert ASCII name to pointer to bullet type class .                  *
@@ -374,7 +379,7 @@ BulletType Bullet_From_Name(char const* name)
  * HISTORY:                                                                                    *
  *   09/27/2021 JJ : Created.                                                                 *
  *=============================================================================================*/
-BulletTypeClass * BulletTypeClass::From_Name(char const* name)
+BulletTypeClass * BulletTypeClass::As_Pointer(char const* name)
 {
 	if (!name) return(NULL);
 

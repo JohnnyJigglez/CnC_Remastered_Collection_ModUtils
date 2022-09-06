@@ -1112,6 +1112,30 @@ InfantryTypeClass::InfantryTypeClass (
 	Speed = SPEED_FOOT;
 }
 
+InfantryTypeClass::InfantryTypeClass(int itype, char const* ininame) :
+	InfantryTypeClass(static_cast<InfantryType>(itype),
+		TXT_NONE,
+		ininame,
+		0x0000,
+		0x0000,
+		false,//isFemale
+		false,//hasCrawlingAnim
+		false,//isCivie
+		false,//isRemapOverride
+		false,//isNominal
+		false,//isTheatre
+		PIP_CIVILIAN,//TransportPipColour
+		E1DoControls,//jammer
+		E1DoControlsVirtual,//gapper
+		25,//projectile launchframe number
+		25,//prone projectile launchframe number
+		0)
+{
+	char message[64];
+	sprintf(message, "Instantiated custom Infantry %s .\n", ininame);
+	WWDebugString(message);
+}
+
 
 /***********************************************************************************************
  * InfantryTypeClass::operator new -- Allocate an infanty type class object.                   *
@@ -1368,16 +1392,27 @@ void InfantryTypeClass::Prep_For_Add(void)
  * HISTORY:                                                                                    *
  *   09/24/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-InfantryType InfantryTypeClass::From_Name(char const * name)
+InfantryType InfantryTypeClass::As_Type(char const * name)
 {
-	if (name != NULL) {
-		for (InfantryType classid = INFANTRY_FIRST; classid < INFANTRY_COUNT; classid++) {
-			if (stricmp(As_Reference(classid).IniName, name) == 0) {
-				return(classid);
-			}
+	if (name == NULL) return(INFANTRY_NONE);
+	InfantryTypeClass* itc = As_Pointer(name);
+	if (itc != NULL)
+		return (itc->Type);
+	return(INFANTRY_NONE);
+}
+
+InfantryTypeClass * InfantryTypeClass::As_Pointer(char const* name)
+{
+	if (name == NULL) return(NULL);
+	static InfantryTypeClass* itc = NULL;
+	for (int index = 0; index < InfantryTypes.Count(); index++) {
+		itc = InfantryTypes.Ptr(index);
+		if (stricmp(itc->Name(), name) == 0) {
+			return(itc);
 		}
 	}
-	return(INFANTRY_NONE);
+	return(NULL);
+
 }
 
 

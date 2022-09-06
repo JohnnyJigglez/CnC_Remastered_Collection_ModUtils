@@ -81,6 +81,7 @@ public:
 	const WeaponTypeClass* Get_WeaponType(char const* section, char const* entry, const WeaponTypeClass * defvalue) const;
 	long Get_Owners(char const* section, char const* entry, long defvalue) const;
 	CrateType Get_CrateType(char const* section, char const* entry, CrateType defvalue) const;
+	MissionType Get_Mission(char const* section, char const* entry, MissionType defvalue) const;
 
 
 	bool Put_Buildings(char const* section, char const* entry, long value);

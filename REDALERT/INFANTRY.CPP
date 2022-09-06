@@ -2467,9 +2467,9 @@ TARGET InfantryClass::Greatest_Threat(ThreatType threat) const
 	**	Special hack to make Tanya not auto-fire if controlled by a
 	**	human player.
 	*/
-	if (*this == INFANTRY_TANYA && House->IsHuman) {
+	/*if (*this == INFANTRY_TANYA && House->IsHuman) {
 		return(TARGET_NONE);
-	}
+	}*/
 
 	if (Class->PrimaryWeapon != NULL) {
 		threat = threat | Class->PrimaryWeapon->Allowed_Threats();
@@ -3500,7 +3500,7 @@ void InfantryClass::Read_INI(CCINIClass & ini)
 			/*
 			**	2nd token: infantry type name.
 			*/
-			classid = InfantryTypeClass::From_Name(strtok(NULL, ",\n\r"));
+			classid = InfantryTypeClass::As_Type(strtok(NULL, ",\n\r"));
 
 			if (classid != INFANTRY_NONE) {
 

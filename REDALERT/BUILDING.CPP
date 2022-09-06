@@ -1601,7 +1601,7 @@ void BuildingClass::operator delete(void *ptr)
  *   04/21/1994 JLB : Created.                                                                 *
  *   08/07/1995 JLB : Fixed act like value to match expected value.                            *
  *=============================================================================================*/
-BuildingClass::BuildingClass(const BuildingTypeClass * btype, HousesType house) :
+BuildingClass::BuildingClass(BuildingTypeClass * classid, HousesType house) :
 	TechnoClass(RTTI_BUILDING, Buildings.ID(this), house),
 	Factory(0),
 	ActLike(House->ActLike),
@@ -1628,7 +1628,8 @@ BuildingClass::BuildingClass(const BuildingTypeClass * btype, HousesType house) 
 	AnimToTrack(TARGET_NONE),
 	LastStrength(0),
 	PlacementDelay(0),
-	Class(btype)
+	Class(classid)
+	//buildingtypeininame("NONE")
 {
 	House->Tracking_Add(this);
 	//const TechnoTypeClass * ttc = BuildingTypes.Ptr(ClassID);
@@ -1649,8 +1650,8 @@ BuildingClass::BuildingClass(const BuildingTypeClass * btype, HousesType house) 
 	if (Class->Get_Buildup_Data() != NULL) {
 		IsAllowedToSell = false;
 	}
+	//strcpy(buildingtypeininame, btype->Name());
 }
-
 
 /***********************************************************************************************
  * BuildingClass::~BuildingClass -- Destructor for building type objects.                      *
@@ -1675,7 +1676,6 @@ BuildingClass::~BuildingClass(void)
 		BuildingClass::Limbo();
 	}
 	Class = 0;
-
 	delete (FactoryClass *)Factory;
 	Factory = 0;
 	ID = -1;
@@ -5343,7 +5343,7 @@ void BuildingClass::Read_INI(CCINIClass & ini)
 {
 	BuildingClass			* b;			// Working unit pointer.
 	HousesType				bhouse;		// Building house.
-	const BuildingTypeClass*		classid;		// Building type.
+	BuildingTypeClass *	   classid;		// Building type.
 	CELL						cell;			// Cell of building.
 	char						buf[128];
 	char						* trigname;	// building's trigger's name
@@ -5366,8 +5366,7 @@ void BuildingClass::Read_INI(CCINIClass & ini)
 		/*
 		**	2nd token: building name.
 		*/
-		//classid = BuildingTypeClass::From_Name(strtok(NULL, ","));
-		classid = BuildingTypeClass::Class_From_Name(strtok(NULL, ","));
+		classid = BuildingTypeClass::As_Pointer(strtok(NULL, ","));
 		if (bhouse != HOUSE_NONE && classid != NULL) {
 			int	strength;
 			DirType facing;

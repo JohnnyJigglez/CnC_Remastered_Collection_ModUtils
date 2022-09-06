@@ -137,7 +137,8 @@ void TabClass::Draw_It(bool complete)
 	}
 	Credits.Graphic_Logic(complete || IsToRedraw);
 #endif
-	IsToRedraw = false;
+	if(this != NULL)
+		IsToRedraw = false;
 }
 
 

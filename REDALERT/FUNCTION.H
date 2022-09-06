@@ -454,7 +454,7 @@ void Increase_Palette_Luminance (unsigned char *palette , int red_percentage , i
 /*
 **	ADATA.CPP
 */
-char const * Anim_Name(AnimType anim);
+//char const * Anim_Name(AnimType anim);
 
 /*
 **	AIRCRAFT.CPP
@@ -465,8 +465,8 @@ bool Building_Check(void);
 **	ANIM.CPP
 */
 void Shorten_Attached_Anims(ObjectClass * obj);
-AnimType Anim_From_Name(char const * name);
-AnimTypeClass * AnimType_From_Name(char const* name);
+//AnimType Anim_From_Name(char const * name);
+//AnimTypeClass * AnimType_From_Name(char const* name);
 
 /*
 **	BDATA.CPP
@@ -553,7 +553,8 @@ void const *Get_Radar_Icon(void const * shapefile, int shapenum, int frames, int
 void CC_Draw_Shape(void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata = 0, void const * ghostdata = 0, DirType rotation = DIR_N);
 
 // Added for draw intercept. ST - 1/17/2019 12:31PM
-void CC_Draw_Shape(const ObjectClass *object, void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata = 0, void const * ghostdata = 0, DirType rotation = DIR_N, long virtualscale = 0x0100, int width = 0, int height = 0);
+//void CC_Draw_Shape(const ObjectClass *object, void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata = 0, void const * ghostdata = 0, DirType rotation = DIR_N, long virtualscale = 0x0100, int width = 0, int height = 0);
+void CC_Draw_Shape(const ObjectClass* object, void const* shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const* fadingdata = 0, void const* ghostdata = 0, DirType rotation = DIR_N, long virtualscale = 0x0100, int width = 0, int height = 0, const char* shape_file_name=NULL);
 void CC_Draw_Shape(const ObjectClass *object, const char *shape_file_name, void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata = 0, void const * ghostdata = 0, DirType rotation = DIR_N, long virtualscale = 0x0100, char override_owner = HOUSE_NONE);
 
 // Added for pip draw intercept - SKY
@@ -1005,14 +1006,14 @@ char const * Version_Name(void);
 /*
 **	BBDATA.CPP
 */
-BulletType Bullet_From_Name(char const* name);
+//BulletType Bullet_From_Name(char const* name);
 
 //BulletTypeClass * From_Name(char const* name);
 
 /*
 **	WARHEAD.CPP
 */
-WarheadType Warhead_From_Name(char const* name);
+//WarheadType Warhead_From_Name(char const* name);
 
 //WarheadTypeClass* WarheadTC_From_Name(char const* name);
 

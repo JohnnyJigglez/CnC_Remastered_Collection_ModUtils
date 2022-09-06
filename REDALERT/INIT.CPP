@@ -250,12 +250,12 @@ bool Init_Game(int , char * [])
 	*/
 	HouseTypes.Set_Heap(HOUSE_COUNT);
 	//BuildingTypes.Set_Heap(STRUCT_COUNT+1);
-	AircraftTypes.Set_Heap(AIRCRAFT_COUNT);
-	InfantryTypes.Set_Heap(INFANTRY_COUNT);
+	//AircraftTypes.Set_Heap(AIRCRAFT_COUNT);
+	//InfantryTypes.Set_Heap(INFANTRY_COUNT);
 	//BulletTypes.Set_Heap(BULLET_COUNT);
 	//AnimTypes.Set_Heap(ANIM_COUNT);
 	//UnitTypes.Set_Heap(UNIT_COUNT);
-	VesselTypes.Set_Heap(VESSEL_COUNT);
+	//VesselTypes.Set_Heap(VESSEL_COUNT);
 	TemplateTypes.Set_Heap(TEMPLATE_COUNT);
 	TerrainTypes.Set_Heap(TERRAIN_COUNT);
 	OverlayTypes.Set_Heap(OVERLAY_COUNT);
@@ -263,12 +263,12 @@ bool Init_Game(int , char * [])
 
 	HouseTypeClass::Init_Heap();
 	//BuildingTypeClass::Init_Heap();
-	AircraftTypeClass::Init_Heap();
-	InfantryTypeClass::Init_Heap();
+	//AircraftTypeClass::Init_Heap();
+	//InfantryTypeClass::Init_Heap();
 	//BulletTypeClass::Init_Heap();
 	//AnimTypeClass::Init_Heap();
 	//UnitTypeClass::Init_Heap();
-	VesselTypeClass::Init_Heap();
+	//VesselTypeClass::Init_Heap();
 	TemplateTypeClass::Init_Heap();
 	TerrainTypeClass::Init_Heap();
 	OverlayTypeClass::Init_Heap();
@@ -291,11 +291,14 @@ bool Init_Game(int , char * [])
 	CCPtr<TriggerClass>::Set_Heap(&Triggers);
 	CCPtr<TriggerTypeClass>::Set_Heap(&TriggerTypes);
 
+
 	CCPtr<HouseTypeClass>::Set_Heap(&HouseTypes);
 	CCPtr<BuildingTypeClass>::Set_Heap(&BuildingTypes);
 	CCPtr<AircraftTypeClass>::Set_Heap(&AircraftTypes);
 	CCPtr<InfantryTypeClass>::Set_Heap(&InfantryTypes);
-	//CCPtr<BulletTypeClass>::Set_Heap(&BulletTypes);
+	CCPtr<WarheadTypeClass>::Set_Heap(&Warheads);
+	//CCPtr<WeaponTypeClass>::Set_Heap(&Weapons);
+	CCPtr<BulletTypeClass>::Set_Heap(&BulletTypes);
 	//CCPtr<AnimTypeClass>::Set_Heap(&AnimTypes);
 	CCPtr<UnitTypeClass>::Set_Heap(&UnitTypes);
 	CCPtr<VesselTypeClass>::Set_Heap(&VesselTypes);
@@ -2911,6 +2914,7 @@ static void Init_One_Time_Systems(void)
 	Options.One_Time();
 	Session.One_Time();
 
+	AnimTypeClass::One_Time();
 	ObjectTypeClass::One_Time();
 	BuildingTypeClass::One_Time();
 	BulletTypeClass::One_Time();
@@ -2922,7 +2926,6 @@ static void Init_One_Time_Systems(void)
 	UnitTypeClass::One_Time();
 	VesselTypeClass::One_Time();
 	InfantryTypeClass::One_Time();
-	AnimTypeClass::One_Time();
 	AircraftTypeClass::One_Time();
 	HouseClass::One_Time();
 }

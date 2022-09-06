@@ -3261,7 +3261,7 @@ void BuildingTypeClass::One_Time(void)
  *   05/02/1994 JLB : Converted to member function.                                            *
  *   08/08/2022 JJ  : Updated to use the softcoded BuildingTypes heap                          *
  *=============================================================================================*/
-StructType BuildingTypeClass::From_Name(char const * name)
+/*StructType BuildingTypeClass::From_Name(char const* name)
 {
 	if (name == NULL)
 		return(STRUCT_NONE);
@@ -3269,7 +3269,7 @@ StructType BuildingTypeClass::From_Name(char const * name)
 	if (btc != NULL)
 		return(btc->Type);
 	return(STRUCT_NONE);
-}
+}*/
 
 
 #ifdef SCENARIO_EDITOR
@@ -3352,7 +3352,7 @@ bool BuildingTypeClass::Create_And_Place(CELL cell, HousesType house) const
 {
 	BuildingClass * ptr;
 
-	ptr = new BuildingClass(this, house);
+	ptr = new BuildingClass((BuildingTypeClass*)this, house);
 	if (ptr != NULL) {
 		return(ptr->Unlimbo(Cell_Coord(cell), DIR_N));
 	}
@@ -3384,7 +3384,7 @@ ObjectClass * BuildingTypeClass::Create_One_Of(HouseClass * house) const
 	if (house != NULL) {
 		htype = house->Class->House;
 	}
-	return(new BuildingClass(this , htype));
+	return(new BuildingClass((BuildingTypeClass*)this, htype));
 }
 
 
@@ -3494,7 +3494,7 @@ void BuildingTypeClass::Dimensions(int &width, int &height) const
 
 
 /***********************************************************************************************
- * BuildingTypeClass::As_Reference -- Fetches reference to the building type specified.        *
+ * BuildingTypeClass::As_Pointer   -- Fetches pointer to the building type specified.          *
  *                                                                                             *
  *    This routine will fetch a reference to the BuildingTypeClass as indicated by the         *
  *    building type number specified.                                                          *
@@ -3509,15 +3509,11 @@ void BuildingTypeClass::Dimensions(int &width, int &height) const
  * HISTORY:                                                                                    *
  *   01/23/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-BuildingTypeClass & BuildingTypeClass::As_Reference(StructType type)
+BuildingTypeClass * BuildingTypeClass::As_Pointer(StructType type)
 {
-	static BuildingTypeClass* btc = NULL;
-	for (int index = 0; index < BuildingTypes.Count(); index++) {
-		btc = BuildingTypes.Ptr(index);
-		if (btc->Type == type)
-			return *btc;
-	}
-	return(*btc);
+	if (type == STRUCT_NONE)
+		return NULL;
+	return(As_Pointer(static_cast<int>(type)));
 }
 
 /***********************************************************************************************
@@ -3536,15 +3532,41 @@ BuildingTypeClass & BuildingTypeClass::As_Reference(StructType type)
  * HISTORY:                                                                                    *
  *   01/23/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-BuildingTypeClass * BuildingTypeClass::As_Pointer(StructType type)
+BuildingTypeClass * BuildingTypeClass::As_Pointer(char const* name)
 {
+	if (name == NULL) return(NULL);
+
 	static BuildingTypeClass* btc = NULL;
+
 	for (int index = 0; index < BuildingTypes.Count(); index++) {
 		btc = BuildingTypes.Ptr(index);
-		if (btc->Type == type)
-			break;
+		if (stricmp(btc->Name(), name) == 0)
+			return(btc);
 	}
-	return(btc);
+	return(NULL);
+}
+
+/***********************************************************************************************
+ * BuildingTypeClass::As_Pointer   -- Fetches pointer to the building type specified.          *
+ *                                                                                             *
+ *    This routine will fetch a reference to the BuildingTypeClass as indicated by the         *
+ *    building type number specified.                                                          *
+ *                                                                                             *
+ * INPUT:   type  -- The building type number to convert into a BuildingTypeClass reference.   *
+ *                                                                                             *
+ * OUTPUT:  Returns with a reference to the building type class as indicated by the            *
+ *          parameter.                                                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   01/23/1995 JLB : Created.                                                                 *
+ *=============================================================================================*/
+BuildingTypeClass* BuildingTypeClass::As_Pointer(int index)
+{
+	if (index < 0)
+		return NULL;
+	return(BuildingTypes.Ptr(index));
 }
 
 /***********************************************************************************************
@@ -3565,39 +3587,71 @@ BuildingTypeClass * BuildingTypeClass::As_Pointer(StructType type)
  *=============================================================================================*/
 BuildingTypeClass& BuildingTypeClass::As_Reference(int index)
 {
-	return(*BuildingTypes.Ptr(index));
+	return(*As_Pointer(index));
 }
+
 /***********************************************************************************************
- * BuildingTypeClass::Class_From_Name -- Fetch building type class pointer for specified name. *
+ * BuildingTypeClass::As_Reference -- Fetches reference to the building type specified.        *
  *                                                                                             *
- *    This routine converts an ASCII representation of a building class and                    *
- *    converts it into a pointer to the real object                                            *
+ *    This routine will fetch a reference to the BuildingTypeClass as indicated by the         *
+ *    building type number specified.                                                          *
  *                                                                                             *
- * INPUT:   name  -- ASCII name representing a building class.                                 *
+ * INPUT:   type  -- The building type number to convert into a BuildingTypeClass reference.   *
  *                                                                                             *
- * OUTPUT:  Returns with the actual building type class pointer that the string                *
- *          represents.                                                                        *
+ * OUTPUT:  Returns with a reference to the building type class as indicated by the            *
+ *          parameter.                                                                         *
  *                                                                                             *
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   08/08/2022 JJ  : Created.                                                                 *
+ *   01/23/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-BuildingTypeClass* BuildingTypeClass::Class_From_Name(char const* name)
+BuildingTypeClass& BuildingTypeClass::As_Reference(StructType type)
 {
-	if (name == NULL) return(NULL);
-
-	static BuildingTypeClass* btc = NULL;
-
-	for (int index = 0; index < BuildingTypes.Count(); index++) {
-		btc = BuildingTypes.Ptr(index);
-		if (stricmp(btc->Name(), name) == 0)
-			break;
-	}
-	return(btc);
-
+	return(*As_Pointer(type));
 }
 
+/***********************************************************************************************
+ * BuildingTypeClass::As_Reference -- Fetches reference to the building type specified.        *
+ *                                                                                             *
+ *    This routine will fetch a reference to the BuildingTypeClass as indicated by the         *
+ *    building type number specified.                                                          *
+ *                                                                                             *
+ * INPUT:   type  -- The building type number to convert into a BuildingTypeClass reference.   *
+ *                                                                                             *
+ * OUTPUT:  Returns with a reference to the building type class as indicated by the            *
+ *          parameter.                                                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   01/23/1995 JLB : Created.                                                                 *
+ *=============================================================================================*/
+BuildingTypeClass& BuildingTypeClass::As_Reference(char const* name)
+{
+	return(*As_Pointer(name));
+}
+
+/***********************************************************************************************
+ * BuildingTypeClass::As_Reference -- Fetches reference to the building type specified.        *
+ *                                                                                             *
+ *    This routine will fetch a reference to the BuildingTypeClass as indicated by the         *
+ *    building type number specified.                                                          *
+ *                                                                                             *
+ * INPUT:   type  -- The building type number to convert into a BuildingTypeClass reference.   *
+ *                                                                                             *
+ * OUTPUT:  Returns with a reference to the building type class as indicated by the            *
+ *          parameter.                                                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   01/23/1995 JLB : Created.                                                                 *
+ *=============================================================================================*/
+StructType BuildingTypeClass::As_Type(void)
+{
+	return(static_cast<StructType>(ID));
+}
 
 /***********************************************************************************************
  * BuildingTypeClass::Occupy_List -- Fetches the occupy list for the building.                 *
@@ -3919,7 +3973,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 	if (TechnoTypeClass::Read_INI(ini)) {
 		char message[128];
 		char buffer[128];
-		sprintf(message, "BTC.Read_INI parsing %s .\n", IniName);
+		sprintf(message, "BTC.Read_INI parsing %s ...\n", IniName);
 		WWDebugString(message);
 		Speed = ini.Get_Bool(Name(), "WaterBound", (Speed == SPEED_FLOAT)) ? SPEED_FLOAT : SPEED_NONE;
 		Capacity = ini.Get_Int(Name(), "Storage", Capacity);
@@ -3937,7 +3991,6 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		ToBuild = ini.Get_RTTIType(Name(), "Build", ToBuild);
 		ExitCoordinate = ini.Get_Coord(Name(), "ExitCoord", ExitCoordinate);
 		StartFace = (DirType)(ini.Get_Int(Name(), "InitialD", StartFace));
-		
 		if (ini.Get_String(Name(), "Size", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building (%d,%d) has Size : %s \n", Width(), Height(), buffer);
 			WWDebugString(message);
@@ -3963,7 +4016,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 			char* token = NULL;
 			char* rest = buffer;
 			short xcoord = 0, ycoord = 0;
-			static short tempexitlist[16];
+			short tempexitlist[16];
 			char* xytoken = strtok_s(rest, "|",&rest);
 			while (xytoken != NULL && count < 15) {
 				token = strtok(xytoken, ",");
@@ -3990,11 +4043,11 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 			short count = 0, rowcount = 0, colcount = 0;
 			char* coltoken = NULL;
 			char* rest = buffer;
-			static short tempoccupylist[17];
+			short tempoccupylist[36] = {REFRESH_EOL};
 			char* rowtoken = strtok_s(rest, "|", &rest);
-			while (rowtoken != NULL && rowcount < 4) {
+			while (rowtoken != NULL && rowcount < 6) {
 				coltoken = strtok(rowtoken, ",");
-				while(coltoken != NULL && colcount < 4) {
+				while (coltoken != NULL && colcount < 6) {
 					if (atoi(coltoken) == 1) {
 						tempoccupylist[count] = (rowcount * 128) + colcount;
 						count++;
@@ -4006,24 +4059,52 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 				rowcount++;
 				rowtoken = strtok_s(rest, "|", &rest);
 			}
+			tempoccupylist[count] = REFRESH_EOL;
+			memcpy(OccupyListData, tempoccupylist,(sizeof(tempoccupylist)/36)*(count+1));
 			sprintf(message, "BTC.Read_INI Building occupies %d cells \n", count);
 			WWDebugString(message);
-			tempoccupylist[count] = REFRESH_EOL;
-			OccupyList = (const short*)tempoccupylist;
+			OccupyList = (short *)OccupyListData;
 		}
+		/*if (OccupyList != NULL) {
+			sprintf(message, "BTC.Read_INI Building has OccupyList : ");
+			//WWDebugString(message);
+			int count = 0;
+			short curr = -1;
+			for (int x = 0; x < 6; x++) {
+				for (int y = 0; y < 6; y++)
+				{
+					curr = OccupyList[count];
+					if (curr == REFRESH_EOL)
+						break;
+					if(y > 0)
+						sprintf(message, "%s,%d",message, curr);
+					else
+						sprintf(message, "%s%d", message, curr);
+					//WWDebugString(message);
+					count++;
+				}
+				if (curr == REFRESH_EOL)
+					break;
+				sprintf(message, "%s|", message);
+				//WWDebugString(message);
+			}
+			sprintf(message, "%s .\n", message);
+			WWDebugString(message);
+		}*/
 		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building has Logic : %s \n", buffer);
 			WWDebugString(message);
-			StructType stype = From_Name(buffer);
+			StructType stype = As_Pointer(buffer)->As_Type();
 			if (stype != STRUCT_NONE)
 				Type = stype;
-			sprintf(message, "BTC.Read_INI Building has ID %d and Type %d . \n", ID,(int)Type);
+			sprintf(message, "BTC.Read_INI Building has ID %d and Logical Type %d . \n", ID,(int)Type);
 			WWDebugString(message);
 		}
 		if (Power < 0) {
 			Drain = -Power;
 			Power = 0;
 		}
+		
 		return(true);
 	}
 	return(false);

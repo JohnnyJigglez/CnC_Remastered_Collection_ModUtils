@@ -68,7 +68,7 @@ template class CCPtr<UnitTypeClass>;
 template class CCPtr<VesselClass>;
 template class CCPtr<VesselTypeClass>;
 template class CCPtr<WarheadTypeClass>;
-template class CCPtr<WeaponTypeClass>;
+//template class CCPtr<WeaponTypeClass>;
 
 
 template<class T> FixedIHeapClass* CCPtr<T>::Heap = NULL;

@@ -35,6 +35,7 @@
 #ifndef WARHEAD_H
 #define WARHEAD_H
 
+const char WARHEAD_NAMES[WARHEAD_COUNT][16] = { "SA","HE","AP","Fire","HollowPoint","Super","Organic","Nuke","Mechanical" };
 
 /**********************************************************************
 **	Each of the warhead types has specific characteristics. This structure
@@ -43,7 +44,7 @@
 class WarheadTypeClass
 {
 	public:
-		WarheadTypeClass(int warheadtype, char const * name);
+		WarheadTypeClass(short wtype, char const * name);
 		WarheadTypeClass(char const* name);
 		WarheadTypeClass(NoInitClass const &) {}
 		~WarheadTypeClass(void);
@@ -51,13 +52,15 @@ class WarheadTypeClass
 		void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		void operator delete(void * pointer);
-
+		static void Init_Heap(void);
 		void Code_Pointers(void) {}
 		void Decode_Pointers(void) {}
 		char const * Name(void) const {return(IniName);}
 		bool Read_INI(CCINIClass & ini);
 		static WarheadTypeClass * As_Pointer(WarheadType weapon);
-		static WarheadTypeClass * From_Name(char const* name);
+		static WarheadTypeClass * As_Pointer(char const* name);
+
+	    
 		//static WarheadType WarheadType_From_Name(char const* name);
 		/*
 		**	This is the ID number of the warhead type. It is index number into the warhead

@@ -153,6 +153,7 @@ class ObjectClass : public AbstractClass
 		*/
 		virtual bool Is_Players_Army(void) const {return(false);}
 		virtual void const * Get_Image_Data(void) const;
+		virtual void const* Get_Secondary_Image_Data(void) const;
 		virtual ActionType What_Action(ObjectClass const *) const;
 		virtual ActionType What_Action(CELL) const;
 		virtual LayerType In_Which_Layer(void) const;

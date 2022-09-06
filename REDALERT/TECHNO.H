@@ -390,7 +390,7 @@ class TechnoClass :	public RadioClass,
 		*/
 		virtual void const * Remap_Table(void) const;
 		VisualType Visual_Character(bool raw = false) const;
-		void Techno_Draw_Object(void const * shapefile, int shapenum, int x, int y, WindowNumberType window, DirType rotation=DIR_N, int scale=0x0100) const;
+		void Techno_Draw_Object(void const * shapefile, int shapenum, int x, int y, WindowNumberType window, DirType rotation=DIR_N, int scale=0x0100, const char* shape_name = NULL) const;
 
 		// Added. ST - 8/1/2019 5:37PM
 		void Techno_Draw_Object_Virtual(void const * shapefile, int shapenum, int x, int y, WindowNumberType window, DirType rotation=DIR_N, int scale=0x0100, const char *shape_name = NULL) const;

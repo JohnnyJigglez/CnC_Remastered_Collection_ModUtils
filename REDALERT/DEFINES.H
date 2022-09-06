@@ -1333,7 +1333,7 @@ inline LayerType operator++(LayerType &n) { n = (LayerType)(((int)n) + 1); retur
 **	This enumerates the various bullet types. These types specify bullet's
 **	visual and explosive characteristics.
 */
-typedef enum BulletType : char {
+typedef enum BulletType : short {
 	BULLET_NONE=-1,
 
 	BULLET_INVISIBLE,
@@ -2669,7 +2669,7 @@ typedef enum BoxStyleEnum : unsigned char {
 **	These are the different "warhead" types that can be assigned to the
 **	various projectiles in the game.
 */
-typedef enum WarheadType : char {
+typedef enum WarheadType : short {
 	WARHEAD_NONE=-1,
 
 	WARHEAD_SA,					// Small arms -- good against infantry.
@@ -2685,7 +2685,7 @@ typedef enum WarheadType : char {
 #endif
 	WARHEAD_COUNT,
 	WARHEAD_FIRST=0,
-	WARHEAD_MAX=127
+	WARHEAD_MAX=254
 } WarheadType;
 
 

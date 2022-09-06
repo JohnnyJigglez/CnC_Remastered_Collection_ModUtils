@@ -91,7 +91,7 @@ template class TFixedIHeapClass<UnitTypeClass>;
 template class TFixedIHeapClass<VesselClass>;
 template class TFixedIHeapClass<VesselTypeClass>;
 template class TFixedIHeapClass<WarheadTypeClass>;
-template class TFixedIHeapClass<WeaponTypeClass>;
+//template class TFixedIHeapClass<WeaponTypeClass>;
 
 
 /***********************************************************************************************

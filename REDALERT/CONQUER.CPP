@@ -3430,7 +3430,7 @@ extern void DLL_Draw_Intercept(int shape_number, int x, int y, int width, int he
 extern void DLL_Draw_Pip_Intercept(const ObjectClass* object, int pip);
 void CC_Draw_Shape(void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata, void const * ghostdata, DirType rotation);
 
-void CC_Draw_Shape(const ObjectClass *object, void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata, void const * ghostdata, DirType rotation, long virtualscale, int width, int height)
+/*void CC_Draw_Shape(const ObjectClass* object, void const* shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const* fadingdata, void const* ghostdata, DirType rotation, long virtualscale, int width, int height)
 {
 	if (window == WINDOW_VIRTUAL) {
 		if (width == 0) width = Get_Build_Frame_Width(shapefile);
@@ -3438,7 +3438,17 @@ void CC_Draw_Shape(const ObjectClass *object, void const * shapefile, int shapen
 		DLL_Draw_Intercept(shapenum, x, y, width, height, (int)flags, object, rotation, virtualscale, NULL, HOUSE_NONE);
 		return;
 	}
+	CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
+}*/
 
+void CC_Draw_Shape(const ObjectClass* object, void const* shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const* fadingdata, void const* ghostdata, DirType rotation, long virtualscale, int width, int height, const char* shape_file_name)
+{
+	if (window == WINDOW_VIRTUAL) {
+		if (width == 0) width = Get_Build_Frame_Width(shapefile);
+		if (height == 0) height = Get_Build_Frame_Height(shapefile);
+		DLL_Draw_Intercept(shapenum, x, y, width, height, (int)flags, object, rotation, virtualscale, shape_file_name, HOUSE_NONE);
+		return;
+	}
 	CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
 }
 
@@ -3450,7 +3460,6 @@ void CC_Draw_Shape(const ObjectClass *object, const char *shape_file_name, void 
 		DLL_Draw_Intercept(shapenum, x, y, width, height, (int)flags, object, rotation, virtualscale, shape_file_name, override_owner);
 		return;
 	}
-
 	CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
 }
 

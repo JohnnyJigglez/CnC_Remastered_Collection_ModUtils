@@ -1913,7 +1913,7 @@ extern "C" __declspec(dllexport) bool __cdecl CNC_Advance_Instance(uint64 player
 extern "C" __declspec(dllexport) bool __cdecl CNC_Save_Load(bool save, const char *file_path_and_name, const char *game_type)
 {
 	bool result = false;
-	
+
 	if (save) {
 		result = Save_Game(file_path_and_name, "internal");
 	} else {
@@ -1939,7 +1939,6 @@ extern "C" __declspec(dllexport) bool __cdecl CNC_Save_Load(bool save, const cha
 		}
 		
 		result = Load_Game(file_path_and_name);
-
 		if (result == false)
 		{
 			return false;
@@ -1955,7 +1954,6 @@ extern "C" __declspec(dllexport) bool __cdecl CNC_Save_Load(bool save, const cha
 		}
 		Set_Palette(GamePalette.Get_Data());
 	}
-
 	return result;
 }
 
@@ -3490,9 +3488,9 @@ void DLLExportClass::DLL_Draw_Intercept(int shape_number, int x, int y, int widt
 			new_object.IsALoaner = techno_object->IsALoaner;
 			new_object.IsNominal = ttype->IsNominal;
 			new_object.MaxPips = ttype->Max_Pips();
-			new_object.IsAntiGround = (ttype->PrimaryWeapon != NULL) && (ttype->PrimaryWeapon->Bullet != NULL) && ttype->PrimaryWeapon->Bullet->IsAntiGround;
-			new_object.IsAntiAircraft = (ttype->PrimaryWeapon != NULL) && (ttype->PrimaryWeapon->Bullet != NULL) && ttype->PrimaryWeapon->Bullet->IsAntiAircraft;
-			new_object.IsSubSurface = (ttype->PrimaryWeapon != NULL) && (ttype->PrimaryWeapon->Bullet != NULL) && ttype->PrimaryWeapon->Bullet->IsSubSurface;
+			new_object.IsAntiGround = (ttype->PrimaryWeapon != NULL && ttype->PrimaryWeapon->Bullet && ttype->PrimaryWeapon->Bullet->IsAntiGround) || (ttype->SecondaryWeapon != NULL && ttype->SecondaryWeapon->Bullet && ttype->SecondaryWeapon->Bullet->IsAntiGround);
+			new_object.IsAntiAircraft = (ttype->PrimaryWeapon != NULL && ttype->PrimaryWeapon->Bullet && ttype->PrimaryWeapon->Bullet->IsAntiAircraft) || (ttype->SecondaryWeapon != NULL && ttype->SecondaryWeapon->Bullet && ttype->SecondaryWeapon->Bullet->IsAntiAircraft);
+			new_object.IsSubSurface = (ttype->PrimaryWeapon != NULL && ttype->PrimaryWeapon->Bullet && ttype->PrimaryWeapon->Bullet->IsSubSurface) || (ttype->SecondaryWeapon != NULL && ttype->SecondaryWeapon->Bullet && ttype->SecondaryWeapon->Bullet->IsSubSurface);
 			new_object.IsIronCurtain = techno_object->IronCurtainCountDown > 0;
 
 			int full_name = techno_object->Full_Name();
@@ -8059,7 +8057,7 @@ void DLLExportClass::Debug_Spawn_All(int x, int y)
 
 		if (building_type.Get_Ownable() && building_type.Level != -1) {
 				
-			BuildingClass * building = new BuildingClass(&building_type, house);
+			BuildingClass * building = new BuildingClass((BuildingTypeClass*)&building_type, house);
 			if (building) {
 				
 				try_x = origin_x;
@@ -8228,10 +8226,11 @@ void DLLExportClass::Debug_Spawn_Unit(const char *object_name, int x, int y, boo
 	/*
 	** What is this thing?
 	*/
-	StructType structure_type = BuildingTypeClass::From_Name(object_name);
+	BuildingTypeClass * buildingtype = BuildingTypeClass::As_Pointer(object_name);
+	StructType structure_type = buildingtype->As_Type();
 	if (structure_type != STRUCT_NONE) {
 		
-		BuildingClass * building = new BuildingClass(BuildingTypeClass::Class_From_Name(object_name), house);
+		BuildingClass * building = new BuildingClass(buildingtype, house);
 		if (building) {
 			if (!building->Unlimbo(Cell_Coord(cell))) {
 				delete building;
@@ -8253,7 +8252,7 @@ void DLLExportClass::Debug_Spawn_Unit(const char *object_name, int x, int y, boo
 	}
 
 	
-	UnitType unit_type = UnitTypeClass::From_Name(object_name);
+	UnitType unit_type = UnitTypeClass::As_Type(object_name);
 	if (unit_type != UNIT_NONE) {
 		
 		UnitClass * unit = new UnitClass(unit_type, house);
@@ -8265,7 +8264,7 @@ void DLLExportClass::Debug_Spawn_Unit(const char *object_name, int x, int y, boo
 	}
 
 
-	InfantryType infantry_type = InfantryTypeClass::From_Name(object_name);
+	InfantryType infantry_type = InfantryTypeClass::As_Type(object_name);
 	if (infantry_type != INFANTRY_NONE) {
 		
 		InfantryClass * inf = new InfantryClass(infantry_type, house);

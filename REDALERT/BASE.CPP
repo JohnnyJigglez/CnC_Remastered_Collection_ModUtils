@@ -476,7 +476,7 @@ void BaseClass::Read_INI(CCINIClass & ini)
 		/*
 		** Set the node's building type
 		*/
-		node.Type = BuildingTypeClass::From_Name(strtok(buf,","));
+		node.Type = BuildingTypeClass::As_Pointer(strtok(buf,","))->As_Type();
 
 		/*
 		** Read & set the node's coordinate

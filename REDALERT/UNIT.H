@@ -129,6 +129,8 @@ class UnitClass :	public DriveClass
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
 		UnitClass(UnitType classid, HousesType house);
+		UnitClass(char const * classname, HousesType house);
+		UnitClass(BuildingTypeClass * classid, HousesType house);
 		UnitClass(NoInitClass const & x) : DriveClass(x), Class(x), Reload(x), SecondaryFacing(x) {};
 		operator UnitType(void) const {return Class->Type;};
 		virtual ~UnitClass(void);

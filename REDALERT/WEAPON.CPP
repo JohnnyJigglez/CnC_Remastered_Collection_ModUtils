@@ -43,11 +43,32 @@
 
 #include	"function.h"
 
-
 /***************************************************************************
 **	These are the various weapons and their characteristics.
 */
-TFixedIHeapClass<WeaponTypeClass> Weapons;
+//TFixedIHeapClass<WeaponTypeClass> Weapons;
+std::vector<WeaponTypeClass *> Weapons;
+
+void * WeaponTypeClass::operator new(size_t, void* ptr)
+{ 
+	char message[64];
+	sprintf(message, "NEW.ptr invoked for Weapon %s .\n", ((WeaponTypeClass*)ptr)->IniName);
+	WWDebugString(message);
+	//((WeaponTypeClass*)ptr)->ID = Weapons.size();
+	//Weapons.push_back((WeaponTypeClass*)ptr);
+	return(ptr);
+}
+void* WeaponTypeClass::operator new(size_t t)
+{
+	
+	//WeaponTypeClass * ptr = (WeaponTypeClass * )malloc(t);
+	//ptr->ID = Weapons.size();
+	//Weapons.push_back(ptr);
+	//char message[64];
+	//sprintf(message, "NEW.void invoked for Weapon with ID %d .\n", ptr->ID);
+	//WWDebugString(message);
+	return(malloc(t));
+}
 
 
 /***********************************************************************************************
@@ -67,24 +88,27 @@ TFixedIHeapClass<WeaponTypeClass> Weapons;
  *   07/17/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
 WeaponTypeClass::WeaponTypeClass(char const * name) :
-	ID(Weapons.ID(this)),
+	//ID(Weapons.ID(this)),
+	ID(-1),
 	IniName(name),
 	IsSupressed(false),
 	IsCamera(false),
 	IsElectric(false),
 	Burst(1),
 	BurstDelay(3),
-	Bullet(NULL),
+	Bullet(0),
 	Attack(0),
 	MaxSpeed(MPH_IMMOBILE),
-	WarheadPtr(NULL),
+	WarheadPtr(0),
 	ROF(0),
 	Range(0),
 	Sound(VOC_NONE),
 	Anim(ANIM_NONE)
 {
+	ID = Weapons.size();
+	Weapons.push_back(this);
 	char message[64];
-	sprintf(message, "Instantiated Weapon %s .\n", IniName);
+	sprintf(message, "Instantiated Weapon %s with ID: %d.\n", IniName,ID);
 	WWDebugString(message);
 }
 
@@ -161,9 +185,12 @@ void WeaponTypeClass::Init_Heap(void) {
  *=============================================================================================*/
 WeaponTypeClass::~WeaponTypeClass(void)
 {
+	char message[64];
+	sprintf(message, "Destroyed Weapon %s with ID: %d.\n", IniName, ID);
+	WWDebugString(message);
 	IniName = NULL;
-	Bullet = NULL;
-	WarheadPtr = NULL;
+	Bullet = 0;
+	WarheadPtr = 0;
 }
 
 
@@ -183,10 +210,10 @@ WeaponTypeClass::~WeaponTypeClass(void)
  * HISTORY:                                                                                    *
  *   07/17/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void * WeaponTypeClass::operator new(size_t)
+/*void* WeaponTypeClass::operator new(size_t)
 {
 	return(Weapons.Alloc());
-}
+}*/
 
 
 /***********************************************************************************************
@@ -206,7 +233,10 @@ void * WeaponTypeClass::operator new(size_t)
  *=============================================================================================*/
 void WeaponTypeClass::operator delete(void * pointer)
 {
-	Weapons.Free((WeaponTypeClass *)pointer);
+	//Weapons.Free((WeaponTypeClass *)pointer);
+	Weapons.at(((WeaponTypeClass*)pointer)->ID) = NULL;
+	Weapons.at(((WeaponTypeClass*)pointer)->ID) = Weapons.back();
+	Weapons.pop_back();
 }
 
 
@@ -228,7 +258,8 @@ void WeaponTypeClass::operator delete(void * pointer)
  *=============================================================================================*/
 WeaponTypeClass * WeaponTypeClass::As_Pointer(int index)
 {
-	return(Weapons.Ptr(index));
+	//return(Weapons.Ptr(index));
+	return(Weapons.at(index));
 }
 
 
@@ -254,7 +285,7 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ini.Section_Present(Name())) {
 		char message[128];
-		sprintf(message, "ReadINI WeaponType %s ...\n", Name());
+		sprintf(message, "WTC.Read_INI parsing WeaponType %s ...\n", Name());
 		WWDebugString(message);
 		IsSupressed = ini.Get_Bool(Name(), "Supress", IsSupressed);
 		Burst = ini.Get_Int(Name(), "Burst", Burst);
@@ -272,25 +303,25 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		IsCamera = ini.Get_Bool(Name(), "Camera", IsCamera);
 		IsElectric = ini.Get_Bool(Name(), "Charges", IsElectric);
 		IsTurboBoosted = ini.Get_Bool(Name(), "TurboBoost", IsTurboBoosted);
-		char buffer[32] = "";
+		char buffer[16] = "";
 		if (ini.Get_String(Name(), "Warhead", buffer, buffer, sizeof(buffer))) {
-			WarheadTypeClass* twhptr = WarheadTypeClass::From_Name(buffer);
+			WarheadTypeClass* twhptr = WarheadTypeClass::As_Pointer(buffer);
 			if (twhptr != NULL) {
 				WarheadPtr = twhptr;
 			}
 		}
-		char pbuffer[32] = "";
+		if (WarheadPtr) {
+			sprintf(message, "ReadINI WeaponType %s has warhead %s.\n", Name(), WarheadPtr->IniName);
+			WWDebugString(message);
+		}
+		char pbuffer[16] = "";
 		if (ini.Get_String(Name(), "Projectile", pbuffer, pbuffer, sizeof(pbuffer))) {
-			BulletTypeClass* tprojptr = BulletTypeClass::From_Name(pbuffer);
+			BulletTypeClass* tprojptr = BulletTypeClass::As_Pointer(pbuffer);
 			if (tprojptr != NULL) {
 				Bullet = tprojptr;
 			}
 		}
-		if (WarheadPtr != NULL) {
-			sprintf(message, "ReadINI WeaponType %s has warhead %s.\n", Name(), WarheadPtr->IniName);
-			WWDebugString(message);
-		}
-		if (Bullet != NULL) {
+		if (Bullet) {
 			sprintf(message, "ReadINI WeaponType %s has projectile %s.\n", Name(), Bullet->IniName);
 			WWDebugString(message);
 		}
@@ -316,24 +347,16 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
  * HISTORY:                                                                                    *
  *   07/17/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WeaponTypeClass * WeaponTypeClass::From_Name(char const * name)
+WeaponTypeClass * WeaponTypeClass::As_Pointer(char const * name)
 {
 	if (name == NULL) return(NULL);
-	//char message[128];
-	//sprintf(message, "WeaponTypeClass.FromName Entry: %s .\n", name);
-	//WWDebugString(message);
 	static WeaponTypeClass* weapon = NULL;
+
 	//for (int index = 0; index < Weapons.Count(); index++) {
-	//	sprintf(message, "WeaponTypeClass.FromName ITERATE: %s .\n", Weapons.Ptr(index)->Name());
-	//	WWDebugString(message);
-	//}
-	for (int index = 0; index < Weapons.Count(); index++) {
-		weapon = Weapons.Ptr(index);
-		//sprintf(message, "WeaponTypeClass.FromName DETECTED: %s .\n", weapon->Name());
-		//WWDebugString(message);
+		//weapon = Weapons.Ptr(index);
+	for (int index = 0; index < (int)Weapons.size(); index++) {
+		weapon = Weapons.at(index);
 		if (stricmp(weapon->Name(), name) == 0) {
-			//sprintf(message, "WeaponTypeClass.FromName FOUND.\n");
-			//WWDebugString(message);
 			return(weapon);
 		}
 	}
@@ -357,15 +380,13 @@ WeaponTypeClass * WeaponTypeClass::From_Name(char const * name)
  * HISTORY:                                                                                    *
  *   10/02/2021 JJ : Created.                                                                  *
  *=============================================================================================*/
-int WeaponTypeClass::ID_From_Name(char const* name)
+int WeaponTypeClass::As_Int(char const* name)
 {
-	if (!name) return(-1);
-
-	for (int index = 0; index < Weapons.Count(); index++) {
-		if (stricmp(Weapons.Ptr(index)->Name(), name) == 0) {
-			return(index);
-		}
-	}
+	if (!name)
+		return(-1);
+	WeaponTypeClass* wtc = As_Pointer(name);
+	if (wtc != NULL)
+		return(wtc->ID);
 	return(-1);
 
 }
@@ -419,20 +440,19 @@ ArmorType Armor_From_Name(char const * name)
 ThreatType WeaponTypeClass::Allowed_Threats(void) const
 {
 	ThreatType threat = THREAT_NORMAL;
-	if (Bullet->IsAntiAircraft) {
+	if (!Bullet)
+		return(threat);
+	if (Bullet->IsAntiAircraft)
 		threat = threat | THREAT_AIR;
-	}
-	if (Bullet->IsAntiGround) {
+	if (Bullet->IsAntiGround)
 		threat = threat | THREAT_INFANTRY|THREAT_VEHICLES|THREAT_BOATS|THREAT_BUILDINGS;
-	}
 	return(threat);
 }
 
 
 bool WeaponTypeClass::Is_Wall_Destroyer(void) const
 {
-	if (WarheadPtr != NULL && WarheadPtr->IsWallDestroyer) {
+	if (WarheadPtr && WarheadPtr->IsWallDestroyer)
 		return(true);
-	}
 	return(false);
 }

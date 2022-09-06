@@ -36,6 +36,7 @@
 #define EXTERNS_H
 
 #include	"cell.h"
+#include <vector>
 
 #ifdef SCENARIO_EDITOR
 #include	"mapedit.h"
@@ -236,7 +237,8 @@ extern TFixedIHeapClass<SmudgeTypeClass>					SmudgeTypes;
 
 extern FixedIHeapClass *										HeapPointers[RTTI_COUNT];
 
-extern TFixedIHeapClass<WeaponTypeClass>					Weapons;
+//extern TFixedIHeapClass<WeaponTypeClass>					Weapons;
+extern std::vector<WeaponTypeClass *>							Weapons;
 extern TFixedIHeapClass<WarheadTypeClass>					Warheads;
 
 extern QueueClass<EventClass, MAX_EVENTS>					OutList;

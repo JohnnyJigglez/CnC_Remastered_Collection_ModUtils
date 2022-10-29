@@ -34,39 +34,57 @@
 
 #ifndef WARHEAD_H
 #define WARHEAD_H
+//#include "CONST.CPP"
+#include	"function.h"
+#include <vector>
+//#include "CCINI.H"
 
-const char WARHEAD_NAMES[WARHEAD_COUNT][16] = { "SA","HE","AP","Fire","HollowPoint","Super","Organic","Nuke","Mechanical" };
-
-/**********************************************************************
-**	Each of the warhead types has specific characteristics. This structure
-**	holds these characteristics.
+/***************************************************************************
+**	These are the text names for the various built-in warhead types a weapon
+*   can possess.
 */
+const char* const WarheadTypeName[WARHEAD_COUNT] = {
+"SA",
+"HE",
+"AP",
+"Fire",
+"HollowPoint",
+"Super",
+"Organic",
+"Nuke",
+"Mechanical"
+};
+
 class WarheadTypeClass
 {
 	public:
-		WarheadTypeClass(short wtype, char const * name);
+		//WarheadTypeClass(short wtype, char const * name);
 		WarheadTypeClass(char const* name);
 		WarheadTypeClass(NoInitClass const &) {}
 		~WarheadTypeClass(void);
 
-		void * operator new(size_t);
-		static void * operator new(size_t , void * ptr) {return(ptr);};
-		void operator delete(void * pointer);
+		//void * operator new(size_t);
+		void* operator new(size_t t) { return(malloc(t)); }
+		//static void* operator new(size_t, void* ptr);
+		//void operator delete(void * pointer);
 		static void Init_Heap(void);
+		static void Clear_Heap(void);
 		void Code_Pointers(void) {}
 		void Decode_Pointers(void) {}
 		char const * Name(void) const {return(IniName);}
 		bool Read_INI(CCINIClass & ini);
-		static WarheadTypeClass * As_Pointer(WarheadType weapon);
-		static WarheadTypeClass * As_Pointer(char const* name);
-
+		static const WarheadTypeClass * As_Pointer(WarheadType weapon);
+		static const WarheadTypeClass * As_Pointer(char const* name);
+		WarheadType Type(void) const { return (BehavesLike); }
+		static const WarheadTypeClass* findorcreate(CCINIClass& ini, const char* value, const WarheadTypeClass* defptr = NULL);
+		static WarheadType findorcreate(CCINIClass& ini, const char* value, WarheadType defvalue = WARHEAD_NONE);
 	    
 		//static WarheadType WarheadType_From_Name(char const* name);
 		/*
 		**	This is the ID number of the warhead type. It is index number into the warhead
 		**	heap.
 		*/
-		int ID;
+		short ID;
 
 		/*
 		*  This is let's other objects know that the object has had its information parsed from an ini file. 
@@ -76,11 +94,13 @@ class WarheadTypeClass
 		/*
 		**	This is the AnimTypeClass we can use to override the ExplosionSet anims
 		*/
-		AnimTypeClass * Anim;
+		AnimType Anim;
+
 		/*
-		**	This is the WarheadType that is used by game logic that requires it.
+		**	This tells relevant game logic to treat this WarheadTypeClass like a
+		*	different WarheadTypeClass.
 		*/
-		WarheadType Type;
+		WarheadType BehavesLike;
 
 		/*
 		**	This is the identifying name of this warhead type.

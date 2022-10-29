@@ -38,10 +38,14 @@
 #include	"ini.h"
 #include	"fixed.h"
 #include	"pk.h"
-
+//#include    "WARHEAD.H"
+//#include    "PROJECTILE.h"
+//#include    "WEAPON.H"
 class TriggerTypeClass;
-class WeaponTypeClass; //added this because the compiler was spazzing out?
-class AnimTypeClass; //added this because the compiler was spazzing out?
+//class WeaponTypeClass; //added this because the compiler was spazzing out?
+//class AnimTypeClass; //added this because the compiler was spazzing out?
+//class WarheadTypeClass;
+//class BulletTypeClass;
 
 /*
 **	The advanced version of the INI database manager. It handles the C&C expansion types and
@@ -60,12 +64,13 @@ public:
 
 	long Get_Buildings(char const* section, char const* entry, long defvalue) const;
 	UnitType Get_UnitType(char const* section, char const* entry, UnitType defvalue) const;
-	AnimType Get_AnimType(char const* section, char const* entry, AnimType defvalue) const;
-	AnimTypeClass* Get_Anim(char const* section, char const* entry) const;
+	//AnimType Get_AnimType(char const* section, char const* entry, AnimType defvalue) const;
+	//const AnimTypeClass * Get_Anim(char const* section, char const* entry) const;
 	RTTIType Get_RTTIType(char const* section, char const* entry, RTTIType defvalue) const;
 	COORDINATE Get_Coord(char const* section, char const* entry, COORDINATE devvalue) const;
 	ArmorType Get_ArmorType(char const* section, char const* entry, ArmorType defvalue) const;
-	BulletType Get_BulletType(char const* section, char const* entry, BulletType defvalue) const;
+	//BulletType Get_BulletType(char const* section, char const* entry, BulletType defvalue) const;
+	//const BulletTypeClass* Get_Bullet(char const* section, char const* entry, const BulletTypeClass* defvalue = NULL) const;
 	HousesType Get_HousesType(char const* section, char const* entry, HousesType defvalue) const;
 	LEPTON Get_Lepton(char const* section, char const* entry, LEPTON defvalue) const;
 	MPHType Get_MPHType(char const* section, char const* entry, MPHType defvalue) const;
@@ -77,8 +82,9 @@ public:
 	TriggerTypeClass* Get_TriggerType(char const* section, char const* entry) const;
 	VQType Get_VQType(char const* section, char const* entry, VQType defvalue) const;
 	VocType Get_VocType(char const* section, char const* entry, VocType defvalue) const;
-	WarheadType Get_WarheadType(char const* section, char const* entry, WarheadType defvalue) const;
-	const WeaponTypeClass* Get_WeaponType(char const* section, char const* entry, const WeaponTypeClass * defvalue) const;
+	//WarheadType Get_WarheadType(char const* section, char const* entry, WarheadType defvalue) const;
+	//const WarheadTypeClass * Get_Warhead(char const* section, char const* entry, const WarheadTypeClass * defvalue=NULL) const;
+	//const WeaponTypeClass* Get_Weapon(char const* section, char const* entry, const WeaponTypeClass * defvalue=NULL) const;
 	long Get_Owners(char const* section, char const* entry, long defvalue) const;
 	CrateType Get_CrateType(char const* section, char const* entry, CrateType defvalue) const;
 	MissionType Get_Mission(char const* section, char const* entry, MissionType defvalue) const;

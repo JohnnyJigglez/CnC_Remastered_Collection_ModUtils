@@ -67,6 +67,7 @@
 #else	//WINSOCK_IPX
 #include	"tcpip.h"
 #endif	//WINSOCK_IPX
+#include "ADATA.H"
 
 #endif
 #include	<conio.h>
@@ -296,9 +297,9 @@ bool Init_Game(int , char * [])
 	CCPtr<BuildingTypeClass>::Set_Heap(&BuildingTypes);
 	CCPtr<AircraftTypeClass>::Set_Heap(&AircraftTypes);
 	CCPtr<InfantryTypeClass>::Set_Heap(&InfantryTypes);
-	CCPtr<WarheadTypeClass>::Set_Heap(&Warheads);
+	//CCPtr<WarheadTypeClass>::Set_Heap(&Warheads);
 	//CCPtr<WeaponTypeClass>::Set_Heap(&Weapons);
-	CCPtr<BulletTypeClass>::Set_Heap(&BulletTypes);
+	//CCPtr<BulletTypeClass>::Set_Heap(&BulletTypes);
 	//CCPtr<AnimTypeClass>::Set_Heap(&AnimTypes);
 	CCPtr<UnitTypeClass>::Set_Heap(&UnitTypes);
 	CCPtr<VesselTypeClass>::Set_Heap(&VesselTypes);
@@ -3783,8 +3784,10 @@ void Free_Heaps(void)
 	BuildingTypes.Clear();
 	AircraftTypes.Clear();
 	InfantryTypes.Clear();
-	BulletTypes.Clear();
-	AnimTypes.Clear();
+	BulletTypeClass::Clear_Heap();
+	WarheadTypeClass::Clear_Heap();
+	WeaponTypeClass::Clear_Heap();
+	AnimTypeClass::Clear_Heap();
 	UnitTypes.Clear();
 	VesselTypes.Clear();
 	TemplateTypes.Clear();

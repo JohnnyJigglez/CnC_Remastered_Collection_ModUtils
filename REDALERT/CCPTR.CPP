@@ -41,11 +41,11 @@
 template class CCPtr<AircraftClass>;
 template class CCPtr<AircraftTypeClass>;
 template class CCPtr<AnimClass>;
-template class CCPtr<AnimTypeClass>;
+//template class CCPtr<AnimTypeClass>;
 template class CCPtr<BuildingClass>;
 template class CCPtr<BuildingTypeClass>;
 template class CCPtr<BulletClass>;
-template class CCPtr<BulletTypeClass>;
+//template class CCPtr<BulletTypeClass>;
 template class CCPtr<FactoryClass>;
 template class CCPtr<HouseClass>;
 template class CCPtr<HouseTypeClass>;
@@ -67,7 +67,7 @@ template class CCPtr<UnitClass>;
 template class CCPtr<UnitTypeClass>;
 template class CCPtr<VesselClass>;
 template class CCPtr<VesselTypeClass>;
-template class CCPtr<WarheadTypeClass>;
+//template class CCPtr<WarheadTypeClass>;
 //template class CCPtr<WeaponTypeClass>;
 
 

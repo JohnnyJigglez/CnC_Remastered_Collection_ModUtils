@@ -79,7 +79,7 @@
 
 
 #include	"function.h"
-
+#include    "ADATA.H"
 
 /***********************************************************************************************
  * CCINIClass::Load -- Load the INI database from the file specified.                          *
@@ -588,14 +588,18 @@ bool CCINIClass::Put_VocType(char const * section, char const * entry, VocType v
  * HISTORY:                                                                                    *
  *   07/03/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-AnimType CCINIClass::Get_AnimType(char const * section, char const * entry, AnimType defvalue=ANIM_NONE) const
+/*AnimType CCINIClass::Get_AnimType(char const* section, char const* entry, AnimType defvalue = ANIM_NONE) const
 {
-	char buffer[128];
-	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		return(AnimTypeClass::As_Type(buffer));
-	}
-	return(defvalue);
-}
+	const AnimTypeClass* aclass = Get_Anim(section, entry);
+	if (aclass != NULL)
+		return(static_cast<AnimType>(aclass->ID));
+	return defvalue;
+	//char buffer[128];
+	//if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+	//	return(AnimTypeClass::As_Type(buffer));
+	//}
+	//return(defvalue);
+}*/
 
 /***********************************************************************************************
  * CCINIClass::Get_Mission -- Fetch an MissionType from the INI database.                      *
@@ -656,12 +660,10 @@ MissionType CCINIClass::Get_Mission(char const* section, char const* entry, Miss
  * HISTORY:                                                                                    *
  *   08/04/2022 JJ : Created.                                                                 *
  *=============================================================================================*/
-AnimTypeClass * CCINIClass::Get_Anim(char const * section, char const * entry) const
+/*const AnimTypeClass* CCINIClass::Get_Anim(char const* section, char const* entry) const
 {
-	char buffer[128];
-	Get_String(section, entry, "", buffer, sizeof(buffer));
-	return(AnimTypeClass::As_Pointer(buffer));
-}
+	return(AnimTypeClass::As_Pointer(Get_Value(section, entry)));
+}*/
 
 /***********************************************************************************************
  * CCINIClass::Put_AnimType -- Stores the animation identifier to the INI database.            *
@@ -684,10 +686,12 @@ AnimTypeClass * CCINIClass::Get_Anim(char const * section, char const * entry) c
  *=============================================================================================*/
 bool CCINIClass::Put_AnimType(char const * section, char const * entry, AnimType value)
 {
-	if (value == ANIM_NONE) {
-		return(Put_String(section, entry, "<none>"));
+	if (value != ANIM_NONE) {
+		const AnimTypeClass* ptr = AnimTypeClass::As_Pointer(value);
+		if (ptr)
+			return(Put_String(section, entry, ptr->Name()));
 	}
-	return(Put_String(section, entry, AnimTypeClass::As_Pointer(value)->Name()));
+	return(Put_String(section, entry, "<none>"));
 }
 
 /***********************************************************************************************
@@ -803,17 +807,34 @@ bool CCINIClass::Put_UnitType(char const * section, char const * entry, UnitType
  *   07/03/1996 JLB : Created.                                                                 *
  *   10/02/2021 JJ  : Updated to remove the WeaponType enum of the olden-code                  *
  *=============================================================================================*/
-const WeaponTypeClass* CCINIClass::Get_WeaponType(char const* section, char const* entry, WeaponTypeClass const * defvalue) const
+/*const WeaponTypeClass* CCINIClass::Get_Weapon(char const* section, char const* entry, WeaponTypeClass const* defvalue) const
 {
-	char buffer[32];
-	char message[128];
+	/*char buffer[32];
+	//char message[128];
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		sprintf(message, "CCINIClass.Get_WeaponType parsed %s for %s : %s \n", entry, section, buffer);
-		WWDebugString(message);
-		return(WeaponTypeClass::As_Pointer(buffer));
+		const WeaponTypeClass* weapon = WeaponTypeClass::As_Pointer(buffer);
+		if (defvalue != NULL && defvalue == weapon)
+			return defvalue;
+		if (weapon == NULL && Section_Present(buffer))
+			weapon = new WeaponTypeClass(buffer);
+		return weapon;
 	}
 	return(defvalue);
-}
+	const WeaponTypeClass* wclass = WeaponTypeClass::As_Pointer(Get_Value(section, entry));
+	return(wclass ? wclass : defvalue);
+}*/
+
+/*const WarheadTypeClass* CCINIClass::Get_Warhead(char const* section, char const* entry, const WarheadTypeClass* defvalue) const
+{
+	const WarheadTypeClass* whclass = WarheadTypeClass::As_Pointer(Get_Value(section, entry));
+	return(whclass ? whclass : defvalue);
+}*/
+
+/*const BulletTypeClass* CCINIClass::Get_Bullet(char const* section, char const* entry, const BulletTypeClass* defvalue) const
+{
+	const BulletTypeClass* btclass = BulletTypeClass::As_Pointer(Get_Value(section, entry));
+	return(btclass ? btclass : defvalue);
+}*/
 
 
 /***********************************************************************************************
@@ -863,16 +884,21 @@ bool CCINIClass::Put_WeaponType(char const * section, char const * entry, int in
  *   07/03/1996 JLB : Created.
  *   07/17/2021 JJ  : Updated to use same lookup logics as get_WeaponType
  *=============================================================================================*/
-WarheadType CCINIClass::Get_WarheadType(char const * section, char const * entry, WarheadType defvalue) const
+/*WarheadType CCINIClass::Get_WarheadType(char const* section, char const* entry, WarheadType defvalue) const
 {
-	char buffer[128];
+	/*char buffer[128];
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		WarheadTypeClass * warhead = WarheadTypeClass::As_Pointer(buffer);
+		const WarheadTypeClass * warhead = WarheadTypeClass::As_Pointer(buffer);
 		if (warhead != NULL)
-			return(warhead->Type);
+			return(warhead->Type());
 	}
 	return(defvalue);
-}
+	
+	const WarheadTypeClass* wtclass = Get_Warhead(section, entry);
+	if (wtclass != NULL)
+		return(static_cast<WarheadType>(wtclass->ID));
+	return defvalue;
+}*/
 
 
 /***********************************************************************************************
@@ -975,19 +1001,26 @@ bool CCINIClass::Put_OverlayType(char const * section, char const * entry, Overl
  * WARNINGS:   none                                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   07/03/1996 JLB : Created.
- *   07/18/2021 JJ  : Updated how this function functions to match the logics of warheads
+ *   07/03/1996 JLB : Created.                                                                 *
+ *   07/18/2021 JJ  : Updated how this function functions to match the logics of warheads      *
  *=============================================================================================*/
-BulletType CCINIClass::Get_BulletType(char const * section, char const * entry, BulletType defvalue) const
+/*BulletType CCINIClass::Get_BulletType(char const* section, char const* entry, BulletType defvalue) const
 {
-	char buffer[128];
+	/*char buffer[128];
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		BulletTypeClass* projectile = BulletTypeClass::As_Pointer(buffer);
+		const BulletTypeClass* projectile = BulletTypeClass::As_Pointer(buffer);
 		if (projectile != NULL)
-			return(projectile->Type);
+			return(static_cast<BulletType>(projectile->ID));
 	}
-	return(defvalue);
-}
+	return(defvalue);*/
+
+	/*const BulletTypeClass* btclass = Get_Bullet(section, entry);
+	if (btclass != NULL)
+		return(static_cast<BulletType>(btclass->ID));
+	return defvalue;
+	return defvalue;
+
+}*/
 
 
 /***********************************************************************************************

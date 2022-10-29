@@ -128,6 +128,7 @@ class UnitClass :	public DriveClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		UnitClass(UnitType classid, HousesType house);
 		UnitClass(char const * classname, HousesType house);
 		UnitClass(BuildingTypeClass * classid, HousesType house);
@@ -202,7 +203,7 @@ class UnitClass :	public DriveClass
 		/*
 		**	Combat related.
 		*/
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance,const WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
 		virtual BulletClass * Fire_At(TARGET target, int which=0);
 
 		/*

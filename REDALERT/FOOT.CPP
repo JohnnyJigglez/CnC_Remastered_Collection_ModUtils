@@ -1129,7 +1129,7 @@ bool FootClass::Unlimbo(COORDINATE coord, DirType dir)
  * HISTORY:                                                                                    *
  *   12/30/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-ResultType FootClass::Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source, bool forced)
+ResultType FootClass::Take_Damage(int & damage, int distance, const WarheadTypeClass * warhead, TechnoClass * source, bool forced)
 {
 	assert(IsActive);
 

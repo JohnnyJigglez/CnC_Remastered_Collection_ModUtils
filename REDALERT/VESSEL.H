@@ -78,6 +78,7 @@ class VesselClass : public DriveClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		operator VesselType(void) const {return Class->Type;};
 
 		static void Init(void);
@@ -109,7 +110,7 @@ class VesselClass : public DriveClass
 		virtual void Assign_Destination(TARGET target);
 		virtual int Pip_Count(void) const;
 
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, const WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
 		virtual FireErrorType Can_Fire(TARGET target, int which) const;
 
 		virtual void Enter_Idle_Mode(bool initial=false);

@@ -97,7 +97,9 @@
  *   ObjectClass::Get_Image_Data -- Fetches the image data to use for this object.             *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+#include <string>
 #include "function.h"
+using std::string;
 
 /*
 **	Selected objects have a special marking box around them. This is the shapes that are
@@ -142,7 +144,13 @@ ObjectClass::ObjectClass(RTTIType rtti, int id) :
 	IsSelectedMask(0)		// Mask showing who has selected this object
 {
 }
-
+ObjectTypeClass::~ObjectTypeClass(void)
+{
+	ImageData = NULL;
+	SecondaryImageData = NULL;
+	RadarIcon = NULL;
+	DimensionData = NULL;
+}
 
 /***********************************************************************************************
  * ObjectClass::Get_Image_Data -- Fetches the image data to use for this object.               *
@@ -1708,7 +1716,7 @@ RadioMessageType ObjectClass::Receive_Message(RadioClass *, RadioMessageType mes
  *   12/27/1994 JLB : Trigger event processing for attacked or destroyed.                      *
  *   01/01/1995 JLB : Reduces damage greatly depending on range.                               *
  *=============================================================================================*/
-ResultType ObjectClass::Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source, bool forced)
+ResultType ObjectClass::Take_Damage(int & damage, int distance, const WarheadTypeClass * warhead, TechnoClass * source, bool forced)
 {
 	assert(this != 0);
 	assert(IsActive);
@@ -1725,8 +1733,8 @@ ResultType ObjectClass::Take_Damage(int & damage, int distance, WarheadTypeClass
 		** it's forced damage, in which case we want full damage.
 		*/
 		if (!forced /*&& damage > 0*/) {
-			damage = Modify_Damage(damage, warhead->Type, Class_Of().Armor, distance);
-
+			//damage = Modify_Damage(damage, warhead->Type(), Class_Of().Armor, distance);
+			damage = Modify_Damage(damage, warhead, Class_Of().Armor, distance);
 			/*
 			**	Special hack to ensure that dogs only do damage to intended victim and no
 			**	damage to others.
@@ -2192,17 +2200,17 @@ int ObjectClass::Full_Name(void) const {return Class_Of().Full_Name();};
  *   03/23/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
 ObjectTypeClass::ObjectTypeClass(
-						RTTIType rtti,
-						int id,
-						bool is_sentient,
-						bool is_stealthy,
-						bool is_selectable,
-						bool is_legal_target,
-						bool is_insignificant,
-						bool is_immune,
-						bool is_footprint,
-						int name,
-						char const * ini) :
+	RTTIType rtti,
+	int id,
+	bool is_sentient,
+	bool is_stealthy,
+	bool is_selectable,
+	bool is_legal_target,
+	bool is_insignificant,
+	bool is_immune,
+	bool is_footprint,
+	int name,
+	char const* ini) :
 	AbstractTypeClass(rtti, id, name, ini),
 	IsCrushable(false),
 	IsStealthy(is_stealthy),
@@ -2215,6 +2223,7 @@ ObjectTypeClass::ObjectTypeClass(
 	Armor(ARMOR_NONE),
 	MaxStrength(0),
 	ImageData(0),
+	SecondaryImageData(0),
 	RadarIcon(0),
 	Scale(1.0)
 {
@@ -2524,4 +2533,84 @@ BuildingClass * ObjectTypeClass::Who_Can_Build_Me(bool intheory, bool legal, Hou
 		}
 	}
 	return(anybuilding);
+}
+bool ObjectTypeClass::Read_INI(CCINIClass& ini)
+{
+	if (ini.Section_Present(Name())){
+		//char message[128];
+		//sprintf(message, "ObjectTypeClass.Read_INI parsing %s ...\n", Name());
+		//WWDebugString(message);
+		IsCrushable = ini.Get_Bool(Name(), "Crushable", IsCrushable);
+		IsStealthy = ini.Get_Bool(Name(), "Stealthy", IsStealthy);
+		IsSelectable = ini.Get_Bool(Name(), "Selectable", IsSelectable);
+		IsLegalTarget = ini.Get_Bool(Name(), "LegalTarget", IsLegalTarget);
+		IsInsignificant = ini.Get_Bool(Name(), "Insignificant", IsInsignificant);
+		IsImmune = ini.Get_Bool(Name(), "Immune", IsImmune);
+		IsSentient = ini.Get_Bool(Name(), "Sentient", IsSentient);
+		IsFootprint = ini.Get_Bool(Name(), "Footprint", IsFootprint);
+		Armor = ini.Get_ArmorType(Name(), "Armor", Armor);
+		MaxStrength = ini.Get_Int(Name(), "Strength", MaxStrength);
+		Scale = ini.Get_Float(Name(), "Scale", Scale);
+		char buffer[_MAX_FNAME];
+		if (ini.Get_String(Name(), "Image", "", buffer, sizeof(buffer))) {
+			if (strcmpi(buffer, GraphicName) != 0)
+			{
+				strcpy(GraphicName, buffer);
+				if (ImageData != NULL) //do we have existing image data that needs to be changed?(scenario/mplayer.ini can do this)
+					Parse_Graphics(0);
+			}
+		}
+		if (ini.Get_String(Name(), "SecondaryImage", "", buffer, sizeof(buffer))) {
+			if (strcmpi(buffer, SecondaryGraphicName) != 0)
+			{
+				strcpy(SecondaryGraphicName, buffer);
+				if (SecondaryImageData != NULL) //do we have existing image data that needs to be changed?(scenario/mplayer.ini can do this)
+					Parse_Graphics(1);
+			}
+		}
+		//sprintf(message, "ObjectTypeClass.Read_INI parsed %s .\n", Name());
+		//WWDebugString(message);
+		return(true);
+	}
+	return(false);
+}
+
+void ObjectTypeClass::Parse_Graphics(short which)
+{
+	char message[64];
+	sprintf(message, "ObjectTypeClass.Parse_Graphics for %s and ID %d executing...\n", Name(), ID);
+	WWDebugString(message);
+	char fullname[_MAX_FNAME + _MAX_EXT];
+	switch (which) {
+	case 0:
+		_makepath(fullname, NULL, NULL, Graphic_Name(), ".SHP");
+		ImageData = MFCD::Retrieve(fullname);
+		break;
+	case 1:
+		_makepath(fullname, NULL, NULL, Secondary_Graphic_Name(), ".SHP");
+		SecondaryImageData = MFCD::Retrieve(fullname);
+		break;
+	default:
+		break;
+	}
+	sprintf(message, "ObjectTypeClass.Parse_Graphics executed.\n");
+	WWDebugString(message);
+}
+char const * ObjectTypeClass::to_string(void) const
+{
+	string out = "";
+	out += ("Image=" + string(GraphicName) + '\n');
+	out += ("SecondaryImage=" + string(SecondaryGraphicName) + '\n');
+	out += ("Crushable=" + std::to_string(IsCrushable) + '\n');
+	out += ("Stealthy=" + std::to_string(IsStealthy) + '\n');
+	out += ("Selectable=" + std::to_string(IsSelectable) + '\n');
+	out += ("LegalTarget=" + std::to_string(IsLegalTarget) + '\n');
+	out += ("Insignificant=" + std::to_string(IsInsignificant) + '\n');
+	out += ("Immune=" + std::to_string(IsImmune) + '\n');
+	out += ("Sentient=" + std::to_string(IsSentient) + '\n');
+	out += ("Footprint=" + std::to_string(IsFootprint) + '\n');
+	out += ("Armor=" + string(ArmorName[Armor]) + '\n');
+	out += ("Strength=" + std::to_string(MaxStrength) + '\n');
+	out += ("Scale=" + std::to_string(Scale) + '\n');
+	return out.c_str();
 }

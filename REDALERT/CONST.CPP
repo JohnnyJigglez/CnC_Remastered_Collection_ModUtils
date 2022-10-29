@@ -202,6 +202,41 @@ char const * const ArmorName[ARMOR_COUNT] = {
 	"concrete"
 };
 
+/***************************************************************************
+**	These are the text names for the various RTTI types an object type may possess.
+*/
+char const* const RTTITypeName[RTTI_COUNT] = {
+	"None",
+	"Aircraft",
+	"AircraftType",
+	"Animation",
+	"AnimationType",
+	"Building",
+	"BuildingType",
+	"Projectile",
+	"ProjectileType",
+	"Cell",
+	"Factory",
+	"House",
+	"HouseType",
+	"Infantry",
+	"InfantryType",
+	"Overlay",
+	"OverlayType",
+	"Smudge",
+	"SmudgeType",
+	"Special",
+	"Team",
+	"TeamType",
+	"Terrain",
+	"TerrainType",
+	"Trigger",
+	"TriggerType",
+	"Vehicle",
+	"VehicleType",
+	"Vessel",
+	"VesselType"
+};
 
 // HACK ALERT! This unused text string is here to stop Watcom from crashing. There is some
 // magic text heap length that causes a crash before the code executes. This dummy string

@@ -39,8 +39,10 @@
  *   AnimTypeClass::operator new -- Allocate an animation type object from private pool.       *
  *   AnimTypeClass::operator delete -- Returns an anim type class object back to the pool.     *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
+#include <string>
 #include	"function.h"
+//#include "ADATA.H"
+std::vector<AnimTypeClass*> AnimTypes;
 
 static AnimTypeClass const AtomBomb(
 	ANIM_ATOM_BLAST,						// Animation number.
@@ -2293,44 +2295,44 @@ static AnimTypeClass const Ant3Death(
  *   08/23/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
 AnimTypeClass::AnimTypeClass(
-		AnimType anim,
-		char const * name,
-		int size,
-		int biggest,
-		bool istheater,
-		bool isnormal,
-		bool iswhitetrans,
-		bool isscorcher,
-		bool iscrater,
-		bool issticky,
-		bool ground,
-		bool istrans,
-		bool isflame,
-		fixed damage,
-		int delaytime,
-		int start,
-		int loopstart,
-		int loopend,
-		int stages,
-		int loops,
-		VocType soundid,
-		AnimType chainto,
-		int virtualstages,
-		int virtualscale,
-		char const * virtualname,
-		AnimType virtualanim) :
-	ObjectTypeClass(RTTI_ANIMTYPE,
-			AnimTypes.ID(this),
-			true,
-			true,
-			false,
-			false,
-			true,
-			true,
-			false,
-			TXT_NONE,
-			name
-			),
+	AnimType anim,
+	char const* name,
+	int size,
+	int biggest,
+	bool istheater,
+	bool isnormal,
+	bool iswhitetrans,
+	bool isscorcher,
+	bool iscrater,
+	bool issticky,
+	bool ground,
+	bool istrans,
+	bool isflame,
+	fixed damage,
+	int delaytime,
+	int start,
+	int loopstart,
+	int loopend,
+	int stages,
+	int loops,
+	VocType soundid,
+	AnimType chainto,
+	int virtualstages,
+	int scale,
+	char const* virtualname,
+	AnimType virtualanim) :
+ObjectTypeClass(RTTI_ANIMTYPE,
+		static_cast<int>(anim),
+		true,
+		true,
+		false,
+		false,
+		true,
+		true,
+		false,
+		TXT_NONE,
+		name
+	),
 	IsNormalized(isnormal),
 	IsGroundLayer(ground),
 	IsTranslucent(istrans),
@@ -2340,7 +2342,6 @@ AnimTypeClass::AnimTypeClass(
 	IsCraterForming(iscrater),
 	IsSticky(issticky),
 	IsTheater(istheater),
-	Type(anim),
 	Size(size),
 	Biggest(biggest),
 	Damage(damage),
@@ -2353,12 +2354,19 @@ AnimTypeClass::AnimTypeClass(
 	Sound(soundid),
 	ChainTo(chainto),
 	VirtualStages(virtualstages),
-	VirtualScale(virtualscale),
 	VirtualName(virtualname),
 	VirtualAnim(virtualanim)
 {
+	Scale = (scale / 0x0100) * 1.0f;
 	char message[64];
-	sprintf(message, "Instantiated Animation %s with ID: %d .\n", IniName, ID);
+	if (ID == -1) {
+		ID = (int)(AnimTypes.size());
+		sprintf(message, "Constructed NEW Animation %s with ID: %d .\n", IniName, ID);
+	}
+	else {
+		sprintf(message, "Constructed BUILT-IN Animation %s with ID: %d .\n", IniName, ID);
+	}
+	AnimTypes.push_back(this);
 	WWDebugString(message);
 }
 /***********************************************************************************************
@@ -2376,48 +2384,30 @@ AnimTypeClass::AnimTypeClass(
  * HISTORY:                                                                                    *
  *   09/27/2021 JJ : Created.                                                                 *
  *=============================================================================================*/
-AnimTypeClass::AnimTypeClass(int animtype, char const * name):
-	ObjectTypeClass(RTTI_ANIMTYPE,
-			AnimTypes.ID(this),
-			true,
-			true,
+	AnimTypeClass::AnimTypeClass(char const* name) :
+		AnimTypeClass(ANIM_NONE,
+			name,
+			0,
+			0,
 			false,
 			false,
-			true,
-			true,
 			false,
-			TXT_NONE,
-			name
-			),
-	IsNormalized(false),
-	IsGroundLayer(false),
-	IsTranslucent(false),
-	IsWhiteTrans(false),
-	IsFlameThrower(false),
-	IsScorcher(false),
-	IsCraterForming(false),
-	IsSticky(false),
-	IsTheater(false),
-	Type(static_cast<AnimType>(animtype)),
-	Size(0),
-	Biggest(0),
-	Damage(0),
-	Delay(1),
-	Start(0),
-	LoopStart(0),
-	LoopEnd(0),
-	Stages(0),
-	Loops(0),
-	Sound(VOC_NONE),
-	ChainTo(ANIM_NONE),
-	VirtualStages(0),
-	VirtualScale(1),
-	VirtualName(NULL),
-	VirtualAnim(ANIM_NONE)
+		false,
+		false,
+		false,
+		false,
+		false,
+		false,
+		1.0f,
+		1,
+		0,
+		0,
+		0,
+		-1,
+		0,
+		VOC_NONE,
+		ANIM_NONE)
 {
-	char message[64];
-	sprintf(message, "Instantiated Custom Animation %s .\n", IniName);
-	WWDebugString(message);
 }
 
 /***********************************************************************************************
@@ -2435,11 +2425,17 @@ AnimTypeClass::AnimTypeClass(int animtype, char const * name):
  * HISTORY:                                                                                    *
  *   07/09/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void * AnimTypeClass::operator new(size_t)
+//void* AnimTypeClass::operator new(size_t t)
+//{
+//	return(malloc(t));//yes I know this is a dynamic memory allocation - JJ
+//}
+/*void* AnimTypeClass::operator new(size_t, void* ptr)
 {
-	return(AnimTypes.Alloc());
-}
-
+		char message[64];
+		sprintf(message, "NEW.ptr invoked for AnimType %s .\n", ((AnimTypeClass*)ptr)->IniName);
+		WWDebugString(message);
+		return(ptr);
+}*/
 
 /***********************************************************************************************
  * AnimTypeClass::operator delete -- Returns an anim type class object back to the pool.       *
@@ -2456,12 +2452,40 @@ void * AnimTypeClass::operator new(size_t)
  * HISTORY:                                                                                    *
  *   07/09/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void AnimTypeClass::operator delete(void * pointer)
+/*void AnimTypeClass::operator delete(void* ptr)
 {
-	AnimTypes.Free((AnimTypeClass *)pointer);
+	//char message[128];
+	//sprintf(message, "ATC.Delete %s with ID: %d - vector size: %d.\n", ((AnimTypeClass*)ptr)->Name(), ((AnimTypeClass*)ptr)->ID, (int)(AnimTypes.size()));
+	//WWDebugString(message);
+	//ptr == NULL;/*
+	for (short x = 0; x < (short)AnimTypes.size(); x++) {
+		if ((AnimTypeClass *)ptr == AnimTypes.at(x))
+		{	
+			
+				//AnimTypes.at(x) = NULL;
+			//AnimTypes.at(x) = AnimTypes.back();
+			//AnimTypes.pop_back();
+			if (x >= ANIM_COUNT) {
+				std::free(ptr);
+				//sprintf(message, "ATC.Delete FREE!");
+				//WWDebugString(message);
+			}
+			break;
+		}
+	}
+	//delete ptr;
+	// std::free((AnimTypeClass *)ptr);
+	//sprintf(message, "ATC.Deleted. Vector size: %d\n", (int)(AnimTypes.size()));
+	//WWDebugString(message);
+}*/
+
+AnimTypeClass::~AnimTypeClass(void)
+{
+	//char message[64];
+	//sprintf(message, "AnimTypeClass.Destroy %s with ID: %d.\n", IniName, ID);
+	//WWDebugString(message);
+	VirtualName = NULL;
 }
-
-
 /***********************************************************************************************
  * AnimTypeClass::Init_Heap -- Initialize the animation type system.                           *
  *                                                                                             *
@@ -2591,18 +2615,21 @@ void AnimTypeClass::Init_Heap(void)
  * WARNINGS:   This routine should be called ONLY once.                                        *
  *                                                                                             *
  * HISTORY:                                                                                    *
- *   06/02/1994 JLB : Created.
- *   07/18/2021 JJ  : Updated to use a non-static HEAP size
+ *   06/02/1994 JLB : Created.                                                                 *
+ *   07/18/2021 JJ  : Updated to use a non-static HEAP size                                    *
  *=============================================================================================*/
 void AnimTypeClass::One_Time(void)
 {
-	for (int index = 0; index < AnimTypes.Count(); index++) {
+	char message[64];
+	sprintf(message, "AnimTypeClass.One_Time executing... - vector size: %d\n", (int)(AnimTypes.size()));
+	WWDebugString(message);
+	for (short index = 0; index < (short)(AnimTypes.size()); index++) {
 		char fullname[_MAX_FNAME+_MAX_EXT];
 		
-		AnimTypeClass const& anim = *AnimTypes.Ptr(index);
-
-		if (!anim.IsTheater) {
-			_makepath(fullname, NULL, NULL, anim.Graphic_Name(), ".SHP");
+		//AnimTypeClass const& anim = *AnimTypes.at(index);
+		AnimTypeClass * anim = AnimTypes.at(index);
+		if (!anim->IsTheater) {
+			_makepath(fullname, NULL, NULL, anim->Graphic_Name(), ".SHP");
 
 			#ifndef NDEBUG
 				RawFileClass file(fullname);
@@ -2612,13 +2639,38 @@ void AnimTypeClass::One_Time(void)
 					((void const *&)As_Reference((AnimType)index).ImageData) = MFCD::Retrieve(fullname);
 				}
 			#else
-			((void const*&)anim.ImageData) = MFCD::Retrieve(fullname);
+			anim->ImageData = MFCD::Retrieve(fullname);
+			//((void const*&)anim.ImageData) = MFCD::Retrieve(fullname);
 			#endif
 		}
 	}
+	sprintf(message, "AnimTypeClass.One_Time executed. - vector size: %d\n", (int)(AnimTypes.size()));
+	WWDebugString(message);
 }
 
-
+/*void AnimTypeClass::Parse_Graphics(short which)
+{
+	if (IsTheater)
+		return;
+	char message[64];
+	sprintf(message, "ATC.Parse_Graphics for %s and ID %d executing...\n", Name(), ID);
+	WWDebugString(message);
+	char fullname[_MAX_FNAME + _MAX_EXT];
+	switch(which) {
+		case 0 :
+			_makepath(fullname, NULL, NULL, Graphic_Name(), ".SHP");
+			ImageData = MFCD::Retrieve(fullname);
+			break;
+		case 1:
+			_makepath(fullname, NULL, NULL, Secondary_Graphic_Name(), ".SHP");
+			SecondaryImageData = MFCD::Retrieve(fullname);
+			break;
+		default:
+			break;
+	}
+	sprintf(message, "ATC.Parse_Graphics executed.\n");
+	WWDebugString(message);
+}*/
 /***********************************************************************************************
  * AnimTypeClass::Init -- Load any animation artwork that is theater specific.                 *
  *                                                                                             *
@@ -2638,9 +2690,9 @@ void AnimTypeClass::One_Time(void)
 void AnimTypeClass::Init(TheaterType theater)
 {
 	if (theater != LastTheater) {
-		for (int index = 0; index < AnimTypes.Count(); index++) {
+		for (short index = 0; index < (short)AnimTypes.size(); index++) {
 
-			AnimTypeClass const& anim = *AnimTypes.Ptr(index);
+			AnimTypeClass const& anim = *AnimTypes.at(index);
 			if (anim.IsTheater) {
 				char fullname[_MAX_FNAME+_MAX_EXT];	// Fully constructed iconset name.
 				if (anim.VirtualName != NULL)
@@ -2698,7 +2750,7 @@ void AnimTypeClass::Init(TheaterType theater)
  * HISTORY:                                                                                    *
  *   07/06/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-AnimTypeClass & AnimTypeClass::As_Reference(AnimType type)
+const AnimTypeClass & AnimTypeClass::As_Reference(AnimType type)
 {
 	return(*AnimTypeClass::As_Pointer(type));
 }
@@ -2719,13 +2771,13 @@ AnimTypeClass & AnimTypeClass::As_Reference(AnimType type)
  * HISTORY:                                                                                    *
  *   09/23/2021 JJ : Created.                                                                 *
  *=============================================================================================*/
-AnimTypeClass * AnimTypeClass::As_Pointer(AnimType type)
+const AnimTypeClass * AnimTypeClass::As_Pointer(AnimType type)
 {
 	if (type == ANIM_NONE) { return(NULL); }
-	AnimTypeClass* atc;
-	for (int anim = 0; anim < AnimTypes.Count(); anim++) {
-		atc = AnimTypes.Ptr(anim);
-		if (atc->Type == type) {
+	const AnimTypeClass* atc;
+	for (short anim = 0; anim < (short)AnimTypes.size(); anim++) {
+		atc = AnimTypes.at(anim);
+		if (atc->ID == type) {
 			return(atc);
 		}
 	}
@@ -2748,12 +2800,12 @@ AnimTypeClass * AnimTypeClass::As_Pointer(AnimType type)
  * HISTORY:                                                                                    *
  *   09/23/2021 JJ : Created.                                                                 *
  *=============================================================================================*/
-AnimTypeClass * AnimTypeClass::As_Pointer(const char * name)
+const AnimTypeClass * AnimTypeClass::As_Pointer(const char * name)
 {
 	if (name == NULL || !strlen(name)) return(NULL);
-	AnimTypeClass * atc;
-	for (int index = 0; index < AnimTypes.Count(); index++) {
-		atc = AnimTypes.Ptr(index);
+	const AnimTypeClass * atc;
+	for (short index = 0; index < (short)AnimTypes.size(); index++) {
+		atc = AnimTypes.at(index);
 		if (stricmp(atc->Name(), name) == 0) {
 			return(atc);
 		}
@@ -2781,9 +2833,9 @@ AnimTypeClass * AnimTypeClass::As_Pointer(const char * name)
 AnimType AnimTypeClass::As_Type(char const* name)
 {
 	if (name == NULL) return(ANIM_NONE);
-	AnimTypeClass* atc = AnimTypeClass::As_Pointer(name);
+	const AnimTypeClass * atc = AnimTypeClass::As_Pointer(name);
 	if (atc != NULL)
-		return(atc->Type);
+		return(atc->Type());
 	return(ANIM_NONE);
 }
 
@@ -2834,9 +2886,9 @@ AnimType AnimTypeClass::As_Type(char const* name)
 bool AnimTypeClass::Read_INI(CCINIClass& ini)
 {
 
-	if (ini.Is_Present(Name())) {
+	if (ObjectTypeClass::Read_INI(ini)) {
 		char message[128];
-		sprintf(message, "ATC.Read_INI parsing AnimType %s ...\n", Name());
+		sprintf(message, "AnimTypeClass.Read_INI parsing %s ...\n", Name());
 		WWDebugString(message);
 		IsNormalized = ini.Get_Bool(Name(), "Normalized", IsNormalized);
 		IsGroundLayer = ini.Get_Bool(Name(), "GroundLayer", IsGroundLayer);
@@ -2847,28 +2899,131 @@ bool AnimTypeClass::Read_INI(CCINIClass& ini)
 		IsCraterForming = ini.Get_Bool(Name(), "CraterForming", IsCraterForming);
 		IsSticky = ini.Get_Bool(Name(), "Sticky", IsSticky);
 		IsTheater = ini.Get_Bool(Name(), "Theater", IsTheater);
-		IsTheater = ini.Get_Bool(Name(), "Theater", IsTheater);
-		Size = ini.Get_Int(Name(), "Size", Size);
-		Biggest = ini.Get_Int(Name(), "Biggest", Biggest);
-		Damage = ini.Get_Fixed(Name(), "Damage", Damage);
-		Delay = ini.Get_Int(Name(), "Delay", Delay);
-		Start = ini.Get_Int(Name(), "Start", Start);
-		LoopStart = ini.Get_Int(Name(), "LoopStart", LoopStart);
-		LoopEnd = ini.Get_Int(Name(), "LoopEnd", LoopEnd);
-		Stages = ini.Get_Int(Name(), "Stages", Stages);
-		Loops = ini.Get_Int(Name(), "Loops", Loops);
+		Size = ini.Get_Short(Name(), "Size", Size);
+		Biggest = ini.Get_Short(Name(), "Biggest", Biggest);
+		Damage = ini.Get_Float(Name(), "Damage", Damage);
+		Delay = ini.Get_Short(Name(), "Delay", Delay);
+		Start = ini.Get_Short(Name(), "Start", Start);
+		LoopStart = ini.Get_Short(Name(), "LoopStart", LoopStart);
+		LoopEnd = ini.Get_Short(Name(), "LoopEnd", LoopEnd);
+		Stages = ini.Get_Short(Name(), "Stages", Stages);
+		Loops = ini.Get_Short(Name(), "Loops", Loops);
 		Sound = ini.Get_VocType(Name(), "Sound", Sound);
-		ChainTo = ini.Get_AnimType(Name(), "Chain", ChainTo);
-		VirtualStages = ini.Get_Int(Name(), "VirtualStages", VirtualStages);
-		VirtualScale = ini.Get_Int(Name(), "Scale", VirtualScale);
-		char buffer[32];
-		if (ini.Get_String(Name(), "Name", "", buffer, sizeof(buffer))) {
-			VirtualName = buffer;
+		char buffer[_MAX_FNAME];
+		const AnimTypeClass* ptr = NULL;
+		if (ini.Get_String(Name(), "ChainTo", "", buffer, sizeof(buffer))) {
+			ptr = AnimTypeClass::As_Pointer(buffer);
+			if (ptr)
+				ChainTo = ptr->Type();
 		}
-		VirtualAnim = ini.Get_AnimType(Name(), "Anim", VirtualAnim);
-		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
+		VirtualStages = ini.Get_Short(Name(), "VirtualStages", VirtualStages);
+		//VirtualScale = ini.Get_Float(Name(), "Scale", VirtualScale);
+		if (ini.Get_String(Name(), "VirtualName", "", buffer, sizeof(buffer))) {
+			if (strlen(buffer) > 0) {
+				memcpy(SecondaryGraphicName, buffer, sizeof(buffer));
+				VirtualName = SecondaryGraphicName;
+			}
+		}
+		if (ini.Get_String(Name(), "VirtualAnim", "", buffer, sizeof(buffer))) {
+			ptr = AnimTypeClass::As_Pointer(buffer);
+			if (ptr)
+				VirtualAnim = ptr->Type();
+		}
+		sprintf(message, "AnimTypeClass.Read_INI parsed %s .\n", Name());
+		WWDebugString(message);
 		return(true);
 	}
 	return(false);
+}
+
+void AnimTypeClass::Clear_Heap(void) {
+	for (short index = 0; index < (short)AnimTypes.size(); index++) {
+		if (index >= ANIM_COUNT)
+			std::free(AnimTypes.at(index));
+	}
+	AnimTypes.clear();
+}
+using std::string;
+char const * AnimTypeClass::to_string(void) const
+{
+	string out = "";
+	out += ("Name=" + string(Name()) + '\n');
+	out += ("ID=" + std::to_string(ID) + '\n');
+	out += ("Normalized=" + std::to_string(IsNormalized) + '\n');
+	out += ("GroundLayer=" + std::to_string(IsGroundLayer) + '\n');
+	out += ("Translucent=" + std::to_string(IsTranslucent) + '\n');
+	out += ("WhiteTrans=" + std::to_string(IsWhiteTrans) + '\n');
+	out += ("FlameThrower=" + std::to_string(IsFlameThrower) + '\n');
+	out += ("Scorcher=" + std::to_string(IsScorcher) + '\n');
+	out += ("CraterForming=" + std::to_string(IsCraterForming) + '\n');
+	out += ("Sticky=" + std::to_string(IsSticky) + '\n');
+	out += ("Theater=" + std::to_string(IsTheater) + '\n');
+	out += ("Size=" + std::to_string(Size) + '\n');
+	out += ("Biggest=" + std::to_string(Biggest) + '\n');
+	out += ("Damage=" + std::to_string(Damage) + '\n');
+	out += ("Delay=" + std::to_string(Delay) + '\n');
+	out += ("Start=" + std::to_string(Start) + '\n');
+	out += ("LoopStart=" + std::to_string(LoopStart) + '\n');
+	out += ("LoopEnd=" + std::to_string(LoopEnd) + '\n');
+	out += ("Stages=" + std::to_string(Stages) + '\n');
+	out += ("Loops=" + std::to_string(Loops) + '\n');
+	out += ("Sound=" + string(Voc_Name(Sound)) + '\n');
+	out += ("ChainTo=" + std::to_string(ChainTo) + '\n');
+	//out += ("ChainTo=" + (As_Pointer(ChainTo) ? string(As_Pointer(ChainTo)->Name()) : std::to_string(ChainTo)) + '\n');
+	out += ("VirtualStages=" + std::to_string(VirtualStages) + '\n');
+	//out += ("VirtualName=" + string(SecondaryGraphicName) + '\n');
+	//out += ("VirtualAnim=" + (As_Pointer(VirtualAnim) ? string(As_Pointer(VirtualAnim)->Name()) : std::to_string(VirtualAnim)) + '\n');
+	out += ("VirtualAnim=" + std::to_string(VirtualAnim) + '\n');
+	//WWDebugString(strdup(out.c_str()));
+	out += ObjectTypeClass::to_string();
+	//WWDebugString(strdup(out.c_str()));
+	return out.c_str();
+}
+const AnimTypeClass* AnimTypeClass::findorcreate(CCINIClass& ini, const char* value, const AnimTypeClass* defptr)
+{
+	if (value == NULL || &ini == NULL || strlen(value) < 2)
+		return defptr;
+	if (strcmpi(value, "none") == 0)
+		return NULL;
+	if ((defptr != NULL && stricmp(defptr->Name(), value) != 0) || defptr == NULL)//if we are changing it
+	{
+		const AnimTypeClass* ptr = As_Pointer(value);
+		if (ptr == NULL)//did we find this new weapon that is referenced in the ini?
+		{
+			if (ini.Section_Present(value))//does this new weapon exist in the ini 
+			{
+				AnimTypeClass* newptr = new AnimTypeClass(value);
+				newptr->Read_INI(ini);
+				defptr = As_Pointer(value);
+				//sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+				//WWDebugString(message);
+				newptr = NULL;
+			}
+		}
+		else
+		{
+			defptr = ptr;
+			//sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+			//WWDebugString(message);
+		}
+		ptr = NULL;
+	}
+	return(defptr);
+}
+AnimType AnimTypeClass::findorcreate(CCINIClass& ini, const char* value, AnimType defvalue)
+{
+	if (value == NULL || strlen(value) < 2 || &ini == NULL)//send me something proper
+		return defvalue;
+	if (strcmpi(value, "none") == 0) //this inbound value is set to none, we're clearing this
+		return ANIM_NONE;
+	const AnimTypeClass* ptr = As_Pointer(value);
+	if (ptr != NULL) //if it exists, then send it
+		return static_cast<AnimType>(ptr->ID);
+	if (ini.Section_Present(value)) {
+		AnimTypeClass* newptr = new AnimTypeClass(value);
+		newptr->Read_INI(ini);
+		return static_cast<AnimType>(newptr->ID);
+	}
+	return defvalue;
 }
 

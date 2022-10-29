@@ -124,6 +124,7 @@ class TeamTypeClass : public AbstractTypeClass
 		static void * operator new(size_t );
 		static void * operator new(size_t, void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		/*
 		**	Initialization: clears all team types in preparation for new scenario

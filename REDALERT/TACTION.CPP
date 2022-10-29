@@ -349,7 +349,7 @@ bool TActionClass::operator() (HousesType house, ObjectClass * object, int id, C
 	*/
 	HouseClass * hptr = HouseClass::As_Pointer(house);
 	TriggerClass * trig = NULL;
-	WarheadTypeClass* wh = WarheadTypeClass::As_Pointer(WARHEAD_AP);
+	const WarheadTypeClass* wh = WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_AP]);
 	if (id != -1) {
 		trig = Triggers.Raw_Ptr(id);
 	}

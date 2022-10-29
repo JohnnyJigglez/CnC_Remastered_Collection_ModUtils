@@ -58,6 +58,7 @@ class TemplateClass : public ObjectClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		TemplateClass(TemplateType type, CELL pos=-1);
 		TemplateClass(NoInitClass const & x) : ObjectClass(x), Class(x) {};
 		virtual ~TemplateClass(void) {if (GameActive) TemplateClass::Limbo();Class=0;};

@@ -418,7 +418,7 @@ typedef enum VQType {
 **	uses these and thus there can be no more RTTI types than can fit
 **	in the exponent of a target value.
 */
-typedef enum RTTIType : unsigned char {
+typedef enum RTTIType : unsigned short {
 	RTTI_NONE=0,
 	RTTI_AIRCRAFT,
 	RTTI_AIRCRAFTTYPE,
@@ -1335,7 +1335,6 @@ inline LayerType operator++(LayerType &n) { n = (LayerType)(((int)n) + 1); retur
 */
 typedef enum BulletType : short {
 	BULLET_NONE=-1,
-
 	BULLET_INVISIBLE,
 	BULLET_CANNON,
 	BULLET_ACK,
@@ -1354,9 +1353,7 @@ typedef enum BulletType : short {
 	BULLET_GPS_SATELLITE,
 	BULLET_NUKE_UP,
 	BULLET_NUKE_DOWN,
-
 	BULLET_COUNT,
-	BULLET_MAX=127,
 	BULLET_FIRST=0
 	
 } BulletType;
@@ -2246,7 +2243,7 @@ typedef enum SmudgeType : char {
 **	Animations are enumerated here. Animations are the high speed and
 **	short lived effects that occur with explosions and fire.
 */
-typedef enum AnimType : char {
+typedef enum AnimType : short {
 	ANIM_NONE=-1,
 	ANIM_FBALL1,					// Large fireball explosion (bulges rightward).
 	ANIM_FBALL_FADE,				// Fading fireball puff.
@@ -2344,7 +2341,6 @@ typedef enum AnimType : char {
 
 	ANIM_COUNT,
 	ANIM_FIRST=0,
-	ANIM_MAX=127
 } AnimType;
 
 

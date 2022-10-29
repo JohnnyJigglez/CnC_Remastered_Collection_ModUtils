@@ -2239,9 +2239,9 @@ bool Read_Scenario_INI(char * fname, bool )
 //	Session.Messages.Add_Message(NULL, 0, NULL, PCOLOR_GREEN, TPF_6PT_GRAD|TPF_USE_GRAD_PAL|TPF_FULLSHADOW, 1);
 //	Session.Messages.Add_Message(NULL, 0, NULL, PCOLOR_GREEN, TPF_6PT_GRAD|TPF_USE_GRAD_PAL|TPF_FULLSHADOW, 1);
 //	Session.Messages.Add_Message(NULL, 0, NULL, PCOLOR_GREEN, TPF_6PT_GRAD|TPF_USE_GRAD_PAL|TPF_FULLSHADOW, 1);
-	WeaponTypeClass* flamer = WeaponTypeClass::As_Pointer("Flamer");
+	/*const WeaponTypeClass* flamer = WeaponTypeClass::As_Pointer("Flamer");
 	if (flamer != NULL)
-		flamer->Sound = VOC_NONE;
+		flamer->Sound = VOC_NONE;*/
 	InfantryTypeClass::As_Reference(INFANTRY_THIEF).IsDoubleOwned = false;
 	InfantryTypeClass::As_Reference(INFANTRY_E4).IsDoubleOwned = false;
 	InfantryTypeClass::As_Reference(INFANTRY_SPY).PrimaryWeapon = NULL;
@@ -2609,15 +2609,15 @@ bool Read_Scenario_INI(char * fname, bool )
 		rnf2_team->MissionList[0].Data.Value = 21;
 	}
 
-	if (_stricmp(Scen.ScenarioName, "scu42ea.ini") == 0) {
+	/*if (_stricmp(Scen.ScenarioName, "scu42ea.ini") == 0) {
 		BuildingTypeClass::As_Reference(STRUCT_PILLBOX).IsCaptureable = false;
-	}
+	}*/
 
-	if ((_stricmp(Scen.ScenarioName, "scu35ea.ini") == 0) || (_stricmp(Scen.ScenarioName, "scu47ea.ini") == 0)) {
+	/*if ((_stricmp(Scen.ScenarioName, "scu35ea.ini") == 0) || (_stricmp(Scen.ScenarioName, "scu47ea.ini") == 0)) {
 		WeaponTypeClass* sniper = WeaponTypeClass::As_Pointer("Sniper");
 		if(sniper != NULL)
 			sniper->Burst = 2;
-	}
+	}*/
 
 	/*
 	**	Multi-player last-minute fixups:

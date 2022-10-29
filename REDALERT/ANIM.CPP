@@ -238,7 +238,7 @@ void AnimClass::Draw_It(int x, int y, WindowNumberType window) const
 			/*
 			**	Some animations require special fixups.
 			*/
-			switch (Class->Type) {
+			switch (Class->Type()) {
 				case ANIM_ATOM_BLAST:
 					transtable = Map.UnitShadow;
 					break;
@@ -283,7 +283,7 @@ void AnimClass::Draw_It(int x, int y, WindowNumberType window) const
 			*/
 			if ((window == WINDOW_VIRTUAL) || (Fetch_Stage() < Class->Stages)) {
 				// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
-				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, flags, remap, transtable, DIR_N, Class->VirtualScale, width, height);
+				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, flags, remap, transtable, DIR_N, Class->Scale*256, width, height);
 			}
 		}
 		IsTheaterShape = false;
@@ -366,11 +366,11 @@ short const * AnimClass::Overlap_List(void) const
 		return(_list);
 	}
 
-	if (Class->Type == ANIM_ATOM_BLAST) {
+	if (Class->Type() == ANIM_ATOM_BLAST) {
 		return(OverlapAtom);
 	}
 
-	if (Class->Type == ANIM_FLAG) {
+	if (Class->Type() == ANIM_FLAG) {
 		return(OverlapFlag);
 	}
 
@@ -706,14 +706,14 @@ void AnimClass::AI(void)
 	**	Special case check to make sure that building on top of a smoke marker
 	**	causes the smoke marker to vanish.
 	*/
-	if (Class->Type == ANIM_LZ_SMOKE && Map[Center_Coord()].Cell_Building()) {
+	if (Class->Type() == ANIM_LZ_SMOKE && Map[Center_Coord()].Cell_Building()) {
 		IsToDelete = true;
 	}
 
 	/*
 	**	Don't allow corpses on rocks, rivers, and water (looks really weird).
 	*/
-	if (Class->Type >= ANIM_CORPSE1 && Class->Type <= ANIM_CORPSE3) {
+	if (Class->Type() >= ANIM_CORPSE1 && Class->Type() <= ANIM_CORPSE3) {
 		LandType land = Map[Center_Coord()].Land_Type();
 		if (land == LAND_ROCK || land == LAND_WATER || land == LAND_RIVER) {
 			IsToDelete = true;
@@ -799,7 +799,6 @@ void AnimClass::AI(void)
 			*/
 			if (xObject != TARGET_NONE && Class->Damage > 0 && stage < Class->Stages) {
 				Accum += Class->Damage;
-
 				if (Accum >= 1) {
 
 					/*
@@ -958,7 +957,7 @@ LayerType AnimClass::In_Which_Layer(void) const
 		return AttachLayer;
 	}
 
-	if (Class->Type >= ANIM_CORPSE1 && Class->Type <= ANIM_CORPSE3) {
+	if (Class->Type() >= ANIM_CORPSE1 && Class->Type() <= ANIM_CORPSE3) {
 		return(LAYER_SURFACE);
 	}
 
@@ -1042,7 +1041,7 @@ void AnimClass::Middle(void)
 	CELL cell = Coord_Cell(Center_Coord());
 	CellClass * cellptr = &Map[cell];
 
-	if (Class->Type == ANIM_ATOM_BLAST) {
+	if (Class->Type() == ANIM_ATOM_BLAST) {
 		Do_Atom_Damage(OwnerHouse, cell);
 	}
 
@@ -1078,7 +1077,7 @@ void AnimClass::Middle(void)
 	**	do so now. Usually, these side effects are in the form of other
 	**	animations.
 	*/
-	switch (Class->Type) {
+	switch (Class->Type()) {
 		case ANIM_NAPALM1:
 		case ANIM_NAPALM2:
 		case ANIM_NAPALM3:

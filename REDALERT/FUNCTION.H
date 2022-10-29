@@ -443,6 +443,11 @@ void Assert_Failure (char *expression, int line, char *file);
 
 #endif	//__BORLANDC__
 
+/*char const* TO_STRING(float f) {
+    char buffer[8] = "";
+    sprintf(buffer, "%f", f);
+    return buffer;
+};*/
 
 extern void Free_Interpolated_Palettes(void);
 extern int Load_Interpolated_Palettes(char const *filename, BOOL add=FALSE);
@@ -500,9 +505,10 @@ int harderr_handler(unsigned, unsigned, unsigned __far *);
 **	COMBAT.CPP
 */
 int Modify_Damage(int damage, WarheadType warhead, ArmorType armor, int distance);
-void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, WarheadTypeClass * warhead);
-AnimType Combat_Anim(int damage, WarheadTypeClass * warhead, LandType land);
-void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int damage, TechnoClass * source, WarheadTypeClass * warhead);
+int Modify_Damage(int damage, const WarheadTypeClass * warhead, ArmorType armor, int distance);
+void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source,const WarheadTypeClass * warhead);
+AnimType Combat_Anim(int damage,const WarheadTypeClass * warhead, LandType land);
+void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int damage, TechnoClass * source,const WarheadTypeClass * warhead);
 
 /*
 **	CONQUER.CPP
@@ -559,6 +565,9 @@ void CC_Draw_Shape(const ObjectClass *object, const char *shape_file_name, void 
 
 // Added for pip draw intercept - SKY
 void CC_Draw_Pip(const ObjectClass *object, void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata = 0, void const * ghostdata = 0, DirType rotation = DIR_N);
+
+// Added for line draw intercept (ex. Obelisk laser) - SKY
+void CC_Draw_Line(int x, int y, int x1, int y1, unsigned char color, int frame, WindowNumberType window);
 
 void Go_Editor(bool flag);
 //long MixFileHandler(VQAHandle * vqa, long action, void * buffer, long nbytes);
@@ -1072,8 +1081,8 @@ extern CCPtr<HouseTypeClass>		y16;
 extern CCPtr<BuildingTypeClass>	y17;
 extern CCPtr<AircraftTypeClass>	y18;
 extern CCPtr<InfantryTypeClass>	y19;
-extern CCPtr<BulletTypeClass>		y20;
-extern CCPtr<AnimTypeClass>		y21;
+//extern CCPtr<BulletTypeClass>		y20;
+//extern CCPtr<AnimTypeClass>		y21;
 extern CCPtr<UnitTypeClass>		y22;
 extern CCPtr<VesselTypeClass>		y23;
 extern CCPtr<TemplateTypeClass>	y24;

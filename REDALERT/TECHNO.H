@@ -250,6 +250,16 @@ class TechnoClass :	public RadioClass,
 		int ElectricZapWhich;
 
 		/*
+		**	Used by the Obelisk laser to cache its laser weapon rendering data.
+		**  Line data is cleared after the specified delay.
+		**  Each line consists of: x, y, x1, y1, color, frame (max frame used to determine duration)
+		*/
+		/*int Lines[3][5];
+		int LineCount;
+		int LineFrame;
+		int LineMaxFrames;*/
+
+		/*
 		**	This is the amount of money spent to produce this object. This value really
 		**	only comes into play for the case of buildings that have special "free"
 		**	objects available when purchased at the more expensive rate.
@@ -353,7 +363,7 @@ class TechnoClass :	public RadioClass,
 		virtual BulletClass * Fire_At(TARGET target, int which=0);
 		virtual int Weapon_Range(int which) const;
 		virtual bool Captured(HouseClass * newowner);
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, const WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
 		bool Evaluate_Cell(ThreatType method, int mask, CELL cell, int range, TechnoClass const ** object, int & value, int zone=0) const;
 		bool Evaluate_Object(ThreatType method, int mask, int range, TechnoClass const * object, int & value, int zone=-1) const;
 		int Evaluate_Just_Cell(CELL cell) const;

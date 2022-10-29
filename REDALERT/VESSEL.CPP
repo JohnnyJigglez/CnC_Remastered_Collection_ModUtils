@@ -947,7 +947,7 @@ void VesselClass::Active_Click_With(ActionType action, CELL cell)
  * HISTORY:                                                                                    *
  *   05/13/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-ResultType VesselClass::Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source, bool forced)
+ResultType VesselClass::Take_Damage(int & damage, int distance, const WarheadTypeClass * warhead, TechnoClass * source, bool forced)
 {
 	assert(Vessels.ID(this) == ID);
 	assert(IsActive);

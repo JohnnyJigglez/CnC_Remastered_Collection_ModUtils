@@ -51,6 +51,8 @@
 
 #include	"function.h"
 #include	"vortex.h"
+//#include    "PROJECTILE.h"
+//#include    "ADATA.H"
 
 
 /***********************************************************************************************
@@ -174,106 +176,110 @@ RulesClass::RulesClass(void) :
 	SurvivorFraction(fixed::_1_2),
 	ReloadRate(".05"),
 	AutocreateTime(5),
-	BuildupTime(".05"),
-	OreDumpRate(2),
-	AtomDamage(1000),
-	IsComputerParanoid(true),
-	IsCurleyShuffle(false),
-	IsFlashLowPower(true),
-	IsCompEasyBonus(true),
-	IsFineDifficulty(false),
-	IsExplosiveHarvester(false),
-	IsMCVDeploy(false),
-	IsAllyReveal(true),
-	IsSeparate(false),
-	IsTreeTarget(false),
-	IsMineAware(true),
-	IsTGrowth(true),
-	IsTSpread(true),
-	IsNamed(false),
-	IsAutoCrush(false),
-	IsSmartDefense(false),
-	IsScatter(false),
-	IsChronoKill(true),
-	ProneDamageBias(fixed::_1_2),
-	QuakeDamagePercent(".33"),
-	QuakeChance(".2"),
-	GrowthRate(2),
-	ShroudRate(4),
-	CrateTime(10),
-	TimerWarning(2),
-	ChronoTechLevel(1),
-	SonarTime(14),
-	ChronoTime(3),
-	ParaBombTime(14),
-	ParaInfantryTime(2),
-	ParaSaboteurTime(14),
-	SpyTime(2),
-	IronCurtainTime(14),
-	GPSTime(1),
-	NukeTime(14),
-	SpeakDelay(2),
-	DamageDelay(1),
-	Gravity(3),
-	GapShroudRadius(10),
-	GapRegenInterval(".1"),
-	RadarJamRadius(10*CELL_LEPTON_W),
-	Incoming(MPH_IMMOBILE),
-	MinDamage(1),
-	MaxDamage(1000),
-	RepairStep(5),
-	RepairPercent(fixed::_1_4),
-	URepairStep(5),
-	URepairPercent(fixed::_1_4),
-	RepairRate(".016"),
-	ConditionGreen(1),
-	ConditionYellow(fixed::_1_2),
-	ConditionRed(fixed::_1_4),
-	RandomAnimateTime(".083"),
-	BailCount(28),
-	GoldValue(35),
-	GemValue(110),
-	AircraftMax(100),
-	AnimMax(100),
-	AnimTypeMax(200),
-	BuildingMax(500),
-	BuildingTypeMax(100),
-	BulletMax(40),
-	FactoryMax(20),
-	InfantryMax(500),
-	OverlayMax(1),
-	SmudgeMax(1),
-	TeamMax(60),
-	TeamTypeMax(60),
-	TemplateMax(1),
-	TerrainMax(500),
-	TriggerMax(60),
-	UnitMax(500),
-	UnitTypeMax(100),
-	VesselMax(100),
-	ProjectileMax(100),
-	WeaponMax(100),
-	WarheadMax(100),
-	TrigTypeMax(80),
-	CloseEnoughDistance(0x0280),
-	StrayDistance(0x0200),
-	CrushDistance(0x0180),
-	CrateRadius(0x0280),
-	HomingScatter(0x0200),
-	BallisticScatter(0x0100),
-	RefundPercent(fixed::_1_2),
-	IronCurtainDuration(fixed::_1_2),
-	BridgeStrength(1000),
-	BuildSpeedBias(1),
-	FactoryLimit(2),
-	C4Delay(".03"),
-	RepairThreshhold(1000),
-	PathDelay(".016"),
-	MovieTime(fixed::_1_4),
-	TiberiumShortScan(0x0600),
-	TiberiumLongScan(0x2000),
-	HealthBarDisplayMode(HB_SELECTED),
-	ResourceBarDisplayMode(RB_SELECTED)
+BuildupTime(".05"),
+OreDumpRate(2),
+AtomDamage(1000),
+IsComputerParanoid(true),
+IsCurleyShuffle(false),
+IsFlashLowPower(true),
+IsCompEasyBonus(true),
+IsFineDifficulty(false),
+IsExplosiveHarvester(false),
+IsMCVDeploy(false),
+IsAllyReveal(true),
+IsSeparate(false),
+IsTreeTarget(false),
+IsMineAware(true),
+IsTGrowth(true),
+IsTSpread(true),
+IsNamed(false),
+IsAutoCrush(false),
+IsSmartDefense(false),
+IsScatter(false),
+IsChronoKill(true),
+ProneDamageBias(fixed::_1_2),
+QuakeDamagePercent(".33"),
+QuakeChance(".2"),
+GrowthRate(2),
+ShroudRate(4),
+CrateTime(10),
+TimerWarning(2),
+ChronoTechLevel(1),
+SonarTime(14),
+ChronoTime(3),
+ParaBombTime(14),
+ParaInfantryTime(2),
+ParaSaboteurTime(14),
+SpyTime(2),
+IronCurtainTime(14),
+GPSTime(1),
+NukeTime(14),
+SpeakDelay(2),
+DamageDelay(1),
+Gravity(3),
+GapShroudRadius(10),
+GapRegenInterval(".1"),
+RadarJamRadius(10 * CELL_LEPTON_W),
+Incoming(MPH_IMMOBILE),
+MinDamage(1),
+MaxDamage(1000),
+RepairStep(5),
+RepairPercent(fixed::_1_4),
+URepairStep(5),
+URepairPercent(fixed::_1_4),
+RepairRate(".016"),
+ConditionGreen(1),
+ConditionYellow(fixed::_1_2),
+ConditionRed(fixed::_1_4),
+RandomAnimateTime(".083"),
+BailCount(28),
+GoldValue(35),
+GemValue(110),
+AircraftMax(100),
+AnimMax(100),
+AnimTypeMax(200),
+BuildingMax(500),
+BuildingTypeMax(100),
+BulletMax(40),
+FactoryMax(20),
+InfantryMax(500),
+OverlayMax(1),
+SmudgeMax(1),
+TeamMax(60),
+TeamTypeMax(60),
+TemplateMax(1),
+TerrainMax(500),
+TriggerMax(60),
+UnitMax(500),
+UnitTypeMax(100),
+VesselMax(100),
+ProjectileMax(100),
+WeaponMax(100),
+WarheadMax(100),
+TrigTypeMax(80),
+CloseEnoughDistance(0x0280),
+StrayDistance(0x0200),
+CrushDistance(0x0180),
+CrateRadius(0x0280),
+HomingScatter(0x0200),
+BallisticScatter(0x0100),
+RefundPercent(fixed::_1_2),
+IronCurtainDuration(fixed::_1_2),
+BridgeStrength(1000),
+BuildSpeedBias(1),
+FactoryLimit(2),
+C4Delay(".03"),
+RepairThreshhold(1000),
+PathDelay(".016"),
+MovieTime(fixed::_1_4),
+TiberiumShortScan(0x0600),
+TiberiumLongScan(0x2000),
+HealthBarDisplayMode(HB_SELECTED),
+ResourceBarDisplayMode(RB_SELECTED),
+DynamicExplosionSetThreshold(false),
+ExplosionSet4Threshold(90),
+ExplosionSet5Threshold(130),
+ExplosionSet3Threshold(150)
 {
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 	NewUnitsEnabled = SecretUnitsEnabled = 0;
@@ -509,7 +515,10 @@ bool RulesClass::General(CCINIClass & ini)
 		VortexSpeed = MPHType(_Scale_To_256(ini.Get_Int(GENERAL, "VortexSpeed", VortexSpeed)));
 		VortexDamage = ini.Get_Int(GENERAL, "VortexDamage", VortexDamage);
 		VortexChance = ini.Get_Fixed(GENERAL, "VortexChance", VortexChance);
-
+		DynamicExplosionSetThreshold = ini.Get_Bool(GENERAL, "DynamicExplosionSetThreshold", DynamicExplosionSetThreshold);
+		ExplosionSet3Threshold = ini.Get_Int(GENERAL, "ExplosionSet4Threshold", ExplosionSet3Threshold);
+		ExplosionSet4Threshold = ini.Get_Int(GENERAL, "ExplosionSet5Threshold", ExplosionSet4Threshold);
+		ExplosionSet5Threshold = ini.Get_Int(GENERAL, "ExplosionSet3Threshold", ExplosionSet5Threshold);
 		ChronalVortex.Set_Range(VortexRange / CELL_LEPTON_W);
 		ChronalVortex.Set_Speed(VortexSpeed);
 		ChronalVortex.Set_Damage(VortexDamage);
@@ -646,24 +655,25 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 	**	Any heaps that use the maximums that were just loaded, must
 	**	be initialized as necessary.
 	*/
-	if (AnimTypes.Count() == 0) {
-		if(AnimTypes.Set_Heap(AnimTypeMax)){
+	if ((short)(AnimTypes.size()) == 0) {
+		AnimTypeClass::Init_Heap();
+		/*if (AnimTypes.Set_Heap(AnimTypeMax)) {
 			AnimTypeClass::Init_Heap();
 			CCPtr<AnimTypeClass>::Set_Heap(&AnimTypes);
-		}
+		}*/
 	}
 	
-	if (Warheads.Count() == 0) {
-		Warheads.Set_Heap(WarheadMax);
+	if (Warheads.size() == 0) {
+		//Warheads.Set_Heap(WarheadMax);
 		WarheadTypeClass::Init_Heap();
 	}
-	if (BulletTypes.Count() == 0) {
-		BulletTypes.Set_Heap(ProjectileMax);
+	if (BulletTypes.size() == 0) {
+		//BulletTypes.Set_Heap(ProjectileMax);
 		BulletTypeClass::Init_Heap();
 	}
 	if (Weapons.size() == 0) {
 		//Weapons.Set_Heap(WeaponMax);
-		WeaponTypeClass::Init_Heap();
+		//WeaponTypeClass::Init_Heap();
 	}
 	if (BuildingTypes.Count() == 0) {
 		BuildingTypes.Set_Heap(BuildingTypeMax);
@@ -987,73 +997,74 @@ bool RulesClass::Objects(CCINIClass & ini)
 	**	Fetch the game object values from the rules file.
 	*/
 	char message[128];
-	static char const* const AT = "NewAnimations";
+	/*static char const* const AT = "NewAnimations";
 	if (ini.Is_Present(AT)) {
 		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", AT, ini.Entry_Count(AT));
 		WWDebugString(message);
-		sprintf(message, "Animations Heap at %d of %d\n", AnimTypes.Count(),AnimTypes.Length());
-		WWDebugString(message);
-		AnimTypeClass* atc = NULL;
+		//sprintf(message, "Animations Heap at %d of %d\n", AnimTypes.size(),AnimTypes.Length());
+		//WWDebugString(message);
+		const AnimTypeClass* atc = NULL;
 		for (int x = 0; x < ini.Entry_Count(AT); x++) {
-			atc = AnimTypeClass::As_Pointer(ini.Get_Value(AT, x));
-			if (!atc)
-				new AnimTypeClass(atoi(ini.Get_Entry(AT, x)), ini.Get_Value(AT, x));
+		//	atc = AnimTypeClass::As_Pointer(ini.Get_Value(AT, x));
+			//if (!atc)
+			new AnimTypeClass(ini.Get_Value(AT, x));
 		}
-	}
-	for (int index = 0; index < AnimTypes.Count(); index++) {
-		AnimTypes.Ptr(index)->Read_INI(ini);
-		sprintf(message, "Animations Heap has %s with ID %d\n", AnimTypes.Ptr(index)->Name(), AnimTypes.Ptr(index)->ID);
-		WWDebugString(message);
+	}*/
+	for (short index = 0; index < (short)(AnimTypes.size()); index++) {
+		AnimTypes.at(index)->Read_INI(ini);
+		//sprintf(message, "Animations Heap has %s with ID %d\n", AnimTypes.at(index)->Name(), AnimTypes.at(index)->ID);
+		//WWDebugString(message);
 	}
 
-	static char const* const WH = "NewWarheads";
+	/*static char const* const WH = "NewWarheads";
 	if (ini.Is_Present(WH)) {
 		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", WH, ini.Entry_Count(WH));
 		WWDebugString(message);
-		sprintf(message, "Warheads Heap at %d of %d\n", Warheads.Count(), Warheads.Length());
-		WWDebugString(message);
+		//sprintf(message, "Warheads Vector at %d of %d\n", Warheads.Count(), Warheads.Length());
+		//WWDebugString(message);
 		for (int x = 0; x < ini.Entry_Count(WH); x++) {
 			if (WarheadTypeClass::As_Pointer(ini.Get_Value(WH, x)) == NULL)
-				new WarheadTypeClass(atoi(ini.Get_Entry(WH, x)), ini.Get_Value(WH, x));
+				new WarheadTypeClass(ini.Get_Value(WH, x));
 		}
-	}
-	for (int whindex = 0; whindex < Warheads.Count(); whindex++) {
-		Warheads.Ptr(whindex)->Read_INI(ini);
-		sprintf(message, "Warheads Heap has %s with ID %d\n", Warheads.Ptr(whindex)->Name(), Warheads.Ptr(whindex)->ID);
-		WWDebugString(message);
+	}*/
+	for (int whindex = 0; whindex < (int)Warheads.size(); whindex++) {
+		Warheads.at(whindex)->Read_INI(ini);
+		//sprintf(message, "Warheads Vector has %s with ID %d\n", Warheads.at(whindex)->Name(), Warheads.at(whindex)->ID);
+		//WWDebugString(message);
 	}
 
-	static char const* const BT = "NewProjectiles";
+	/*static char const* const BT = "NewProjectiles";
 	if (ini.Is_Present(BT)) {
 		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", BT, ini.Entry_Count(BT));
 		WWDebugString(message);
-		sprintf(message, "Projectiles Heap at %d of %d\n", BulletTypes.Count(), BulletTypes.Length());
-		WWDebugString(message);
+		//sprintf(message, "Projectiles Heap at %d of %d\n", BulletTypes.size(), BulletTypes.Length());
+		//WWDebugString(message);
 		for (int x = 0; x < ini.Entry_Count(BT); x++) {
 			if (BulletTypeClass::As_Pointer(ini.Get_Value(BT, x)) == NULL) {
-				new BulletTypeClass(atoi(ini.Get_Entry(BT, x)), ini.Get_Value(BT, x));
+				new BulletTypeClass(ini.Get_Value(BT, x));
 			}
 		}
-	}
-	for (int proj = 0; proj < BulletTypes.Count(); proj++) {
-		BulletTypes.Ptr(proj)->Read_INI(ini);
-		sprintf(message, "Projectiles Heap has %s with ID %d\n", BulletTypes.Ptr(proj)->Name(), BulletTypes.Ptr(proj)->ID);
-		WWDebugString(message);
+	}*/
+	for (int proj = 0; proj < (int)(BulletTypes.size()); proj++) {
+		BulletTypes.at(proj)->Read_INI(ini);
+		//sprintf(message, "Projectiles Vector has %s with ID %d\n", BulletTypes.at(proj)->Name(), BulletTypes.at(proj)->ID);
+		//WWDebugString(message);
 	}
 
-	static char const* const WT = "NewWeapons";
-	if (ini.Is_Present(WT)) {
+	//static char const* const WT = "NewWeapons";
+	/*if (ini.Is_Present(WT)) {
 		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", WT, ini.Entry_Count(WT));
 		WWDebugString(message);
 		for (int x = 0; x < ini.Entry_Count(WT); x++) {
 			if(WeaponTypeClass::As_Pointer(ini.Get_Entry(WT, x)) == NULL)
 				new WeaponTypeClass(ini.Get_Entry(WT, x));
 		}
-	}
-	for (int windex = 0; windex < (int)Weapons.size(); windex++) {
-		Weapons.at(windex)->Read_INI(ini);
-		sprintf(message, "Weapons Vector has %s with ID %d\n", Weapons.at(windex)->Name(), Weapons.at(windex)->ID);
-		WWDebugString(message);
+	}*/
+	for (int windex = 0; windex < (int)Weapons.size(); windex++)//detect any changes in this ini file to our weapons
+	{
+		Weapons.at(windex)->Read_INI(ini); 
+		//sprintf(message, "Weapons Vector has %s with ID %d\n", Weapons.at(windex)->Name(), Weapons.at(windex)->ID);
+		//WWDebugString(message);
 	}
 
 	static char const* const UT = "NewVehicles";

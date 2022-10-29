@@ -42,6 +42,8 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include	"function.h"
+//#include "WEAPON.H"
+//#include    "PROJECTILE.h"
 
 /***************************************************************************
 **	These are the various weapons and their characteristics.
@@ -49,7 +51,7 @@
 //TFixedIHeapClass<WeaponTypeClass> Weapons;
 std::vector<WeaponTypeClass *> Weapons;
 
-void * WeaponTypeClass::operator new(size_t, void* ptr)
+/*void* WeaponTypeClass::operator new(size_t, void* ptr)
 { 
 	char message[64];
 	sprintf(message, "NEW.ptr invoked for Weapon %s .\n", ((WeaponTypeClass*)ptr)->IniName);
@@ -57,8 +59,8 @@ void * WeaponTypeClass::operator new(size_t, void* ptr)
 	//((WeaponTypeClass*)ptr)->ID = Weapons.size();
 	//Weapons.push_back((WeaponTypeClass*)ptr);
 	return(ptr);
-}
-void* WeaponTypeClass::operator new(size_t t)
+}*/
+/*void* WeaponTypeClass::operator new(size_t t)
 {
 	
 	//WeaponTypeClass * ptr = (WeaponTypeClass * )malloc(t);
@@ -68,7 +70,7 @@ void* WeaponTypeClass::operator new(size_t t)
 	//sprintf(message, "NEW.void invoked for Weapon with ID %d .\n", ptr->ID);
 	//WWDebugString(message);
 	return(malloc(t));
-}
+}*/
 
 
 /***********************************************************************************************
@@ -105,10 +107,10 @@ WeaponTypeClass::WeaponTypeClass(char const * name) :
 	Sound(VOC_NONE),
 	Anim(ANIM_NONE)
 {
-	ID = Weapons.size();
+	ID = (short)(Weapons.size());
 	Weapons.push_back(this);
 	char message[64];
-	sprintf(message, "Instantiated Weapon %s with ID: %d.\n", IniName,ID);
+	sprintf(message, "Constructed Weapon %s with ID: %d.\n", IniName,ID);
 	WWDebugString(message);
 }
 
@@ -185,12 +187,12 @@ void WeaponTypeClass::Init_Heap(void) {
  *=============================================================================================*/
 WeaponTypeClass::~WeaponTypeClass(void)
 {
-	char message[64];
-	sprintf(message, "Destroyed Weapon %s with ID: %d.\n", IniName, ID);
-	WWDebugString(message);
+	//char message[64];
+	//sprintf(message, "Destroyed Weapon %s with ID: %d.\n", IniName, ID);
+	//WWDebugString(message);
 	IniName = NULL;
-	Bullet = 0;
-	WarheadPtr = 0;
+	WarheadPtr = NULL;
+	Bullet = NULL;
 }
 
 
@@ -231,13 +233,13 @@ WeaponTypeClass::~WeaponTypeClass(void)
  * HISTORY:                                                                                    *
  *   07/17/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void WeaponTypeClass::operator delete(void * pointer)
+/*void WeaponTypeClass::operator delete(void* pointer)
 {
 	//Weapons.Free((WeaponTypeClass *)pointer);
 	Weapons.at(((WeaponTypeClass*)pointer)->ID) = NULL;
 	Weapons.at(((WeaponTypeClass*)pointer)->ID) = Weapons.back();
 	Weapons.pop_back();
-}
+}*/
 
 
 /***********************************************************************************************
@@ -256,7 +258,7 @@ void WeaponTypeClass::operator delete(void * pointer)
  * HISTORY:                                                                                    *
  *   07/17/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WeaponTypeClass * WeaponTypeClass::As_Pointer(int index)
+const WeaponTypeClass * WeaponTypeClass::As_Pointer(int index)
 {
 	//return(Weapons.Ptr(index));
 	return(Weapons.at(index));
@@ -285,7 +287,7 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ini.Section_Present(Name())) {
 		char message[128];
-		sprintf(message, "WTC.Read_INI parsing WeaponType %s ...\n", Name());
+		sprintf(message, "WeaponTypeClass.Read_INI parsing Weapon %s ...\n", Name());
 		WWDebugString(message);
 		IsSupressed = ini.Get_Bool(Name(), "Supress", IsSupressed);
 		Burst = ini.Get_Int(Name(), "Burst", Burst);
@@ -299,32 +301,54 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		ROF = ini.Get_Int(Name(), "ROF", ROF);
 		Range = ini.Get_Lepton(Name(), "Range", Range);
 		Sound = ini.Get_VocType(Name(), "Report", Sound);
-		Anim = ini.Get_AnimType(Name(), "Anim", Anim);
+		Anim = AnimTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Anim"), Anim);
 		IsCamera = ini.Get_Bool(Name(), "Camera", IsCamera);
 		IsElectric = ini.Get_Bool(Name(), "Charges", IsElectric);
 		IsTurboBoosted = ini.Get_Bool(Name(), "TurboBoost", IsTurboBoosted);
-		char buffer[16] = "";
-		if (ini.Get_String(Name(), "Warhead", buffer, buffer, sizeof(buffer))) {
-			WarheadTypeClass* twhptr = WarheadTypeClass::As_Pointer(buffer);
-			if (twhptr != NULL) {
-				WarheadPtr = twhptr;
+		//char buffer[64];
+		WarheadPtr = WarheadTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Warhead"), WarheadPtr);
+		Bullet = BulletTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Projectile"), Bullet);
+		/*const char* warheadname = ini.Get_Value(Name(), "Warhead");
+
+		if(warheadname != NULL)
+		{
+			if ((WarheadPtr != NULL && stricmp(WarheadPtr->Name(), warheadname) != 0) || WarheadPtr == NULL)//if we are changing it
+			{
+				const WarheadTypeClass* warhead = WarheadTypeClass::As_Pointer(warheadname);
+				if (warhead == NULL)//did we find this new warhead that is referenced in the ini?
+				{
+					if (ini.Section_Present(warheadname))//does this new warhead exist in the ini?
+					{
+						WarheadTypeClass* bob = new WarheadTypeClass(warheadname);
+						bob->Read_INI(ini);
+						WarheadPtr = WarheadTypeClass::As_Pointer(warheadname);
+						sprintf(message, "WeaponTypeClass.Read_INI %s obtained warhead %s\n", Name(), WarheadPtr->Name());
+						WWDebugString(message);
+						bob = NULL;
+					}
+				}
+				else {
+					WarheadPtr = warhead;
+					sprintf(message, "WeaponTypeClass.ReadINI %s obtained warhead %s\n", Name(), WarheadPtr->Name());
+					WWDebugString(message);
+				}
+				warhead = NULL;
 			}
 		}
-		if (WarheadPtr) {
-			sprintf(message, "ReadINI WeaponType %s has warhead %s.\n", Name(), WarheadPtr->IniName);
-			WWDebugString(message);
-		}
+		warheadname = NULL;
 		char pbuffer[16] = "";
 		if (ini.Get_String(Name(), "Projectile", pbuffer, pbuffer, sizeof(pbuffer))) {
-			BulletTypeClass* tprojptr = BulletTypeClass::As_Pointer(pbuffer);
+			const BulletTypeClass* tprojptr = BulletTypeClass::As_Pointer(pbuffer);
 			if (tprojptr != NULL) {
 				Bullet = tprojptr;
 			}
 		}
 		if (Bullet) {
-			sprintf(message, "ReadINI WeaponType %s has projectile %s.\n", Name(), Bullet->IniName);
-			WWDebugString(message);
-		}
+			sprintf(message, "WeaponTypeClass.Read_INI %s has projectile %s.\n", Name(), Bullet->IniName);
+		    WWDebugString(message);
+		}*/
+		sprintf(message, "WeaponTypeClass.Read_INI parsed Weapon %s .\n", Name());
+		WWDebugString(message);
 		return(true);
 	}
 	return(false);
@@ -347,14 +371,15 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
  * HISTORY:                                                                                    *
  *   07/17/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WeaponTypeClass * WeaponTypeClass::As_Pointer(char const * name)
+const WeaponTypeClass * WeaponTypeClass::As_Pointer(char const * name)
 {
-	if (name == NULL) return(NULL);
-	static WeaponTypeClass* weapon = NULL;
+	if (name == NULL || strlen(name) < 2)
+		return(NULL);
+	WeaponTypeClass* weapon = NULL;
 
 	//for (int index = 0; index < Weapons.Count(); index++) {
 		//weapon = Weapons.Ptr(index);
-	for (int index = 0; index < (int)Weapons.size(); index++) {
+	for (int index = 0; index < (int)(Weapons.size()); index++) {
 		weapon = Weapons.at(index);
 		if (stricmp(weapon->Name(), name) == 0) {
 			return(weapon);
@@ -380,16 +405,16 @@ WeaponTypeClass * WeaponTypeClass::As_Pointer(char const * name)
  * HISTORY:                                                                                    *
  *   10/02/2021 JJ : Created.                                                                  *
  *=============================================================================================*/
-int WeaponTypeClass::As_Int(char const* name)
+/*int WeaponTypeClass::As_Int(char const* name)
 {
 	if (!name)
 		return(-1);
-	WeaponTypeClass* wtc = As_Pointer(name);
+	const WeaponTypeClass* wtc = As_Pointer(name);
 	if (wtc != NULL)
 		return(wtc->ID);
 	return(-1);
 
-}
+}*/
 
 
 /***********************************************************************************************
@@ -455,4 +480,57 @@ bool WeaponTypeClass::Is_Wall_Destroyer(void) const
 	if (WarheadPtr && WarheadPtr->IsWallDestroyer)
 		return(true);
 	return(false);
+}
+
+int WeaponTypeClass::MaxDamage(int explosionset) {
+	int max = 0;
+	WeaponTypeClass * weapon = NULL;
+	for (short index = 0; index < (short)Weapons.size(); index++) {
+		weapon = Weapons.at(index);
+		if (weapon && weapon->WarheadPtr && weapon->WarheadPtr->ExplosionSet == explosionset)
+			max = Max(max,weapon->Attack);
+	}
+	char message[128];
+	sprintf(message, "WeaponTC.MaxDamage ExplosionSet %d has maximum damage %d.\n", explosionset, max);
+	WWDebugString(message);
+	return max;
+}
+
+const WeaponTypeClass* WeaponTypeClass::findorcreate(CCINIClass & ini, const char* value, const WeaponTypeClass* defptr)
+{
+	if (value == NULL || &ini == NULL)
+		return defptr;
+	if (strcmpi(value, "none") == 0)
+		return NULL;
+	if ((defptr != NULL && stricmp(defptr->Name(), value) != 0) || defptr == NULL)//if we are changing it
+	{
+		const WeaponTypeClass* ptr = As_Pointer(value);
+		if (ptr == NULL)//did we find this new weapon that is referenced in the ini?
+		{
+			if (ini.Section_Present(value))//does this new weapon exist in the ini 
+			{
+				WeaponTypeClass* newptr = new WeaponTypeClass(value);
+				newptr->Read_INI(ini);
+				defptr = As_Pointer(value);
+				//sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+				//WWDebugString(message);
+				newptr = NULL;
+			}
+		}
+		else
+		{
+			defptr = ptr;
+				//sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+				//WWDebugString(message);
+		}
+		ptr = NULL;
+	}
+	return(defptr);
+}
+
+void WeaponTypeClass::Clear_Heap(void) {
+	for (short index = 0; index < (short)Weapons.size(); index++) {
+		std::free(Weapons.at(index));
+	}
+	Weapons.clear();
 }

@@ -121,17 +121,17 @@ enum SAMState {
 **	Center of building offset table.
 */
 COORDINATE const BuildingClass::CenterOffset[BSIZE_COUNT] = {
-	0x00800080L,
-	0x008000FFL,
-	0x00FF0080L,
-	0x00FF00FFL,
-	0x018000FFL,
-	0x00FF0180L,
-	0x01800180L,
+	0x00800080L,//128,128 1x1
+	0x008000FFL,//128,255 2x1
+	0x00FF0080L,//255,128 1x2
+	0x00FF00FFL,//255,255 2x2
+	0x018000FFL,//384,255 2x3
+	0x00FF0180L,//255,384 3x2
+	0x01800180L,//384,384 3x3
 
-	0x00FF0200L,
+	0x00FF0200L,//255,512 4x2
 
-	0x02800280L,
+	0x02800280L,//640,640 5x5
 };
 
 
@@ -1221,7 +1221,7 @@ bool BuildingClass::Unlimbo(COORDINATE coord, DirType dir)
  *   11/22/1994 JLB : Shares base damage handler for techno objects.                           *
  *   07/15/1995 JLB : Power ratio gets adjusted.                                               *
  *=============================================================================================*/
-ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source, bool forced)
+ResultType BuildingClass::Take_Damage(int & damage, int distance, const WarheadTypeClass * warhead, TechnoClass * source, bool forced)
 {
 	assert(Buildings.ID(this) == ID);
 	assert(IsActive);
@@ -1426,7 +1426,7 @@ ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadTypeCla
 					**	Show pieces of fire to indicate that a significant change in
 					**	damage level has occurred.
 					*/
-					if (warhead->Type == WARHEAD_FIRE) {
+					if (warhead->Type() == WARHEAD_FIRE) {
 						switch (Random_Pick(0, 5+Class->Width()+Class->Height())) {
 							case 0:
 								break;
@@ -2967,8 +2967,45 @@ COORDINATE BuildingClass::Center_Coord(void) const
 {
 	assert(Buildings.ID(this) == ID);
 	assert(IsActive);
+	/*if (!Class->hasBuilt)
+	{
+		short w = Class->Width();
+		short h = Class->Height();
+		BSizeType size = BSIZE_55;
+		switch (w) {
+			case(4):
+				size = BSIZE_42;
+				break;
+			case(3):
+				size = BSIZE_33;
+				if (h == 2)
+					size = BSIZE_32;
+				break;
+			case(2):
+				size = BSIZE_23;
+				if (h == 2)
+					size = BSIZE_22;
+				if (h == 1)
+					size = BSIZE_21;
+				break;
+			case(1):
+				size = BSIZE_12;
+				if (h == 1)
+					size = BSIZE_11;
+				break;
+			default:
+				size = BSIZE_11;
+				break;
+		}
+		unsigned long offset = static_cast<unsigned long>(XY_Coord(w == 2 ? 255 : w * 128, h == 2 ? 255 : h * 128));
+		unsigned long offset2 = static_cast<unsigned long>(CenterOffset[size]);
+		char message[128];
+		sprintf(message, "BC.Center_Coord - Building %s has Size %d,%d and new ulong offset %lu and old ulong offset %lu \n", Class->Name(), w, h, offset, offset2);
+		WWDebugString(message);
+		Class->hasBuilt = true;
+	}*/
 	//return(Coord_Add(Coord, CenterOffset[Class->Size]));
-	return(Coord_Add(Coord, XY_Coord((Class->SizeWidth) * 128, (Class->SizeHeight) * 128)));
+	return(Coord_Add(Coord, XY_Coord(Class->Width() == 2 ? 255 : Class->Width() * 128, Class->Height() == 2 ? 255 : Class->Height() * 128)));
 }
 
 

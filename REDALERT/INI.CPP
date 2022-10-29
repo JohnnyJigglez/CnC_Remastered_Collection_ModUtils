@@ -548,6 +548,40 @@ char const* INIClass::Get_Value(char const* section, int index) const
 }
 
 /***********************************************************************************************
+ * INIClass::Get_Value -- Get an entry's value given ordinal number and section name.          *
+ *                                                                                             *
+ *    This will return the value for the entry under the section specified. The      *
+ *    ordinal number specified is used to determine which entry to retrieve. The entry         *
+ *    value is the text that appears to the right of the "=" character.                        *
+ *                                                                                             *
+ * INPUT:   section  -- The section to use.                                                    *
+ *                                                                                             *
+ *          index    -- The ordinal number to use when fetching an entry name.                 *
+ *                                                                                             *
+ * OUTPUT:  Returns with a pointer to the entry value.                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/27/2021 JJ : Created.                                                                 *
+ *=============================================================================================*/
+char const* INIClass::Get_Value(char const* section, char const * key) const
+{
+	if (key == NULL || strlen(key) < 2)
+		return NULL;
+	INISection* secptr = Find_Section(section);
+
+	if (secptr != NULL) {
+		INIEntry* entryptr = secptr->EntryList.First();
+		while (entryptr != NULL && entryptr->Is_Valid()) {
+			if (strcmpi(key,entryptr->Entry) == 0) return(entryptr->Value);
+			entryptr = entryptr->Next();
+		}
+	}
+	return(NULL);
+}
+
+/***********************************************************************************************
  * INIClass::Put_UUBlock -- Store a binary encoded data block into the INI database.           *
  *                                                                                             *
  *    Use this routine to store an arbitrary length binary block of data into the INI database.*
@@ -862,6 +896,36 @@ int INIClass::Get_Int(char const * section, char const * entry, int defvalue) co
 }
 
 /***********************************************************************************************
+ * INIClass::Get_Short -- Fetch an short entry from the specified section.                     *
+ *                                                                                             *
+ *    This routine will fetch a short value from the entry and section specified. If no        *
+ *    entry could be found, then the default value will be returned instead.                   *
+ *                                                                                             *
+ * INPUT:   section  -- The section name to search under.                                      *
+ *                                                                                             *
+ *          entry    -- The entry name to search for.                                          *
+ *                                                                                             *
+ *          defvalue -- The default value to use if the specified entry could not be found.    *
+ *                                                                                             *
+ * OUTPUT:  Returns with the short value specified in the INI database or else returns the     *
+ *          default value.                                                                     *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   09/06/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+short INIClass::Get_Short(char const* section, char const* entry, short defvalue) const
+{
+	int defvaluel = Get_Int(section, entry, defvalue);
+	if (defvaluel > SHRT_MAX)
+		defvaluel = SHRT_MAX;
+	if (defvaluel < SHRT_MIN)
+		defvaluel = SHRT_MIN;
+	return((short)defvaluel);
+}
+
+/***********************************************************************************************
  * INIClass::Get_Float -- Fetch a floating point entry from the specified section.             *
  *                                                                                             *
  *    This routine will fetch a float value from the entry and section specified. If no       *
@@ -1146,7 +1210,7 @@ bool INIClass::Get_Bool(char const * section, char const * entry, bool defvalue)
 	if (section == NULL || entry == NULL) return(defvalue);
 
 	INIEntry * entryptr = Find_Entry(section, entry);
-	if (entryptr && entryptr->Value != NULL) {
+	if (entryptr != NULL && entryptr->Value != NULL) {
 		switch (toupper(*entryptr->Value)) {
 			case 'Y':
 			case 'T':

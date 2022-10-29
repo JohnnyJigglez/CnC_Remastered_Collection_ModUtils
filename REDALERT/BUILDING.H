@@ -217,6 +217,7 @@ class BuildingClass : public TechnoClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		BuildingClass(BuildingTypeClass * classid, HousesType house);
 #ifdef FIXIT_MULTI_SAVE
 		BuildingClass(NoInitClass const& x) : TechnoClass(x), Class(x),  Factory(x), CountDown(x), PlacementDelay(x) {};
@@ -302,7 +303,7 @@ class BuildingClass : public TechnoClass
 		virtual void Death_Announcement(TechnoClass const * source=0) const;
 		virtual FireErrorType Can_Fire(TARGET, int which) const;
 		virtual TARGET Greatest_Threat(ThreatType threat) const;
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance,const WarheadTypeClass * warhead, TechnoClass * source=0, bool forced=false);
 		virtual bool Captured(HouseClass * newowner);
 		void Update_Radar_Spied(void);
 

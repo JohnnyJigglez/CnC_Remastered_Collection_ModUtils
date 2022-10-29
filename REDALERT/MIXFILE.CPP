@@ -532,15 +532,18 @@ int compfunc(void const * ptr1, void const * ptr2)
  *   10/17/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
 template<class T>
-bool MixFileClass<T>::Offset(char const * filename, void ** realptr, MixFileClass ** mixfile, long * offset, long * size) 
+bool MixFileClass<T>::Offset(char const* filename, void** realptr, MixFileClass** mixfile, long* offset, long* size)
 {
-	MixFileClass<T> * ptr;
+	MixFileClass<T>* ptr;
 
 	if (filename == NULL) {
-assert(filename != NULL);//BG
+		assert(filename != NULL);//BG
 		return(false);
 	}
-
+	if (strlen(filename) > _MAX_PATH) {
+		assert(strlen(filename) <= _MAX_PATH); //JJ
+		return(false);
+	}
 	/*
 	**	Create the key block that will be used to binary search for the file.
 	*/

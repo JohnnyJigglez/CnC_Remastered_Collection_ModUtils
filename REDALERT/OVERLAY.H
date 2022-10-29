@@ -57,6 +57,7 @@ class OverlayClass : public ObjectClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		OverlayClass(OverlayType type, CELL pos=-1, HousesType = HOUSE_NONE);
 		OverlayClass(NoInitClass const & x) : ObjectClass(x), Class(x) {};
 		virtual ~OverlayClass(void) {if (GameActive) OverlayClass::Limbo();Class=0;};

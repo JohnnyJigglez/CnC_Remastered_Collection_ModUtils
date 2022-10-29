@@ -36,6 +36,7 @@
 #define ANIM_H
 
 #include	"type.h"
+#include    "ADATA.H"
 
 
 /**********************************************************************************************
@@ -47,8 +48,7 @@ class AnimClass : public ObjectClass, public StageClass {
 		/*
 		**	This points to the type of animation object this is.
 		*/
-		//CCPtr<AnimTypeClass> Class;
-	    AnimTypeClass* Class;
+	   const AnimTypeClass* Class;
 
 	public:
 
@@ -56,10 +56,11 @@ class AnimClass : public ObjectClass, public StageClass {
 		AnimClass(NoInitClass const & x) : ObjectClass(x), StageClass(x) {};
 		virtual ~AnimClass(void);
 
-		operator AnimType(void) const {return Class->Type;};
+		operator AnimType(void) const {return Class->Type();};
 
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		static void operator delete(void *ptr);
 
 		/*---------------------------------------------------------------------
@@ -170,7 +171,7 @@ class AnimClass : public ObjectClass, public StageClass {
 		**	value holds the accumulation of fractional damage points. When the accumulated
 		**	fractions reach 256, then one damage point is applied to the attached object.
 		*/
-		fixed Accum;
+		float Accum;
 
 		/*
 		**	The map layer this animation is in when attached to an object.

@@ -86,12 +86,14 @@ class INIClass {
 		char const * Get_Entry(char const * section, int index) const;
 
 		char const* Get_Value(char const* section, int index) const;
+		char const* Get_Value(char const* section, char const* key) const;
 
 		/*
 		**	Get the various data types from the section and entry specified.
 		*/
 		int Get_String(char const * section, char const * entry, char const * defvalue, char * buffer, int size) const;
 		int Get_Int(char const * section, char const * entry, int defvalue=0) const;
+		short Get_Short(char const* section, char const* entry, short defvalue = 0) const;
 		float Get_Float(char const* section, char const* entry, float defvalue = 0.0) const;
 		int Get_Hex(char const * section, char const * entry, int defvalue=0) const;
 		bool Get_Bool(char const * section, char const * entry, bool defvalue=false) const;

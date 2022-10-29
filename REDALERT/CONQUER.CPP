@@ -3428,6 +3428,7 @@ void const * Get_Radar_Icon(void const * shapefile, int shapenum, int frames, in
 
 extern void DLL_Draw_Intercept(int shape_number, int x, int y, int width, int height, int flags, const ObjectClass *object, DirType rotation, long scale, const char *shape_file_name, char override_owner);
 extern void DLL_Draw_Pip_Intercept(const ObjectClass* object, int pip);
+//extern void DLL_Draw_Line_Intercept(int x, int y, int x1, int y1, unsigned char color, int frame);
 void CC_Draw_Shape(void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata, void const * ghostdata, DirType rotation);
 
 /*void CC_Draw_Shape(const ObjectClass* object, void const* shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const* fadingdata, void const* ghostdata, DirType rotation, long virtualscale, int width, int height)
@@ -3473,6 +3474,16 @@ void CC_Draw_Pip(const ObjectClass *object, void const * shapefile, int shapenum
 
 	CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
 }
+
+/*void CC_Draw_Line(int x, int y, int x1, int y1, unsigned char color, int frame, WindowNumberType window)
+{
+	if (window == WINDOW_VIRTUAL) {
+		DLL_Draw_Line_Intercept(x, y, x1, y1, color, frame);
+		return;
+	}
+
+	LogicPage->Draw_Line(x, y, x1, y1, color);
+}*/
 
 
 /***********************************************************************************************

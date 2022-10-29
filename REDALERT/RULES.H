@@ -882,6 +882,14 @@ class RulesClass {
 		LEPTON TiberiumLongScan;
 
 		/*
+		**	Tell the warhead explosionset logic that the animations chosen are based on the maximum
+		**  damage of all weapons that use that explosionset for their warhead.
+		*/
+		bool DynamicExplosionSetThreshold;
+		short ExplosionSet3Threshold;
+		short ExplosionSet4Threshold;
+		short ExplosionSet5Threshold;
+		/*
 		**	Health bar display mode
 		*/
 		enum eHealthBarDisplayMode

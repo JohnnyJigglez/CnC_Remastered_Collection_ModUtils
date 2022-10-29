@@ -2757,7 +2757,7 @@ static BuildingTypeClass const ClassLarva2(
 #endif
 void const * BuildingTypeClass::WarFactoryOverlay;
 void const * LightningShapes;
-
+static short const translateSize[BSIZE_COUNT][2] = { {1,1},{2,1},{1,2},{2,2},{2,3},{3,2},{3,3},{4,2},{5,5} };
 
 /***********************************************************************************************
  * BuildingTypeClass::BuildingTypeClass -- This is the constructor for the building types.     *
@@ -2801,28 +2801,28 @@ BuildingTypeClass::BuildingTypeClass(
 						short const * exitlist,
 						short const * sizelist,
 						short const * overlap) :
-								TechnoTypeClass(RTTI_BUILDINGTYPE,
-													int(type),
-													name,
-													ininame,
-													remap,
-													verticaloffset,
-													primaryoffset,
-													primarylateral,
-													primaryoffset,
-													primarylateral,
-													is_nominal,
-													is_stealthy,
-													is_selectable,
-													is_legal_target,
-													is_insignificant,
-													false,
-													is_theater,
-													is_turret_equipped,
-													is_remappable,
-													true,
-													(is_turret_equipped ? 32 : 1),
-													SPEED_NONE),
+TechnoTypeClass(RTTI_BUILDINGTYPE,
+	int(type),
+	name,
+	ininame,
+	remap,
+	verticaloffset,
+	primaryoffset,
+	primarylateral,
+	primaryoffset,
+	primarylateral,
+	is_nominal,
+	is_stealthy,
+	is_selectable,
+	is_legal_target,
+	is_insignificant,
+	false,
+	is_theater,
+	is_turret_equipped,
+	is_remappable,
+	true,
+	(is_turret_equipped ? 32 : 1),
+	SPEED_NONE),
 	IsBase(true),
 	IsFake(is_fake),
 	IsBibbed(false),
@@ -2842,7 +2842,7 @@ BuildingTypeClass::BuildingTypeClass(
 	Capacity(0),
 	Power(0),
 	Drain(0),
-	Size(size),
+	Size{translateSize[size][0],translateSize[size][1]},
 	OccupyList(sizelist),
 	OverlapList(overlap),
 	BuildupData(0)
@@ -2850,7 +2850,6 @@ BuildingTypeClass::BuildingTypeClass(
 	//char message[64];
 	//sprintf(message, "Instantiated BTC %s .\n", ininame);
 	//WWDebugString(message);
-
 	Anims[BSTATE_CONSTRUCTION].Start = 0;
 	Anims[BSTATE_CONSTRUCTION].Count = 1;
 	Anims[BSTATE_CONSTRUCTION].Rate = 0;
@@ -2871,7 +2870,7 @@ BuildingTypeClass::BuildingTypeClass(
 	Anims[BSTATE_AUX2].Count = 1;
 	Anims[BSTATE_AUX2].Rate = 0;
 
-	short width[BSIZE_COUNT] = {
+	/*short width[BSIZE_COUNT] = {
 		1,
 		2,
 		1,
@@ -2892,9 +2891,9 @@ BuildingTypeClass::BuildingTypeClass(
 		3,
 		2,
 		5
-	};
-	SizeWidth = width[Size];
-	SizeHeight = height[Size];
+	};*/
+	//SizeWidth = width[Size];
+	//SizeHeight = height[Size];
 }
 
 /***********************************************************************************************
@@ -3755,7 +3754,7 @@ short const * BuildingTypeClass::Overlap_List(void) const
  *=============================================================================================*/
 int BuildingTypeClass::Width(void) const
 {
-	return(SizeWidth);
+	return(Size[0]);
 }
 
 
@@ -3775,7 +3774,7 @@ int BuildingTypeClass::Width(void) const
  *=============================================================================================*/
 int BuildingTypeClass::Height(bool bib) const
 {
-	return(SizeHeight + ((bib && IsBibbed) ? 1 : 0));
+	return(Size[1] + ((bib && IsBibbed) ? 1 : 0));
 }
 
 
@@ -4003,8 +4002,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 					size[1] = atoi(token);
 			}
 			if (size[0] > 0 && size[1] > 0 && size[0] < 6 && size[1] < 6) {
-				SizeWidth = size[0];
-				SizeHeight = size[1];
+				memcpy(Size, size, sizeof(size));
 			}
 			sprintf(message, "BTC.Read_INI Building now has Size (%d,%d) \n", Width(), Height());
 		}
@@ -4064,7 +4062,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 			memcpy(OccupyListData, tempoccupylist,(sizeof(tempoccupylist)/36)*(count+1));
 			sprintf(message, "BTC.Read_INI Building occupies %d cells \n", count);
 			WWDebugString(message);
-			OccupyList = (short *)OccupyListData;
+			OccupyList = OccupyListData;
 		}
 		/*if (OccupyList != NULL) {
 			sprintf(message, "BTC.Read_INI Building has OccupyList : ");
@@ -4131,15 +4129,15 @@ RTTIType RTTIType_From_Name(char const* name)
 {
 	if (name == NULL) 
 		return(RTTI_NONE);
-	if (stricmp("AIRCRAFT", name) == 0)
+	if (!stricmp("AIRCRAFT", name))
 		return(RTTI_AIRCRAFTTYPE);
-	if (stricmp("UNIT", name) == 0)
+	if (!stricmp("UNIT", name) || !stricmp("VEHICLE", name))
 		return(RTTI_UNITTYPE);
-	if (stricmp("VESSEL", name) == 0)
+	if (!stricmp("VESSEL", name))
 		return(RTTI_VESSELTYPE);
-	if (stricmp("INFANTRY", name) == 0)
+	if (!stricmp("INFANTRY", name))
 		return(RTTI_INFANTRYTYPE);
-	if (stricmp("BUILDING", name) == 0)
+	if (!stricmp("BUILDING", name))
 		return(RTTI_BUILDINGTYPE);
 	return(RTTI_NONE);
 }

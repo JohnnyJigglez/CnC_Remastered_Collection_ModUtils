@@ -42,7 +42,8 @@
 
 #include	"function.h"
 #include    "TYPE.H"
-
+//#include "PROJECTILE.h"
+std::vector<BulletTypeClass*> BulletTypes;
 
 
 /***********************************************************************************************
@@ -62,9 +63,9 @@
  *   07/17/1996 JLB : Uses correct default values.                                             *
  *   09/25/2021 JJ  : now Type identifier is specified as part of the instantiation            *
  *=============================================================================================*/
-BulletTypeClass::BulletTypeClass(short bullettype, char const* name) :
-		ObjectTypeClass(	RTTI_BULLETTYPE,
-								BulletTypes.ID(this),
+BulletTypeClass::BulletTypeClass(char const* name) :
+		ObjectTypeClass(RTTI_BULLETTYPE,
+			BULLET_NONE,
 								true,
 								true,
 								false,
@@ -93,13 +94,25 @@ BulletTypeClass::BulletTypeClass(short bullettype, char const* name) :
 	IsSubSurface(false),
 	IsParachuted(false),
 	IsGigundo(false),
-	Type(static_cast<BulletType>(bullettype)),
+	//Type(static_cast<BulletType>(bullettype)),
 	ROT(0),
 	Arming(0),
-	Tumble(0)
+	Tumble(0),
+	Anim(ANIM_NONE),
+	BehavesLike(BULLET_NONE)
 {
-	char message[128];
-	sprintf(message, "Instantiated Projectile %s .\n", Name());
+	if (ID == -1)
+		ID = (short)(BulletTypes.size());
+	BulletTypes.push_back(this);
+	BehavesLike = static_cast<BulletType>(ID);
+	for (BulletType bt = BULLET_FIRST; bt < BULLET_COUNT; bt++) {
+		if (strcmpi(IniName, BulletTypeName[bt]) == 0) {
+			BehavesLike = bt;
+			break;
+		}
+	}
+	char message[64];
+	sprintf(message, "Constructed Projectile %s with ID: %d.\n", Name(), ID);
 	WWDebugString(message);
 }
 
@@ -120,10 +133,18 @@ BulletTypeClass::BulletTypeClass(short bullettype, char const* name) :
  * HISTORY:                                                                                    *
  *   07/06/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void * BulletTypeClass::operator new(size_t)
+/*void* BulletTypeClass::operator new(size_t)
 {
 	return(BulletTypes.Alloc());
-}
+}*/
+
+/*void* BulletTypeClass::operator new(size_t, void* ptr)
+{
+	//char message[64];
+	//sprintf(message, "NEW.ptr invoked for Projectile %s .\n", ((BulletTypeClass*)ptr)->IniName);
+	//WWDebugString(message);
+	return(ptr);
+}*/
 
 
 /***********************************************************************************************
@@ -142,10 +163,12 @@ void * BulletTypeClass::operator new(size_t)
  * HISTORY:                                                                                    *
  *   07/06/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void BulletTypeClass::operator delete(void * ptr)
+/*void BulletTypeClass::operator delete(void* ptr)
 {
-	BulletTypes.Free((BulletTypeClass *)ptr);
-}
+	BulletTypes.at(((BulletTypeClass*)ptr)->ID) = NULL;
+	BulletTypes.at(((BulletTypeClass*)ptr)->ID) = BulletTypes.back();
+	BulletTypes.pop_back();
+}*/
 
 
 /***********************************************************************************************
@@ -172,8 +195,8 @@ void BulletTypeClass::Init_Heap(void)
 	**and maybe someday I'll wrote the code that sorts an assumed-unsorted list so we can get on with our lives
 	**and not hold onto so many pointers when we instantiate the BULLET class and other classes like it.
 	*/
-	for (unsigned short index = BULLET_FIRST; index < BULLET_COUNT; index++) {
-		new BulletTypeClass(index, (const char*)(&BULLET_NAMES[index]));
+	for (short index = BULLET_FIRST; index < BULLET_COUNT; index++) {
+		new BulletTypeClass(BulletTypeName[index]);
 	}
 	/*
 	new BulletTypeClass(0,"Invisible");	//	BULLET_INVISIBLE
@@ -219,10 +242,10 @@ void BulletTypeClass::One_Time(void)
 	/*
 	**	Load the bullet shapes.
 	*/
-	BulletTypeClass* btc = NULL;
-	for (int index = 0; index < BulletTypes.Count(); index++) {
-		btc = BulletTypes.Ptr(index);
-		if (!(btc->IsInvisible)) {
+	const BulletTypeClass* btc = NULL;
+	for (int index = 0; index < (int)BulletTypes.size(); index++) {
+		btc = BulletTypes.at(index);
+		if (btc && !(btc->IsInvisible)) {
 			char	fullname[_MAX_FNAME + _MAX_EXT];
 			_makepath(fullname, NULL, NULL, btc->Graphic_Name(), ".SHP");
 			#ifdef NDEBUG
@@ -258,7 +281,7 @@ void BulletTypeClass::One_Time(void)
  * HISTORY:                                                                                    *
  *   07/06/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-BulletTypeClass & BulletTypeClass::As_Reference(BulletType type)
+const BulletTypeClass & BulletTypeClass::As_Reference(BulletType type)
 {
 	return *BulletTypeClass::As_Pointer(type);
 
@@ -279,14 +302,14 @@ BulletTypeClass & BulletTypeClass::As_Reference(BulletType type)
  * HISTORY:                                                                                    *
  *   07/17/2021 JJ : Created.                                                                  *
  *=============================================================================================*/
-BulletTypeClass* BulletTypeClass::As_Pointer(BulletType bullet)
+const BulletTypeClass* BulletTypeClass::As_Pointer(BulletType bullet)
 {
 	if (bullet == BULLET_NONE) {
 		return(NULL);
 	}
-	for (int index = 0; index < BulletTypes.Count(); index++) {
-		if (bullet == BulletTypes.Ptr(index)->Type) {
-			return BulletTypes.Ptr(index);
+	for (int index = 0; index < (int)BulletTypes.size(); index++) {
+		if (bullet == BulletTypes.at(index)->ID) {
+			return BulletTypes.at(index);
 		}
 	}
 	return(NULL);
@@ -310,9 +333,9 @@ BulletTypeClass* BulletTypeClass::As_Pointer(BulletType bullet)
  *=============================================================================================*/
 bool BulletTypeClass::Read_INI(CCINIClass & ini)
 {
-	if (ini.Is_Present(Name())) {
+	if (ObjectTypeClass::Read_INI(ini)) {
 		char message[128];
-		sprintf(message, "BTC.Read_INI parsing BulletType %s ...\n", Name());
+		sprintf(message, "BulletTypeClass.Read_INI parsing %s ...\n", Name());
 		WWDebugString(message);
 		Arming = ini.Get_Int(Name(), "Arm", Arming);
 		ROT = ini.Get_Int(Name(), "ROT", ROT);
@@ -335,7 +358,11 @@ bool BulletTypeClass::Read_INI(CCINIClass & ini)
 		IsFaceless = !ini.Get_Bool(Name(), "Rotates", !IsFaceless);
 		IsTranslucent = ini.Get_Bool(Name(), "Translucent", IsTranslucent);
 		IsGigundo = ini.Get_Bool(Name(), "Gigundo", IsGigundo);
-		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
+		Anim = AnimTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Anim"), Anim);
+		BehavesLike = findorcreate(ini, ini.Get_Value(Name(), "BehavesLike"), BehavesLike);
+		//ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
+		sprintf(message, "BulletTypeClass.Read_INI parse %s .\n", Name());
+		WWDebugString(message);
 		return(true);
 	}
 	return(false);
@@ -379,14 +406,70 @@ BulletType Bullet_From_Name(char const* name)
  * HISTORY:                                                                                    *
  *   09/27/2021 JJ : Created.                                                                 *
  *=============================================================================================*/
-BulletTypeClass * BulletTypeClass::As_Pointer(char const* name)
+const BulletTypeClass * BulletTypeClass::As_Pointer(char const* name)
 {
 	if (!name) return(NULL);
 
-	for (int index = 0; index < BulletTypes.Count(); index++) {
-		if (stricmp(BulletTypes.Ptr(index)->Name(), name) == 0) {
-			return(BulletTypes.Ptr(index));
+	for (int index = 0; index < (int)BulletTypes.size(); index++) {
+		if (stricmp(BulletTypes.at(index)->Name(), name) == 0) {
+			return(BulletTypes.at(index));
 		}
 	}
 	return(NULL);
+}
+
+void BulletTypeClass::Clear_Heap(void) {
+	for (short index = 0; index < (short)(BulletTypes.size()); index++) {
+		std::free(BulletTypes.at(index));
+	}
+	BulletTypes.clear();
+}
+
+const BulletTypeClass* BulletTypeClass::findorcreate(CCINIClass& ini, const char* value, const BulletTypeClass* defptr)
+{
+	if (value == NULL || &ini == NULL)
+		return defptr;
+	if (strcmpi(value, "none") == 0)
+		return NULL;
+	if ((defptr != NULL && stricmp(defptr->Name(), value) != 0) || defptr == NULL)//if we are changing it
+	{
+		const BulletTypeClass* ptr = As_Pointer(value);
+		if (ptr == NULL)//did we find this new weapon that is referenced in the ini?
+		{
+			if (ini.Section_Present(value))//does this new weapon exist in the ini 
+			{
+				BulletTypeClass* newptr = new BulletTypeClass(value);
+				newptr->Read_INI(ini);
+				defptr = As_Pointer(value);
+				//sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+				//WWDebugString(message);
+				newptr = NULL;
+			}
+		}
+		else
+		{
+			defptr = ptr;
+			//sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+			//WWDebugString(message);
+		}
+		ptr = NULL;
+	}
+	return(defptr);
+}
+
+BulletType BulletTypeClass::findorcreate(CCINIClass& ini, const char* value, BulletType defvalue)
+{
+	if (value == NULL || strlen(value) < 2 || &ini == NULL)//send me something proper
+		return defvalue;
+	if (strcmpi(value, "none") == 0) //this inbound value is set to none, we're clearing this
+		return BULLET_NONE;
+	const BulletTypeClass* ptr = As_Pointer(value);
+	if (ptr != NULL) //if it exists, then send it
+		return static_cast<BulletType>(ptr->ID);
+	if (ini.Section_Present(value)) {
+		BulletTypeClass* newptr = new BulletTypeClass(value);
+		newptr->Read_INI(ini);
+		return static_cast<BulletType>(newptr->ID);
+	}
+	return defvalue;
 }

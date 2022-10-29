@@ -51,26 +51,28 @@ class WeaponTypeClass
 		~WeaponTypeClass(void);
 
 		//void* operator new(size_t);
-		void* operator new(size_t t);
+		void* operator new(size_t t) { return(malloc(t)); }
 		//static void * operator new(size_t , void * ptr) {return(ptr);};
-		static void* operator new(size_t, void* ptr);
-		void operator delete(void * pointer);
+		//static void* operator new(size_t, void* ptr);
+		//void operator delete(void * pointer);
 		static void Init_Heap(void);
+		static void Clear_Heap(void);
 		char const * Name(void) const {return(IniName);}
 		bool Read_INI(CCINIClass & ini);
-		static WeaponTypeClass * As_Pointer(int index);
-		static WeaponTypeClass * As_Pointer(char const* name);
-		static int As_Int(char const* name);
+		static const WeaponTypeClass * As_Pointer(int index);
+		static const WeaponTypeClass * As_Pointer(char const* name);
+		//static int As_Int(char const* name);
 		void Code_Pointers(void) {}
 		void Decode_Pointers(void) {}
 		ThreatType Allowed_Threats(void) const;
 		bool Is_Wall_Destroyer(void) const;
 		bool IsUsable(void) const { return (Bullet && WarheadPtr); }
-
+		static int MaxDamage(int explosionset);
+		static const WeaponTypeClass* findorcreate(CCINIClass & ini, const char * value, const WeaponTypeClass* defptr = NULL);
 		/*
 		**	This is the index number in the weapon heap.
 		*/
-		int ID;
+		short ID;
 
 		/*
 		**	This is the identifying name of this weapon.
@@ -118,9 +120,9 @@ class WeaponTypeClass
 		int BurstDelay;
 
 		/*
-		**	Projectile Type that the weapon uses.
+		**	Projectile/BulletType that the weapon uses.
 		*/
-		CCPtr<BulletTypeClass> Bullet;
+		const BulletTypeClass * Bullet;
 
 		/*
 		**	This is the damage (explosive load) to be assigned to the projectile that
@@ -136,7 +138,8 @@ class WeaponTypeClass
 		/*
 		**	Warhead Type to attach to the projectile.
 		*/
-		CCPtr<WarheadTypeClass> WarheadPtr;
+		//CCPtr<WarheadTypeClass> WarheadPtr;
+		const WarheadTypeClass * WarheadPtr;
 
 		/*
 		**	Objects that fire (which can be buildings as well) will fire at a

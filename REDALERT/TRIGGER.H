@@ -88,6 +88,7 @@ class TriggerClass {
 		static void * operator new(size_t size);
 		static void * operator new(size_t, void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		/*
 		**	If this trigger object is active, then this flag will be true. Trigger

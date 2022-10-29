@@ -36,15 +36,14 @@
  *   WarheadTypeClass::operator delete -- Returns warhead object back to special memory pool.  *
  *   WarheadTypeClass::operator new -- Allocate a warhead object from the special heap.        *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-
-#include	"function.h"
+#include    "WARHEAD.H"
 
 
 /***************************************************************************
 **	This is the warhead data object array.
 */
-TFixedIHeapClass<WarheadTypeClass> Warheads;
+//TFixedIHeapClass<WarheadTypeClass> Warheads;
+std::vector<WarheadTypeClass*> Warheads;
 
 /***********************************************************************************************
  * WarheadTypeClass::Init_Heap -- Initialize the warhead type class heap.                      *
@@ -65,7 +64,7 @@ void WarheadTypeClass::Init_Heap(void)
 	//char message[128];
 	//static char warheadpreop[WARHEAD_COUNT][16] = {"SA","HE","AP","Fire","HollowPoint","Super","Organic","Nuke","Mechanical"};
 	for(unsigned short index = WARHEAD_FIRST; index < WARHEAD_COUNT; index++){
-		new WarheadTypeClass(index,(const char *)(&WARHEAD_NAMES[index]));
+		new WarheadTypeClass(WarheadTypeName[index]);
 	}
 	/*for (unsigned short index = 0; index < Warheads.Count(); index++) {
 		sprintf(message, "WTC.Init_Heap Loaded Warhead %s .\n", Warheads.Ptr(index)->Name());
@@ -91,9 +90,8 @@ void WarheadTypeClass::Init_Heap(void)
  * HISTORY:                                                                                    *
  *   07/19/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WarheadTypeClass::WarheadTypeClass(short wtype, char const* name) :
-	Type(static_cast<WarheadType>(wtype)),
-	ID(Warheads.ID(this)),
+WarheadTypeClass::WarheadTypeClass(char const* name) :
+	ID(-1),
 	IniName(name),
 	SpreadFactor(1),
 	IsReadfromINI(false),
@@ -103,13 +101,23 @@ WarheadTypeClass::WarheadTypeClass(short wtype, char const* name) :
 	IsOrganic(false),
 	ExplosionSet(0),
 	InfantryDeath(0),
-	Anim(NULL)
+	Anim(ANIM_NONE),
+	BehavesLike(WARHEAD_NONE)
 {
+	ID = (short)(Warheads.size());
+	Warheads.push_back(this);
+	BehavesLike = static_cast<WarheadType>(ID);
+	for (WarheadType wht = WARHEAD_FIRST; wht < WARHEAD_COUNT; wht++) {
+		if (strcmpi(IniName, WarheadTypeName[wht]) == 0) {
+			BehavesLike = wht;
+			break;
+		}
+	}
 	for (ArmorType armor = ARMOR_FIRST; armor < ARMOR_COUNT; armor++) {
 		Modifier[armor] = 1;
 	}
-	char message[128];
-	sprintf(message, "Instantiated Warhead %s .\n", Name());
+	char message[64];
+	sprintf(message, "Constructed Warhead %s with ID: %d.\n", IniName, ID);
 	WWDebugString(message);
 }
 
@@ -129,7 +137,7 @@ WarheadTypeClass::WarheadTypeClass(short wtype, char const* name) :
  * HISTORY:                                                                                    *
  *   10/05/2021 JJ : Created.                                                                  *
  *=============================================================================================*/
-WarheadTypeClass::WarheadTypeClass(char const* name) : WarheadTypeClass(-1, name) {}
+//WarheadTypeClass::WarheadTypeClass(char const* name) : WarheadTypeClass(name) {}
 
 /***********************************************************************************************
  * WeaponTypeClass::~WeaponTypeClass -- Destructor for weapon type class objects.              *
@@ -149,7 +157,6 @@ WarheadTypeClass::WarheadTypeClass(char const* name) : WarheadTypeClass(-1, name
 WarheadTypeClass::~WarheadTypeClass(void)
 {
 	IniName = NULL;
-	Anim = NULL;
 }
 
 /***********************************************************************************************
@@ -194,13 +201,13 @@ WarheadType Warhead_From_Name(char const* name)
  * HISTORY:                                                                                    *
  *   09/27/2021 JJ  : Created.                                                                 *
  *=============================================================================================*/
-WarheadTypeClass* WarheadTypeClass::As_Pointer(char const* name)
+const WarheadTypeClass* WarheadTypeClass::As_Pointer(char const* name)
 {
 	if (name == NULL) return(NULL);
 
-	for (int index = 0; index < Warheads.Count(); index++) {
-		if (!stricmp(Warheads.Ptr(index)->Name(), name)) {
-			return(Warheads.Ptr(index));
+	for (short index = 0; index < (short)(Warheads.size()); index++) {
+		if (!stricmp(Warheads.at(index)->Name(), name)) {
+			return(Warheads.at(index));
 		}
 	}
 	return(NULL);
@@ -223,10 +230,13 @@ WarheadTypeClass* WarheadTypeClass::As_Pointer(char const* name)
  * HISTORY:                                                                                    *
  *   07/19/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void * WarheadTypeClass::operator new(size_t)
+/*void* WarheadTypeClass::operator new(size_t, void* ptr)
 {
-	return(Warheads.Alloc());
-}
+	//char message[64];
+	//sprintf(message, "NEW.ptr invoked for Warhead %s .\n", ((WarheadTypeClass*)ptr)->IniName);
+	//WWDebugString(message);
+	return(ptr);
+}*/
 
 
 /***********************************************************************************************
@@ -243,10 +253,12 @@ void * WarheadTypeClass::operator new(size_t)
  * HISTORY:                                                                                    *
  *   07/19/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-void WarheadTypeClass::operator delete(void * pointer)
+/*void WarheadTypeClass::operator delete(void* pointer)
 {
-	Warheads.Free((WarheadTypeClass *)pointer);
-}
+	Warheads.at(((WarheadTypeClass*)pointer)->ID) = NULL;
+	Warheads.at(((WarheadTypeClass*)pointer)->ID) = Warheads.back();
+	Warheads.pop_back();
+}*/
 
 
 /***********************************************************************************************
@@ -264,12 +276,12 @@ void WarheadTypeClass::operator delete(void * pointer)
  * HISTORY:                                                                                    *
  *   07/19/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-WarheadTypeClass * WarheadTypeClass::As_Pointer(WarheadType warhead)
+const WarheadTypeClass * WarheadTypeClass::As_Pointer(WarheadType warhead)
 {
 	if (warhead != WARHEAD_NONE) {
-		for (int index = 0; index < Warheads.Count(); index++) {
-			if (Warheads.Ptr(index)->Type == warhead) {
-				return(Warheads.Ptr(index));
+		for (short index = 0; index < (short)(Warheads.size()); index++) {
+			if (Warheads.at(index)->ID == warhead) {
+				return(Warheads.at(index));
 			}
 		}
 	}
@@ -299,7 +311,7 @@ bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 	//sprintf(message, "WTC.Read_INI ENTRY WarheadType %s ...\n", Name());
 	//WWDebugString(message);
 	if (ini.Section_Present(Name())) {
-		sprintf(message, "WTC.Read_INI parsing WarheadType %s ...\n", Name());
+		sprintf(message, "WarheadTypeClass.Read_INI parsing %s ...\n", Name());
 		WWDebugString(message);
 		SpreadFactor = ini.Get_Int(Name(), "Spread", SpreadFactor);
 		IsWallDestroyer = ini.Get_Bool(Name(), "Wall", IsWallDestroyer);
@@ -307,7 +319,9 @@ bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 		IsTiberiumDestroyer = ini.Get_Bool(Name(), "Ore", IsTiberiumDestroyer);
 		ExplosionSet = ini.Get_Int(Name(), "Explosion", ExplosionSet);
 		InfantryDeath = ini.Get_Int(Name(), "InfDeath", InfantryDeath);
-		Anim = ini.Get_Anim(Name(), "Anim"); //this requires a lookup to the AnimTypes heap
+		InfantryDeath = ini.Get_Int(Name(), "InfDeath", InfantryDeath);
+		Anim = AnimTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Anim"), Anim);
+		BehavesLike = findorcreate(ini, ini.Get_Value(Name(), "BehavesLike"), BehavesLike);
 		char buffer[128];
 		if (ini.Get_String(Name(), "Verses", "100%%,100%%,100%%,100%%,100%%", buffer, sizeof(buffer))) {
 			char * aval = strtok(buffer, ",");
@@ -318,8 +332,66 @@ bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 		}
 		IsOrganic = (Modifier[ARMOR_STEEL] == 0);
 		IsReadfromINI = true;
+		sprintf(message, "WarheadTypeClass.Read_INI parsed %s .\n", Name());
+		WWDebugString(message);
 		return(true);
 	}
 	return(false);
 }
+void WarheadTypeClass::Clear_Heap(void) {
+	for (short index = 0; index < (short)Warheads.size(); index++) {
+
+		std::free(Warheads.at(index));
+	}
+	Warheads.clear();
+}
+
+const WarheadTypeClass* WarheadTypeClass::findorcreate(CCINIClass& ini, const char* value, const WarheadTypeClass* defptr)
+{
+	if (value == NULL || &ini == NULL || strlen(value) < 2)
+		return defptr;
+	if (strcmpi(value, "none") == 0)
+		return NULL;
+	if ((defptr != NULL && stricmp(defptr->Name(), value) != 0) || defptr == NULL)//if we are changing it
+	{
+		const WarheadTypeClass* ptr = As_Pointer(value);
+		if (ptr == NULL)//did we find this new weapon that is referenced in the ini?
+		{
+			if (ini.Section_Present(value))//does this new weapon exist in the ini 
+			{
+				WarheadTypeClass* newptr = new WarheadTypeClass(value);
+				newptr->Read_INI(ini);
+				defptr = As_Pointer(value);
+				//sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+				//WWDebugString(message);
+				newptr = NULL;
+			}
+		}
+		else
+		{
+			defptr = ptr;
+			//sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+			//WWDebugString(message);
+		}
+		ptr = NULL;
+	}
+	return(defptr);
+}
+WarheadType WarheadTypeClass::findorcreate(CCINIClass& ini, const char* value, WarheadType defvalue)
+{
+	if (value == NULL || strlen(value) < 2 || &ini == NULL)//send me something proper
+		return defvalue;
+	if (strcmpi(value, "none") == 0) //this inbound value is set to none, we're clearing this
+		return WARHEAD_NONE;
+	const WarheadTypeClass* ptr = As_Pointer(value);
+	if (ptr != NULL) //if it exists, then send it
+		return static_cast<WarheadType>(ptr->ID);
+	if (ini.Section_Present(value)) {
+		WarheadTypeClass* newptr = new WarheadTypeClass(value);
+		newptr->Read_INI(ini);
+		return static_cast<WarheadType>(newptr->ID);
+	}
+	return defvalue;
+}
+
 

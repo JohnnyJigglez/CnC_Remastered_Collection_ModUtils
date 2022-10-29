@@ -58,6 +58,7 @@ class TerrainClass : public ObjectClass, public StageClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		TerrainClass(TerrainType id, CELL cell);
 		TerrainClass(NoInitClass const & x) : ObjectClass(x), Class(x), StageClass(x) {};
 		virtual ~TerrainClass(void);
@@ -109,7 +110,7 @@ class TerrainClass : public ObjectClass, public StageClass
 		*/
 		virtual void Fire_Out(void);
 		virtual bool Catch_Fire(void);
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance,const WarheadTypeClass* warhead, TechnoClass * source, bool forced=false);
 
 		/*
 		**	AI.

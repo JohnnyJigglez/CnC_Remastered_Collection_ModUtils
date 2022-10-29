@@ -102,7 +102,7 @@ TerrainClass::~TerrainClass(void)
  *   11/22/1994 JLB : Shares base damage handler for techno objects.                           *
  *   12/11/1994 JLB : Shortens attached burning animations.                                    *
  *=============================================================================================*/
-ResultType TerrainClass::Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source, bool forced)
+ResultType TerrainClass::Take_Damage(int & damage, int distance,const WarheadTypeClass* warhead, TechnoClass * source, bool forced)
 {
 	assert(Terrains.ID(this) == ID);
 	assert(IsActive);
@@ -112,11 +112,11 @@ ResultType TerrainClass::Take_Damage(int & damage, int distance, WarheadTypeClas
 	/*
 	**	Small arms can never destroy a terrain element.
 	*/
-	if ((!IsOnFire || warhead->Type == WARHEAD_FIRE) && warhead->Type != WARHEAD_SA && !Class->IsImmune) {
+	if ((!IsOnFire || warhead->Type() == WARHEAD_FIRE) && warhead->Type() != WARHEAD_SA && !Class->IsImmune) {
 
 		res = ObjectClass::Take_Damage(damage, distance, warhead, source, forced);
 
-		if (damage && warhead->Type == WARHEAD_FIRE) {
+		if (damage && warhead->Type() == WARHEAD_FIRE) {
 			Catch_Fire();
 		}
 

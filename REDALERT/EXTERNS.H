@@ -226,8 +226,8 @@ extern TFixedIHeapClass<HouseTypeClass>					HouseTypes;
 extern TFixedIHeapClass<BuildingTypeClass>				BuildingTypes;
 extern TFixedIHeapClass<AircraftTypeClass>				AircraftTypes;
 extern TFixedIHeapClass<InfantryTypeClass>				InfantryTypes;
-extern TFixedIHeapClass<BulletTypeClass>					BulletTypes;
-extern TFixedIHeapClass<AnimTypeClass>						AnimTypes;
+extern std::vector<BulletTypeClass*>					BulletTypes;
+extern std::vector<AnimTypeClass*>					AnimTypes;
 extern TFixedIHeapClass<UnitTypeClass>						UnitTypes;
 extern TFixedIHeapClass<VesselTypeClass>					VesselTypes;
 extern TFixedIHeapClass<TemplateTypeClass>				TemplateTypes;
@@ -237,10 +237,8 @@ extern TFixedIHeapClass<SmudgeTypeClass>					SmudgeTypes;
 
 extern FixedIHeapClass *										HeapPointers[RTTI_COUNT];
 
-//extern TFixedIHeapClass<WeaponTypeClass>					Weapons;
 extern std::vector<WeaponTypeClass *>							Weapons;
-extern TFixedIHeapClass<WarheadTypeClass>					Warheads;
-
+extern std::vector<WarheadTypeClass*>							Warheads;
 extern QueueClass<EventClass, MAX_EVENTS>					OutList;
 extern QueueClass<EventClass, (MAX_EVENTS * 64)>		DoList;
 
@@ -377,11 +375,14 @@ extern char const * const					SpecialWeaponName[SPC_COUNT];
 extern int const								SpecialWeaponHelp[SPC_COUNT];
 extern char const * const					SpecialWeaponFile[SPC_COUNT];
 extern char const * const					ArmorName[ARMOR_COUNT];
+extern char const* const					RTTITypeName[RTTI_COUNT];
 extern char const * const					QuarryName[QUARRY_COUNT];
 extern char const * const					FormationName[FORMATION_COUNT];
+extern char const* const					WarheadTypeName[WARHEAD_COUNT];
+extern char const* const					BulletTypeName[BULLET_COUNT];
+
 extern unsigned long const					PlayCodes[];
 extern unsigned long const					CheatCodes[];
-//extern char const * const					ProjectileNames[];
 extern unsigned long const					EditorCodes[];
 extern char const * const					SourceName[SOURCE_COUNT];
 extern int const								GroundColor[LAND_COUNT];

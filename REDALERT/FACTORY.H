@@ -50,6 +50,7 @@ class FactoryClass : private StageClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		static void Init(void);
 

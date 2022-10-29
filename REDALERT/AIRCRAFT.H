@@ -57,6 +57,7 @@ class AircraftClass : public FootClass, public FlyClass
 		static void * operator new(size_t);
 		static void * operator new(size_t, void * ptr) {return(ptr);};
 		static void operator delete(void *);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		operator AircraftType(void) const {return Class->Type;};
 		AircraftClass(AircraftType classid, HousesType house);
 		AircraftClass(NoInitClass const & x) : FootClass(x), FlyClass(x), Class(x), SecondaryFacing(x), SightTimer(x) {};
@@ -142,7 +143,7 @@ class AircraftClass : public FootClass, public FlyClass
 		/*
 		**	Combat related.
 		*/
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass * warhead, TechnoClass * source, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, const WarheadTypeClass * warhead, TechnoClass * source, bool forced=false);
 		virtual BulletClass * Fire_At(TARGET target, int which);
 
 		/*

@@ -1128,6 +1128,16 @@ void TechnoClass::Draw_It(int x, int y, WindowNumberType window) const
 	if ((ElectricZapDelay >= 0) && ElectricZapTarget) {
 		Electric_Zap(ElectricZapTarget, ElectricZapWhich, window);
 	}
+	/*if (LineFrame < LineMaxFrames) {
+		// Only draw the last line for virtual window
+		int start_line = (window == WINDOW_VIRTUAL) ? max(0, LineCount - 1) : 0;
+		for (int i = start_line; i < LineCount; i++) {
+			CC_Draw_Line(Lines[i][0], Lines[i][1], Lines[i][2], Lines[i][3], (unsigned char)Lines[i][4], LineFrame, window);
+		}
+		if (window == WINDOW_VIRTUAL) {
+			LineFrame++;
+		}
+	}*/
 
 	int width, height;
 	Class_Of().Dimensions(width, height);
@@ -3242,6 +3252,39 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 	**	Get the location where the projectile should appear.
 	*/
 	fire_coord = Fire_Coord(which);
+	/*if (strcmpi(btype.Name(), "Laser") == 0) {
+		int x, y, x1, y1;
+		//COORDINATE source, dest;
+		//dest = As_Coord(target);
+		if (SpecialDialog == SDLG_NONE) {
+			Map.Coord_To_Pixel(fire_coord, x, y);
+			Map.Coord_To_Pixel(target_coord, x1, y1);
+			x += Map.TacPixelX;
+			x1 += Map.TacPixelX;
+			y += Map.TacPixelY;
+			y1 += Map.TacPixelY;
+			Lines[0][0] = x + 1;
+			Lines[0][1] = y;
+			Lines[0][2] = x1;
+			Lines[0][3] = y1;
+			Lines[0][4] = 0x7D;
+			Lines[1][0] = x - 1;
+			Lines[1][1] = y;
+			Lines[1][2] = x1;
+			Lines[1][3] = y1;
+			Lines[1][4] = 0x7D;
+			Lines[2][0] = x;
+			Lines[2][1] = y;
+			Lines[2][2] = x1;
+			Lines[2][3] = y1;
+			Lines[2][4] = 0x7F;
+			LineCount = 3;
+			LineFrame = 0;
+			LineMaxFrames = 5;
+			Map.Flag_To_Redraw(true);
+		}
+		new SmudgeClass(Random_Pick(SMUDGE_SCORCH1, SMUDGE_SCORCH6), As_Coord(target));
+	}*/
 
 	/*
 	**	If the projectile is a homing type (such as a missile), then it will
@@ -4071,7 +4114,7 @@ bool TechnoClass::Captured(HouseClass * newowner)
  * HISTORY:                                                                                    *
  *   06/20/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-ResultType TechnoClass::Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source, bool forced)
+ResultType TechnoClass::Take_Damage(int & damage, int distance, const WarheadTypeClass* warhead, TechnoClass * source, bool forced)
 {
 	assert(IsActive);
 
@@ -4103,7 +4146,7 @@ ResultType TechnoClass::Take_Damage(int & damage, int distance, WarheadTypeClass
 				/*
 				**	The warhead to use is based on the weapon this object is equipped with.
 				*/
-				WarheadTypeClass * wh = WarheadTypeClass::As_Pointer(WARHEAD_HE);
+				const WarheadTypeClass * wh = WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_HE]);
 				if (Techno_Type_Class()->PrimaryWeapon != NULL) {
 					wh = Techno_Type_Class()->PrimaryWeapon->WarheadPtr;
 				}
@@ -6842,8 +6885,10 @@ static inline int _Scale_To_256(int val)
  *=============================================================================================*/
 bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 {
-	if (ini.Section_Present(Name())) {
+	if (ObjectTypeClass::Read_INI(ini)) {
 		char message[128];
+		sprintf(message, "TechnoTypeClass.Read_INI parsing %s ...\n", Name());
+		WWDebugString(message);
 		//GlyphX_Debug_Print(message);
 #ifdef FIXIT_NAME_OVERRIDE
 		char buffer[256];
@@ -6875,23 +6920,71 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 			}
 		}
 #endif
-		sprintf(message, "TTC.ReadINI parsing %s ...\n", Name());
-		WWDebugString(message);
+		
 		IsDoubleOwned = ini.Get_Bool(Name(), "DoubleOwned", IsDoubleOwned);
 		ThreatRange = ini.Get_Lepton(Name(), "GuardRange", ThreatRange);
 		IsExploding = ini.Get_Bool(Name(), "Explodes", IsExploding);
-		PrimaryWeapon = ini.Get_WeaponType(Name(), "Primary", PrimaryWeapon);
-		sprintf(message, "TTC.ReadINI %s has pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
-		WWDebugString(message);
-		SecondaryWeapon = ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon);
-		sprintf(message, "TTC.ReadINI %s has sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
-		WWDebugString(message);
+		//PrimaryWeapon = ini.Get_WeaponType(Name(), "Primary", PrimaryWeapon);
+		PrimaryWeapon = WeaponTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Primary"), PrimaryWeapon);
+		SecondaryWeapon = WeaponTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Secondary"), SecondaryWeapon);
+		/*const WeaponTypeClass* weapon = NULL;
+		if (ini.Get_String(Name(), "Primary", "", buffer, sizeof(buffer))) 
+		{
+			if ((PrimaryWeapon != NULL && stricmp(PrimaryWeapon->Name(), buffer) != 0) || PrimaryWeapon == NULL)//if we are changing it
+			{
+				weapon = WeaponTypeClass::As_Pointer(buffer);
+				if (weapon == NULL)//did we find this new weapon that is referenced in the ini?
+				{
+					if (ini.Section_Present(buffer))//does this new weapon exist in the ini 
+					{
+						WeaponTypeClass* bob = new WeaponTypeClass(ini.Get_Value(Name(), "Primary"));
+						bob->Read_INI(ini);
+						PrimaryWeapon = WeaponTypeClass::As_Pointer(buffer);
+						sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+						WWDebugString(message);
+						bob = NULL;
+					}
+				}
+				else {
+					PrimaryWeapon = weapon;
+					sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
+					WWDebugString(message);
+				}
+				weapon = NULL;
+			}
+		}
+		if (ini.Get_String(Name(), "Secondary", "", buffer, sizeof(buffer)))
+		{
+			if ((SecondaryWeapon != NULL && stricmp(SecondaryWeapon->Name(), buffer) != 0) || SecondaryWeapon == NULL)//if we are changing it
+			{
+				weapon = WeaponTypeClass::As_Pointer(buffer);
+				if (weapon == NULL)//did we find this new weapon that is referenced in the ini?
+				{
+					if (ini.Section_Present(buffer))//does this new weapon exist in the ini 
+					{
+						WeaponTypeClass* bob = new WeaponTypeClass(ini.Get_Value(Name(), "Secondary"));//make it so.
+						bob->Read_INI(ini);//parse it up
+						SecondaryWeapon = WeaponTypeClass::As_Pointer(buffer);//deliver it to the techno
+						sprintf(message, "TTC.ReadINI %s obtained sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
+						WWDebugString(message);
+					}
+				}
+				else {
+					SecondaryWeapon = weapon;
+					sprintf(message, "TTC.ReadINI %s obtained sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
+					WWDebugString(message);
+				}
+			}
+		}*/
+		//SecondaryWeapon = ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon);
+		//sprintf(message, "TTC.ReadINI %s has sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
+		//WWDebugString(message);
 		IsCloakable = ini.Get_Bool(Name(), "Cloakable", IsCloakable);
-		IsCrushable = ini.Get_Bool(Name(), "Crushable", IsCrushable);
+		//IsCrushable = ini.Get_Bool(Name(), "Crushable", IsCrushable);
 		IsScanner = ini.Get_Bool(Name(), "Sensors", IsScanner);
-		Armor = ini.Get_ArmorType(Name(), "Armor", Armor);
+		//Armor = ini.Get_ArmorType(Name(), "Armor", Armor);
 		Prerequisite = ini.Get_Buildings(Name(), "Prerequisite", Prerequisite);
-		MaxStrength = ini.Get_Int(Name(), "Strength", MaxStrength);
+		//MaxStrength = ini.Get_Int(Name(), "Strength", MaxStrength);
 		SightRange = ini.Get_Int(Name(), "Sight", SightRange);
 		Level = ini.Get_Int(Name(), "TechLevel", Level);
 		MaxSpeed = MPHType(_Scale_To_256(ini.Get_Int(Name(), "Speed", fixed(MaxSpeed, 256) * 100)));
@@ -6908,7 +7001,7 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		IsIndependentFire = ini.Get_Bool(Name(), "IndependentFire", IsIndependentFire);
 		IsTurretEquipped = ini.Get_Bool(Name(), "Turret", IsTurretEquipped);
 		BuildSpeedBias = ini.Get_Fixed(Name(), "BuildTime", BuildSpeedBias);
-		ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
+		//ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
 		HorizontalOffset = ini.Get_Int(Name(), "HOffset", HorizontalOffset); 		
 		VerticalOffset = ini.Get_Int(Name(), "VOffset", VerticalOffset);			
 		PrimaryOffset = ini.Get_Int(Name(), "PrimaryOffset", PrimaryOffset);			
@@ -6916,8 +7009,8 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		SecondaryOffset = ini.Get_Int(Name(), "SecondaryOffset", SecondaryOffset);
 		SecondaryLateral = ini.Get_Int(Name(), "SecondaryLateral", SecondaryLateral);
 		Rotation = ini.Get_Int(Name(), "Rotation", Rotation);
-		Scale = ini.Get_Float(Name(), "Scale", Scale);
-		ini.Get_String(Name(), "SecondaryImage", SecondaryGraphicName, SecondaryGraphicName, sizeof(SecondaryGraphicName));
+		//Scale = ini.Get_Float(Name(), "Scale", Scale);
+		//ini.Get_String(Name(), "SecondaryImage", SecondaryGraphicName, SecondaryGraphicName, sizeof(SecondaryGraphicName));
 		IsLeader = false;
 		if (PrimaryWeapon != NULL && PrimaryWeapon->Attack > 0) {
 			IsLeader = true;
@@ -6932,7 +7025,8 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		if (Speed == SPEED_FLOAT) {
 			MZone = MZONE_WATER;
 		}
-
+		sprintf(message, "TechnoTypeClass.Read_INI parsed %s.\n", Name());
+		WWDebugString(message);
 		return(true);
 	}
 	return(false);

@@ -50,6 +50,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include	"function.h"
+//#include    "ADATA.H"
 
 
 /***********************************************************************************************
@@ -73,21 +74,16 @@
  *   12/23/1994 JLB : Fixed scatter algorithm for non-homing projectiles.                      *
  *   12/31/1994 JLB : Removed range parameter (not needed).                                    *
  *=============================================================================================*/
-BulletClass::BulletClass(BulletType id, TARGET target, TechnoClass * payback, int strength, WarheadType warhead, int speed) :
-	ObjectClass(RTTI_BULLET, Bullets.ID(this)),
-	Class(BulletTypeClass::As_Pointer(id)),
-	Payback(payback),
-	PrimaryFacing(DIR_N),
-	IsInaccurate(false),
-	IsToAnimate(false),
-	IsLocked(true),
-	TarCom(target),
-	MaxSpeed(speed),
-	Warhead(WarheadTypeClass::As_Pointer(warhead))
+BulletClass::BulletClass(BulletType id, TARGET target, TechnoClass * payback, int strength, WarheadType warhead, int speed) : 
+	BulletClass(BulletTypeClass::As_Pointer(id),
+		target,
+		payback,
+		strength,
+		WarheadTypeClass::As_Pointer(warhead),
+		speed)
 {
-	Strength = strength;
-	Height = FLIGHT_LEVEL;
 }
+
 
 /***********************************************************************************************
  * BulletClass::BulletClass -- Bullet constructor.                                             *
@@ -106,7 +102,7 @@ BulletClass::BulletClass(BulletType id, TARGET target, TechnoClass * payback, in
  *   08/04/2022 JJ : Created.                                                                 *
  *=============================================================================================*/
 
-BulletClass::BulletClass(BulletTypeClass * projectile, TARGET target, TechnoClass* payback, int strength, WarheadTypeClass * warhead, int speed) :
+BulletClass::BulletClass(const BulletTypeClass * projectile, TARGET target, TechnoClass* payback, int strength,const WarheadTypeClass * warhead, int speed) :
 	ObjectClass(RTTI_BULLET, Bullets.ID(this)),
 	Class(projectile),
 	Payback(payback),
@@ -432,7 +428,7 @@ void BulletClass::AI(void)
 		*/
 		case IMPACT_EDGE:
 			Mark();
-			if (Payback != NULL && Class->Type == BULLET_GPS_SATELLITE) {
+			if (Payback != NULL && Class->Type() == BULLET_GPS_SATELLITE) {
 				
 				bool reveal = false;
 				if (Session.Type != GAME_GLYPHX_MULTIPLAYER) {
@@ -491,7 +487,7 @@ void BulletClass::AI(void)
 //			if(Class->Type == BULLET_NUKE_DOWN) {
 //				Render(true);
 //			}
-			if (Class->Type == BULLET_NUKE_UP) {
+			if (Class->Type() == BULLET_NUKE_UP) {
 				if (Payback != NULL) {
 					if (Distance(Payback->As_Target()) > 0x0C00) {
 						delete this;
@@ -758,7 +754,7 @@ bool BulletClass::Unlimbo(COORDINATE coord, DirType dir)
 		**	fire is inherently inaccurate.
 		*/
 		if (IsInaccurate || Class->IsInaccurate ||
-			((Is_Target_Cell(TarCom) || Is_Target_Infantry(TarCom)) && (Warhead->Type == WARHEAD_AP || Class->IsFueled))) {
+			((Is_Target_Cell(TarCom) || Is_Target_Infantry(TarCom)) && (Warhead->Type() == WARHEAD_AP || Class->IsFueled))) {
 
 			/*
 			**	Inaccuracy for low velocity or homing projectiles manifests itself as a standard
@@ -1118,7 +1114,7 @@ void BulletClass::Bullet_Explodes(bool forced)
 	}
 
 //				if (Payback && Payback->House == PlayerPtr && stricmp(Class->Name(), "GPSSATELLITE") == 0) {
-	if (Payback && Class->Type == BULLET_GPS_SATELLITE) {
+	if (Payback && Class->Type() == BULLET_GPS_SATELLITE) {
 		
 		bool reveal = false;
 		if (Session.Type != GAME_GLYPHX_MULTIPLAYER) {

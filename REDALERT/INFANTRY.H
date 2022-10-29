@@ -114,6 +114,7 @@ class InfantryClass : public FootClass
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		InfantryClass(InfantryType classid, HousesType house);
 		InfantryClass(NoInitClass const & x) : FootClass(x), Class(x), Comment(x) {};
 		virtual ~InfantryClass(void);
@@ -165,7 +166,7 @@ class InfantryClass : public FootClass
 		virtual ActionType What_Action(ObjectClass const * object) const;
 		virtual ActionType What_Action(CELL cell) const;
 		virtual BulletClass * Fire_At(TARGET target, int which);
-		virtual ResultType Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
+		virtual ResultType Take_Damage(int & damage, int distance, const WarheadTypeClass* warhead, TechnoClass * source=0, bool forced=false);
 		virtual FireErrorType Can_Fire(TARGET target, int which) const;
 		virtual COORDINATE Fire_Coord(int which) const;
 		virtual void Assign_Target(TARGET);

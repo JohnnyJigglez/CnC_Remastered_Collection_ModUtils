@@ -1475,7 +1475,7 @@ bool UnitTypeClass::Read_INI(CCINIClass & ini)
 		IsJammer = ini.Get_Bool(IniName, "Jammer", IsJammer);
 		IsGapper = ini.Get_Bool(IniName, "Gapper", IsGapper);
 		Mission = ini.Get_Mission(IniName, "Mission", Mission);
-		Explosion = ini.Get_AnimType(IniName, "Explosion", Explosion);
+		Explosion = AnimTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Explosion"), Explosion);
 		char buffer[64], message[128];
 		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
 			sprintf(message, "UTC.Read_INI %s has Logic : %s \n", Name(),buffer);

@@ -63,11 +63,11 @@
 template class TFixedIHeapClass<AircraftClass>;
 template class TFixedIHeapClass<AircraftTypeClass>;
 template class TFixedIHeapClass<AnimClass>;
-template class TFixedIHeapClass<AnimTypeClass>;
+//template class TFixedIHeapClass<AnimTypeClass>;
 template class TFixedIHeapClass<BuildingClass>;
 template class TFixedIHeapClass<BuildingTypeClass>;
 template class TFixedIHeapClass<BulletClass>;
-template class TFixedIHeapClass<BulletTypeClass>;
+//template class TFixedIHeapClass<BulletTypeClass>;
 template class TFixedIHeapClass<FactoryClass>;
 template class TFixedIHeapClass<HouseClass>;
 template class TFixedIHeapClass<HouseTypeClass>;
@@ -90,7 +90,7 @@ template class TFixedIHeapClass<UnitClass>;
 template class TFixedIHeapClass<UnitTypeClass>;
 template class TFixedIHeapClass<VesselClass>;
 template class TFixedIHeapClass<VesselTypeClass>;
-template class TFixedIHeapClass<WarheadTypeClass>;
+//template class TFixedIHeapClass<WarheadTypeClass>;
 //template class TFixedIHeapClass<WeaponTypeClass>;
 
 

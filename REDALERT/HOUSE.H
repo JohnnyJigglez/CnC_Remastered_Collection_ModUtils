@@ -646,6 +646,7 @@ class HouseClass {
 		static void * operator new(size_t size);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		HouseClass(HousesType house);
 		HouseClass(NoInitClass const & x) : Class(x), Control(x), AlertTime(x), BorrowedTime(x), Attack(x), AITimer(x), DamageTime(x), TeamTime(x), TriggerTime(x), SpeakAttackDelay(x), SpeakPowerDelay(x), SpeakMoneyDelay(x), SpeakMaxedDelay(x) {};
 		~HouseClass(void);

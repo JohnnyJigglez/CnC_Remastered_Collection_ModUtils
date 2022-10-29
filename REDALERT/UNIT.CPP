@@ -1039,7 +1039,7 @@ bool UnitClass::Unlimbo(COORDINATE coord, DirType dir)
  *   06/30/1995 JLB : Lasers do maximum damage against gunboat.                                *
  *   08/16/1995 JLB : Harvester crushing doesn't occur on early missions.                      *
  *=============================================================================================*/
-ResultType UnitClass::Take_Damage(int & damage, int distance, WarheadTypeClass* warhead, TechnoClass * source, bool forced)
+ResultType UnitClass::Take_Damage(int & damage, int distance,const WarheadTypeClass* warhead, TechnoClass * source, bool forced)
 {
 	assert(Units.ID(this) == ID);
 	assert(IsActive);
@@ -1933,7 +1933,7 @@ void UnitClass::Per_Cell_Process(PCPType why)
 		*/
 		LandType land = Map[Coord].Land_Type();
 		if (!IsDriving && IsMovingOntoBridge && (land == LAND_ROCK || land == LAND_WATER || land == LAND_RIVER)) {
-			WarheadTypeClass * wh = WarheadTypeClass::As_Pointer(WARHEAD_AP);
+			const WarheadTypeClass * wh = WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_AP]);
 			new AnimClass(Combat_Anim(Strength, wh, land), Coord);
 			int damage = Strength;
 			Take_Damage(damage, 0, wh, NULL, true);

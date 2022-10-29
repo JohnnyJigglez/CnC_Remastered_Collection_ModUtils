@@ -52,10 +52,14 @@ class AbstractTypeClass
 	public:
 
 		/*
-		**	This serves to identify the object class. The ID corresponds to the
-		**	variation number (e.g., UNIT_TANK1, UNIT_TANK2, etc.).
+		**	This serves to identify the object class.
 		*/
 		RTTIType RTTI;
+
+		/*
+		**	The ID is a unique identification number for this object type
+		** within the scope of the specific TypeClass
+		*/
 		int ID;
 
 		/*
@@ -76,7 +80,7 @@ class AbstractTypeClass
 
 		AbstractTypeClass(RTTIType rtti, int id, int name, char const * ini);
 		AbstractTypeClass(NoInitClass const & ) {};
-		~AbstractTypeClass(void) {};
+		//~AbstractTypeClass(void);
 
 		RTTIType What_Am_I(void) const {return(RTTI);};
 		TARGET As_Target(void) const {return(Build_Target(RTTI, ID));};
@@ -162,6 +166,7 @@ class HouseTypeClass : public AbstractTypeClass
 
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		static void operator delete(void * ptr);
 
 		static HousesType From_Name(char const * name);
@@ -186,14 +191,14 @@ class ObjectTypeClass : public AbstractTypeClass
 		**	type. If the graphic name is a null string, then there is no graphic
 		**	associated with this object type.
 		*/
-		char GraphicName[_MAX_FNAME];
+		char GraphicName[_MAX_FNAME] = {};
 
 		/*
 		**	This is the base name of the graphic data associated with this object
 		**	type. If the graphic name is a null string, then there is no graphic
 		**	associated with this object type.
 		*/
-		char SecondaryGraphicName[_MAX_FNAME];
+		char SecondaryGraphicName[_MAX_FNAME] = {};
 
 		/*
 		**	Is this object squashable by heavy vehicles?  If it is, then the vehicle
@@ -282,7 +287,7 @@ class ObjectTypeClass : public AbstractTypeClass
 		/*
 		**	This points to the radar imagery for this object.
 		*/
-		void const * RadarIcon;
+		void const* RadarIcon;
 
 		/*
 		* This is the scale we will apply to the image of this object
@@ -305,7 +310,7 @@ class ObjectTypeClass : public AbstractTypeClass
 								);
 
 		static void One_Time(void);
-
+		~ObjectTypeClass(void);
 		bool Is_Foot(void) const {return(RTTI == RTTI_INFANTRYTYPE || RTTI == RTTI_UNITTYPE || RTTI == RTTI_VESSELTYPE || RTTI == RTTI_AIRCRAFTTYPE);};
 		char const * Graphic_Name(void) const {if (GraphicName[0] != '\0') return(GraphicName); return(Name());}
 		char const* Secondary_Graphic_Name(void) const { if (SecondaryGraphicName[0] != '\0') return(SecondaryGraphicName); return(NULL); }
@@ -319,10 +324,12 @@ class ObjectTypeClass : public AbstractTypeClass
 		virtual short const * Overlap_List(void) const;
 		virtual BuildingClass * Who_Can_Build_Me(bool intheory, bool legal, HousesType house) const;
 		virtual void const * Get_Cameo_Data(void) const;
-		void const * Get_Image_Data(void) const {return ImageData;};
-		void const* Get_Secondary_Image_Data(void) const { return SecondaryImageData; };
-		void const * Get_Radar_Data(void) const {return RadarIcon;};
-
+		void const * Get_Image_Data(void) const {return ImageData;}
+		void const* Get_Secondary_Image_Data(void) const { return SecondaryImageData; }
+		void const * Get_Radar_Data(void) const {return RadarIcon;}
+		virtual bool Read_INI(CCINIClass& ini);
+		virtual void Parse_Graphics(short which = 0);
+		virtual char const * to_string(void) const;
 		#ifdef SCENARIO_EDITOR
 		virtual void Display(int, int, WindowNumberType, HousesType) const {};
 		#endif
@@ -631,7 +638,7 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	Is this building allowed to be considered for building adjacency
 		**	checking? If false, then building off of (or adjacent to) this building
 		**	is not considered.
-		*/
+		*/		
 		unsigned IsBase:1;
 
 		/*
@@ -642,11 +649,11 @@ class BuildingTypeClass : public TechnoTypeClass {
 		/*
 		** Width of the building, on the xcoord.
 		*/
-		short SizeWidth;
+		//short SizeWidth;
 		/*
 		** Height of the building, on the ycoord.
 		*/
-		short SizeHeight;
+		//short SizeHeight;
 
 		/*
 		**	This flag controls whether the building is equiped with a dirt
@@ -764,7 +771,8 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	This is the size of the building. This size value is a rough indication
 		**	of the building's "footprint".
 		*/
-		BSizeType Size;
+		//BSizeType Size;
+		short Size[2] = { 1,1 };
 
 		/**********************************************************************
 		**	For each stage that a building may be in, its animation is controlled
@@ -826,6 +834,7 @@ class BuildingTypeClass : public TechnoTypeClass {
 
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		static void operator delete(void * ptr);
 
 		static void Init_Heap(void);
@@ -1053,6 +1062,7 @@ class UnitTypeClass : public TechnoTypeClass
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		static void Init_Heap(void);
 		static UnitType As_Type(char const * name);
@@ -1160,6 +1170,7 @@ class VesselTypeClass : public TechnoTypeClass
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		static void Init_Heap(void);
 		static VesselType From_Name(char const * name);
@@ -1313,6 +1324,7 @@ class InfantryTypeClass : public TechnoTypeClass
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		static void Init_Heap(void);
 		static InfantryType As_Type(char const * name);
@@ -1415,6 +1427,7 @@ class AircraftTypeClass : public TechnoTypeClass
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		static void Init_Heap(void);
 		static AircraftType From_Name(char const * name);
@@ -1437,200 +1450,7 @@ class AircraftTypeClass : public TechnoTypeClass
 		static void const * LRotorData;
 		static void const * RRotorData;
 };
-
-
-/***************************************************************************
-** Bullets and other projectiles need some specific information according
-**	to their type.
-*/
-const char BULLET_NAMES[BULLET_COUNT][16] = {
-"Invisible",
-"Cannon",
-"Ack",
-"Torpedo",
-"FROG",
-"HeatSeeker",
-"LaserGuided",
-"Lobbed",
-"Bomblet",
-"Ballistic",
-"Parachute",
-"Fireball",
-"LeapDog",
-"Catapult",
-"AAMissile",
-"GPSSatellite",
-"NukeUp",
-"NukeDown"
-};
-class BulletTypeClass : public ObjectTypeClass
-{
-	public:
-
-		/*
-		**	Does this bullet type fly over walls?
-		*/
-		unsigned IsHigh:1;
-
-		bool IsReadfromINI:1;
-
-		/*
-		** Does this bullet need a shadow drawn under it?  Shadowed bullets
-		** use the Height value to offset their Y position.
-		*/
-		unsigned IsShadow:1;
-
-		/*
-		**	If this projectile is one that ballistically arcs from ground level, up into the air and
-		**	then back to the ground, where it explodes. Typical uses of this are for grenades and
-		**	artillery shells.
-		*/
-		unsigned IsArcing:1;
-
-		/*
-		**	Certain projectiles do not travel horizontally, but rather, vertically -- they drop
-		**	from a height. Bombs fall into this category and will have this value set to
-		**	true. Dropping projectiles do not calculate collision with terrain (such as walls).
-		*/
-		unsigned IsDropping:1;
-
-		/*
-		**	Is this projectile invisible?  Some bullets and weapon effects are not directly
-		**	rendered. Small caliber bullets and flame thrower flames are treated like
-		**	normal projectiles for damage purposes, but are displayed using custom
-		**	rules.
-		*/
-		unsigned IsInvisible:1;
-
-		/*
-		**	Does this bullet explode when near the target?  Some bullets only explode if
-		**	it actually hits the target. Some explode even if nearby.
-		*/
-		unsigned IsProximityArmed:1;
-
-		/*
-		**	Does this projectile spew puffs of smoke out its tail while it
-		**	travels? Missiles are prime examples of this projectile type.
-		*/
-		unsigned IsFlameEquipped:1;
-
-		/*
-		**	Should fuel consumption be tracked for this projectile?  Rockets are the primary
-		**	projectile with this characteristic, but even for bullets it should be checked so that
-		**	bullets don't travel too far.
-		*/
-		unsigned IsFueled:1;
-
-		/*
-		**	Is this projectile without different facing visuals?  Most plain bullets do not change
-		**	visual imagery if their facing changes. Rockets, on the other hand, are equipped with
-		**	the full 32 facing imagery.
-		*/
-		unsigned IsFaceless:1;
-
-		/*
-		**	If this is a typically inaccurate projectile, then this flag will be true. Artillery
-		**	is a prime example of this type.
-		*/
-		unsigned IsInaccurate:1;
-
-		/*
-		**	If the bullet contains translucent pixels, then this flag will be true. These
-		**	translucent pixels really are "shadow" pixels in the same style as the shadow
-		**	cast by regular ground units.
-		*/
-		unsigned IsTranslucent:1;
-
-		/*
-		**	If this bullet can be fired on aircraft, then this flag will be true.
-		*/
-		unsigned IsAntiAircraft:1;
-
-		/*
-		**	If this bullet can fire upon ground targets, then this flag will be true.
-		*/
-		unsigned IsAntiGround:1;
-
-		/*
-		**	If this bullet can be fired upon submarines (that are submerged), then
-		**	this flag will be true.
-		*/
-		unsigned IsAntiSub:1;
-
-		/*
-		**	If this bullet should lose strength as it travels toward the target, then
-		**	this flag will be true.
-		*/
-		unsigned IsDegenerate:1;
-
-		/*
-		**	Does this projectile travel under the water? If so, then its imagery will be modified
-		**	to look like it is doing so.
-		*/
-		unsigned IsSubSurface:1;
-
-		/*
-		**	If this projectile is equipped with a parachute, then this flag will be set. Parachute
-		**	bombs are usually the only one with this flag set.
-		*/
-		unsigned IsParachuted:1;
-
-		/*
-		**	Is this unit of the humongous size?  Certain very large projectiles have
-		**	this flag set. Typically, they require a special offset list so that the cells
-		**	they overlap will be properly redrawn.
-		*/
-		unsigned IsGigundo:1;
-
-		/*
-		**	This element is a unique identification number for the bullet
-		**	type.
-		*/
-		BulletType Type;
-
-		/*
-		**	This is the rotation speed of the bullet. It only has practical value
-		**	for those projectiles that performing homing action during flight -- such
-		**	as with rockets. If the ROT is zero, then no homing is performed. Otherwise
-		**	the projectile is considered to be a homing type.
-		*/
-		unsigned char ROT;
-
-		/*
-		**	Some projectiles have a built in arming distance that must elapse before the
-		**	projectile may explode. If this value is non-zero, then this override is
-		**	applied.
-		*/
-		int Arming;
-
-		/*
-		**	If this bullet is of the tumbling type, then this is the modulo to factor
-		**	into the game frame when determining what shape number to use for the
-		**	imagery.
-		*/
-		int Tumble;
-
-		//---------------------------------------------------------------------
-		BulletTypeClass(NoInitClass const & x) : ObjectTypeClass(x) {}
-		BulletTypeClass(short bullettype, char const * name);
-
-		static void * operator new(size_t);
-		static void * operator new(size_t , void * ptr) {return(ptr);};
-		static void operator delete(void * ptr);
-
-		static void Init_Heap(void);
-		static BulletTypeClass & As_Reference(BulletType type);
-		static BulletTypeClass* As_Pointer(BulletType bullet);
-		static BulletTypeClass* As_Pointer(char const* name);
-		static void Init(TheaterType ) {};
-		static void One_Time(void);
-
-		virtual bool Read_INI(CCINIClass & ini);
-		virtual bool Create_And_Place(CELL , HousesType =HOUSE_NONE) const {return false;};
-		virtual ObjectClass * Create_One_Of(HouseClass *) const {return 0;};
-};
-
-
+#include "PROJECTILE.h"
 /****************************************************************************
 **	These are the different TYPES of terrain objects. Every terrain object must
 **	be one of these types.
@@ -1678,7 +1498,7 @@ class TerrainTypeClass : public ObjectTypeClass
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
-
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		static void Init_Heap(void);
 		static TerrainType From_Name(char const * name);
 		static TerrainTypeClass & As_Reference(TerrainType type);
@@ -1739,6 +1559,7 @@ class TemplateTypeClass: public ObjectTypeClass
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
+		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		static void Init_Heap(void);
 		static TemplateType From_Name(char const * name);
@@ -1757,225 +1578,7 @@ class TemplateTypeClass: public ObjectTypeClass
 		virtual void Display(int x, int y, WindowNumberType window, HousesType house=HOUSE_NONE) const;
 		#endif
 };
-
-
-/****************************************************************************
-**	All the animation objects are controlled by this class. It holds the static
-**	data associated with each animation type.
-*/
-class AnimTypeClass : public ObjectTypeClass
-{
-	public:
-
-		/*
-		**	If this animation should run at a constant apparent rate regardless
-		**	of game speed setting, then this flag will be set to true.
-		*/
-		unsigned IsNormalized:1;
-
-		/*
-		**	If this animation should be rendered and sorted with the other ground
-		**	units, then this flag is true. Typical of this would be fire and other
-		**	low altitude animation effects.
-		*/
-		unsigned IsGroundLayer:1;
-
-		/*
-		**	If this animation should be rendered in a translucent fashion, this flag
-		**	will be true. Translucent colors are some of the reds and some of the
-		**	greys. Typically, smoke and some fire effects have this flag set.
-		*/
-		unsigned IsTranslucent:1;
-
-		/*
-		**	If this animation uses the white translucent table, then this flag
-		**	will be true.
-		*/
-		unsigned IsWhiteTrans:1;
-
-		/*
-		**	If this is the special flame thrower animation, then custom affects
-		**	occur as it is playing. Specifically, scorch marks and little fire
-		**	pieces appear as the flame jets forth.
-		*/
-		unsigned IsFlameThrower:1;
-
-		/*
-		**	Some animations leave a scorch mark behind. Napalm and other flame
-		**	type explosions are typical of this type.
-		*/
-		unsigned IsScorcher:1;
-
-		/*
-		**	Some explosions are of such violence that they leave craters behind.
-		**	This flag will be true for those types.
-		*/
-		unsigned IsCraterForming:1;
-
-		/*
-		**	If this animation should attach itself to any unit that is in the same
-		**	location as itself, then this flag will be true. Most vehicle impact
-		**	explosions are of this type.
-		*/
-		unsigned IsSticky:1;
-
-		/*
-		**	If this animation is theater specific, then this flag will be
-		**	set to true. Most animations are not theater specific.
-		*/
-		unsigned IsTheater:1;
-
-		/*
-		**	This is the type number for this animation kind. It can be used as
-		**	a unique identifier for animation types.
-		*/
-		AnimType Type;
-
-		/*
-		**	This specified the maximum dimension of the shape (edge to edge). This dimension
-		**	is used to build the appropriate cell refresh list. Keep this value as small
-		**	as possible to ensure maximum performance. This is especially critical, since
-		**	animations always cause the cells under them to be redrawn every frame.
-		*/
-		int Size;
-
-		/*
-		**	This is the frame that the animation is biggest. The biggest frame of animation
-		**	will hide any changes to underlying ground (e.g., craters) that the animation
-		**	causes, so these effects are delayed until this frame is reached. The end result
-		**	is to prevent the player from seeing craters "pop" into existence.
-		*/
-		int Biggest;
-
-		/*
-		**	Some animations (when attached to another object) damage the object it
-		**	is in contact with. Fire is a good example of this. This value is a
-		**	fixed point number of the damage that is applied to the attached object
-		**	every game tick. The damage is expressed as damage points per game frame.
-		**	Because it is a fixed point fraction, the damage can be very slight.
-		**  
-		*/
-		fixed Damage;
-
-		/*
-		**	Simple animation delay value between advancing of frames. This can
-		**	be overridden by the control list.
-		*/
-		int Delay;
-
-		/*
-		**	The starting frame number for each animation sequence. Usually this is
-		**	zero, but can sometimes be different if this animation is a sub sequence
-		**	of a larger animation file.
-		*/
-		int Start;
-
-		/*
-		**	Looping animations might start at a different frame than the initial one.
-		**	This is true for smoke effects that have a startup sequence followed by a
-		**	continuous looping sequence.
-		*/
-		int LoopStart;
-
-		/*
-		**	For looping animations, this is the frame that will end all the middle loops
-		**	of the animation. The last loop of the animation will proceed until the Stages
-		**	has been fully completed.
-		*/
-		int LoopEnd;
-
-		/*
-		**	The number of stages that this animation sequence will progress through
-		**	before it loops or ends.
-		*/
-		int Stages;
-
-		/*
-		**	This is the normal loop count for this animation. Usually this is one, but
-		**	for some animations, it may be larger.
-		*/
-		int Loops;
-
-		/*
-		**	This is the sound effect to play when this animation starts. Usually, this
-		**	applies to explosion animations.
-		*/
-		VocType Sound;
-
-		/*
-		**	If the animation is to launch into another animation, then
-		**	the secondary animation will be defined here.
-		*/
-		AnimType ChainTo;
-
-		/*
-		**	The number of virtual animation stages. Keeps the animation alive longer for the purpose
-		**  of 4K rendering, but is ignored by legacy rendering.
-		*/
-		int VirtualStages;
-
-		/*
-		**	The scale of the virtual animation. Allows for higher-resolution art to appear larger.
-		*/
-		int VirtualScale;
-
-		/*
-		**	The shape name to used for 4K virtual rendering, overrides the INI name
-		*/
-		char const * VirtualName;
-
-		/*
-		**	Animation data to use specifically for virtual rendering (implies this animation only for legacy).
-		*/
-		AnimType VirtualAnim;
-
-		//---------------------------------------------------------------------------
-		AnimTypeClass(NoInitClass const & x) : ObjectTypeClass(x) {}
-		AnimTypeClass(AnimType anim,
-							char const * name,
-							int size,
-							int biggest,
-							bool istheater,
-							bool isnormal,
-							bool iswhite,
-							bool isscorcher,
-							bool iscrater,
-							bool issticky,
-							bool ground,
-							bool istrans,
-							bool isflame,
-							fixed damage,
-							int delaytime,
-							int start,
-							int loopstart,
-							int loopend,
-							int stages,
-							int loops,
-							VocType sound,
-							AnimType chainto,
-							int virtualstages=-1,
-							int virtualscale=0x100,
-							char const * virtualname=NULL,
-							AnimType virtualanim=ANIM_NONE);
-		AnimTypeClass(int animtype, char const* name);
-		static void Init_Heap(void);
-		static void * operator new(size_t);
-		static void * operator new(size_t , void * ptr) {return(ptr);};
-		static void operator delete(void * ptr);
-
-		static AnimTypeClass & As_Reference(AnimType type);
-		static AnimTypeClass * As_Pointer(AnimType type);
-		static AnimTypeClass * As_Pointer(const char * name);
-		//static AnimTypeClass * As_Pointer(int index);
-		static AnimType As_Type(const char* name);
-		static void Init(TheaterType theater);
-		static void One_Time(void);
-
-		virtual bool Create_And_Place(CELL , HousesType =HOUSE_NONE) const {return false;};
-		virtual ObjectClass * Create_One_Of(HouseClass *) const {return 0;};
-		virtual bool Read_INI(CCINIClass& ini);
-};
-
+#include "ADATA.H"
 
 /****************************************************************************
 **	This controls the overlay object types. These object types include walls
@@ -2074,7 +1677,7 @@ class OverlayTypeClass: public ObjectTypeClass
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
-
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		static void Init_Heap(void);
 		static OverlayType From_Name(char const * name);
 		static OverlayTypeClass & As_Reference(OverlayType type);
@@ -2144,7 +1747,7 @@ class SmudgeTypeClass : public ObjectTypeClass
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void * ptr);
-
+		static void operator delete(void*, void* ptr) { delete ptr; }
 		static void Init_Heap(void);
 		static SmudgeType From_Name(char const * name);
 		static SmudgeTypeClass & As_Reference(SmudgeType type);

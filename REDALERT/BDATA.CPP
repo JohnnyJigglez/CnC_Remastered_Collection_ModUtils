@@ -4064,6 +4064,34 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 			WWDebugString(message);
 			OccupyList = OccupyListData;
 		}
+		if (ini.Get_String(Name(), "OverlapList", "", buffer, sizeof(buffer))) {
+			sprintf(message, "BTC.Read_INI Building has OverlapList : %s \n", buffer);
+			WWDebugString(message);
+			short count = 0, rowcount = 0, colcount = 0;
+			char* coltoken = NULL;
+			char* rest = buffer;
+			short tempoccupylist[36] = { REFRESH_EOL };
+			char* rowtoken = strtok_s(rest, "|", &rest);
+			while (rowtoken != NULL && rowcount < 6) {
+				coltoken = strtok(rowtoken, ",");
+				while (coltoken != NULL && colcount < 6) {
+					if (atoi(coltoken) == 1) {
+						tempoccupylist[count] = (rowcount * 128) + colcount;
+						count++;
+					}
+					colcount++;
+					coltoken = strtok(NULL, ",");
+				}
+				colcount = 0;
+				rowcount++;
+				rowtoken = strtok_s(rest, "|", &rest);
+			}
+			tempoccupylist[count] = REFRESH_EOL;
+			memcpy(OverlapListData, tempoccupylist, (sizeof(tempoccupylist) / 36) * (count + 1));
+			sprintf(message, "BTC.Read_INI Building overlaps %d cells \n", count);
+			WWDebugString(message);
+			OverlapList = OverlapListData;
+		}
 		/*if (OccupyList != NULL) {
 			sprintf(message, "BTC.Read_INI Building has OccupyList : ");
 			//WWDebugString(message);

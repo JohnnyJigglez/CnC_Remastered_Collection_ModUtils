@@ -911,6 +911,13 @@ class BuildingTypeClass : public TechnoTypeClass {
 		short const * OverlapList;
 
 		/*
+		**	Buildings can often times overlap a cell but not actually "occupy" it for
+		**	purposes of movement. This points to a list of offsets that indicate which
+		**	cells the building has visual overlap but does not occupy.
+		*/
+		short OverlapListData[36] = { REFRESH_EOL };
+
+		/*
 		**	The construction animation graphic data pointer is
 		**	pointed to by this element.
 		*/

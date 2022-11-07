@@ -378,7 +378,7 @@ void WWDebugString (char *string)
 
 	if (DebugFile != INVALID_HANDLE_VALUE){
 		SetFilePointer (DebugFile, 0, NULL, FILE_END);
-		WriteFile(DebugFile, outstr, strlen(outstr)+1, &actual, NULL);
+		WriteFile(DebugFile, outstr, strlen(outstr), &actual, NULL);
 		CloseHandle (DebugFile);
 	}
 

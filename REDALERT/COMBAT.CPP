@@ -80,11 +80,12 @@ int Modify_Damage(int damage, WarheadType warhead, ArmorType armor, int distance
 	**	Negative damage (i.e., heal) is always applied full strength, but only if the heal
 	**	effect is close enough.
 	*/
+	WarheadType mechtype = WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_MECHANICAL])->Type();
 	if (damage < 0) {
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 		if (distance < 0x008) {
-			if(warhead != WARHEAD_MECHANICAL && armor == ARMOR_NONE) return(damage);
-			if(warhead == WARHEAD_MECHANICAL && armor != ARMOR_NONE) return(damage);
+			if(mechtype != warhead && armor == ARMOR_NONE) return(damage);
+			if(warhead == mechtype && armor != ARMOR_NONE) return(damage);
 		}
 #else
 		if (distance < 0x008 && armor == ARMOR_NONE) return(damage);
@@ -139,11 +140,12 @@ int Modify_Damage(int damage, const WarheadTypeClass * warhead, ArmorType armor,
 	**	Negative damage (i.e., heal) is always applied full strength, but only if the heal
 	**	effect is close enough.
 	*/
+	//WarheadType mechtype = WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_MECHANICAL])->Type();
 	if (damage < 0) {
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 		if (distance < 0x008) {
-			if (warhead->Type() != WARHEAD_MECHANICAL && armor == ARMOR_NONE) return(damage);
-			if (warhead->Type() == WARHEAD_MECHANICAL && armor != ARMOR_NONE) return(damage);
+			if (!warhead->nameMatches(WARHEAD_MECHANICAL) && armor == ARMOR_NONE) return(damage);
+			if (warhead->nameMatches(WARHEAD_MECHANICAL) && armor != ARMOR_NONE) return(damage);
 		}
 #else
 		if (distance < 0x008 && armor == ARMOR_NONE) return(damage);
@@ -320,7 +322,7 @@ void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, cons
 		 cellptr->TType == TEMPLATE_BRIDGE_2A || cellptr->TType == TEMPLATE_BRIDGE_2B ||
 		 cellptr->TType == TEMPLATE_BRIDGE_3A || cellptr->TType == TEMPLATE_BRIDGE_3B ) {
 		//TODO: Add code to check if warheads are isBridgeDestroyer
-		if (((warhead->Type() == WARHEAD_AP || warhead->Type() == WARHEAD_HE) && Random_Pick(1, Rule.BridgeStrength) < strength)) {
+		if (((warhead->nameMatches(WARHEAD_AP) || warhead->nameMatches(WARHEAD_HE)) && Random_Pick(1, Rule.BridgeStrength) < strength)) {
 			Map.Destroy_Bridge_At(cell);
 		}
 	}
@@ -349,7 +351,7 @@ void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source, cons
  *   05/19/1996 JLB : Created.                                                                 *
  *   09/29/2021 JJ  : Add capability to override explosionSet with Anim                        *
  *=============================================================================================*/
-AnimType Combat_Anim(int damage,const WarheadTypeClass * warhead, LandType land)
+AnimType Combat_Anim(int damage,const WarheadTypeClass * warhead, LandType land, bool exploding)
 {
 	/*
 	**	For cases of no damage or invalid warhead, don't have any
@@ -390,9 +392,7 @@ AnimType Combat_Anim(int damage,const WarheadTypeClass * warhead, LandType land)
 		Rule.DynamicExplosionSetThreshold ? (int)std::round((0.75f)*WeaponTypeClass::MaxDamage(5)) : Rule.ExplosionSet5Threshold,
 		Rule.DynamicExplosionSetThreshold ? (int)std::round((0.75f)*WeaponTypeClass::MaxDamage(3)) : Rule.ExplosionSet3Threshold
 	};
-	//WarheadTypeClass const * wptr = WarheadTypeClass::As_Pointer(warhead);
-//	WarheadTypeClass const * wptr = &Warheads[warhead];
-	switch (warhead->ExplosionSet) {
+	switch (exploding ? warhead->SelfHarm : warhead->ExplosionSet) {
 		case 6:
 			return(ANIM_ATOM_BLAST);
 
@@ -404,7 +404,6 @@ AnimType Combat_Anim(int damage,const WarheadTypeClass * warhead, LandType land)
 
 		case 4:
 			if (land == LAND_NONE) return(ANIM_FLAK);
-//	Fixed math error
 			if (land == LAND_WATER) return(_waterlist[(ARRAY_SIZE(_waterlist)-1) * fixed(min(damage, maxdamage[0]), maxdamage[0])]);
 			return(_aplist[(ARRAY_SIZE(_aplist)-1) * fixed(min(damage, maxdamage[0]), maxdamage[0])]);
 
@@ -479,7 +478,7 @@ void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int rawdamage, TechnoClas
 			int dist_from_center = Distance(XY_Coord(x+cell_radius, y+cell_radius), XY_Coord(cell_radius, cell_radius));
 			int damage = rawdamage * Inverse(fixed(cell_radius, dist_from_center));
 			Explosion_Damage(Cell_Coord(tcell), damage, source, warhead);
-			if (warhead->Type() == WARHEAD_FIRE && damage > 100) {
+			if (warhead->nameMatches(WARHEAD_FIRE) && damage > 100) {
 				new SmudgeClass(Random_Pick(SMUDGE_SCORCH1, SMUDGE_SCORCH6), Cell_Coord(tcell));
 			}
 		}

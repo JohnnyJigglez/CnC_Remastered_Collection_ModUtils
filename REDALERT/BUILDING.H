@@ -226,7 +226,7 @@ class BuildingClass : public TechnoClass
 #endif
 		virtual ~BuildingClass(void);
 		//const BuildingTypeClass* BuildingClass::ClassPtr(void) { return BuildingTypes.Ptr(ClassID); };
-		operator StructType(void) const {return (Class->Type);};
+		operator StructType(void) const {return (StructType)(Class->ID);};
 
 		/*---------------------------------------------------------------------
 		**	Member function prototypes.

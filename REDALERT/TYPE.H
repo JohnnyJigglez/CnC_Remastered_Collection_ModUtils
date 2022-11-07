@@ -1283,11 +1283,23 @@ class InfantryTypeClass : public TechnoTypeClass
 		DoInfoStruct const * DoControls;
 
 		/*
+		**	This is an array of the various animation frame data for the actions that
+		**	the infantry may perform.
+		*/
+		DoInfoStruct DoControlsData[DO_COUNT];
+
+		/*
 		**	Alternate animation info for the 'virtual' window which gets rendered on the GlyphX client.
 		** The infantry frames here map to the original TD infantry frames, so a different set is needed depending on whether
 		** we are rendering in legacy mode or on the GlyphX client. ST - 9/5/2019 12:17PM
 		*/
 		DoInfoStruct const * DoControlsVirtual;
+		/*
+		**	Alternate animation info for the 'virtual' window which gets rendered on the GlyphX client.
+		** The infantry frames here map to the original TD infantry frames, so a different set is needed depending on whether
+		** we are rendering in legacy mode or on the GlyphX client. ST - 9/5/2019 12:17PM
+		*/
+		DoInfoStruct DoControlsVirtualData[DO_COUNT];
 
 		/*
 		**	There are certain units with special animation sequences built into the
@@ -1341,6 +1353,7 @@ class InfantryTypeClass : public TechnoTypeClass
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 		static void Prep_For_Add(void);
+		static PipEnum Pip_From_Name(char const* name);
 
 		virtual bool Read_INI(CCINIClass & ini);
 		virtual void Dimensions(int & width, int & height) const;
@@ -1410,6 +1423,7 @@ class AircraftTypeClass : public TechnoTypeClass
 		int LandingSpeed;
 
 		AircraftTypeClass(NoInitClass const & x) : TechnoTypeClass(x) {}
+		AircraftTypeClass(int aatype, char const* ininame);
 		AircraftTypeClass(
 				AircraftType airtype,
 				int name,
@@ -1437,25 +1451,34 @@ class AircraftTypeClass : public TechnoTypeClass
 		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		static void Init_Heap(void);
-		static AircraftType From_Name(char const * name);
+		//static AircraftType From_Name(char const* name);
 		static AircraftTypeClass & As_Reference(AircraftType a);
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 		static void Prep_For_Add(void);
 
+		virtual bool Read_INI(CCINIClass& ini);
 		virtual void Dimensions(int &width, int &height) const;
 		virtual bool Create_And_Place(CELL, HousesType) const;
 		virtual ObjectClass * Create_One_Of(HouseClass * house) const;
 		virtual short const * Occupy_List(bool placement=false) const;
 		virtual short const * Overlap_List(void) const;
 		virtual int Max_Pips(void) const;
+		static AircraftTypeClass * As_Pointer(char const* name);
+		static AircraftTypeClass * As_Pointer(int index);
+		static AircraftType As_Type(char const* name);
 
 		#ifdef SCENARIO_EDITOR
 		virtual void Display(int x, int y, WindowNumberType window, HousesType house) const;
 		#endif
 
 		static void const * LRotorData;
+		char LRotorDataName[16];
+		void const* LRotorTrueData;
+
 		static void const * RRotorData;
+		char RRotorDataName[16];
+		void const* RRotorTrueData;
 };
 #include "PROJECTILE.h"
 /****************************************************************************

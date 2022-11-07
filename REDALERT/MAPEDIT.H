@@ -56,15 +56,15 @@ enum MapEdit1Enum {
 		(int)OVERLAY_COUNT +
 		(int)SMUDGE_COUNT +
 		(int)TERRAIN_COUNT +
-		(int)UNIT_COUNT +
-		(int)INFANTRY_COUNT +
+		(int)UNITT_MAX +
+		(int)INFANTRYT_MAX +
 		(int)VESSEL_COUNT +
-		(int)STRUCT_COUNT,
+		(int)STRUCT_MAX,
 
 	MAX_TEAM_CLASSES =				// max # ObjectTypeClasses for a team
-		(int)UNIT_COUNT +
-		(int)INFANTRY_COUNT +
-		(int)AIRCRAFT_COUNT,
+		(int)UNITT_MAX +
+		(int)INFANTRYT_MAX +
+		(int)AIRCRAFT_MAX,
 
 //	NUM_EDIT_MISSIONS = 6,			// # missions that can be assigned an object
 

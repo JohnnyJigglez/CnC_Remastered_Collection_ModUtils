@@ -280,12 +280,61 @@ AircraftTypeClass::AircraftTypeClass(
 	Type(airtype),
 	Mission(deforder),
 	Building(building),
-	LandingSpeed(landingspeed)
+	LandingSpeed(landingspeed),
+	LRotorTrueData(NULL),
+	RRotorTrueData(NULL)
 {
 	/*
 	**	Forced aircraft overrides from the default.
 	*/
 	Speed = SPEED_WINGED;
+	//char * bob = LRotorDataName;
+	strcpy(LRotorDataName, "LROTOR");
+	strcpy(RRotorDataName, "RROTOR");
+	//LRotorDataName = "LROTOR";
+
+	//std::copy(LRotorTrueDataName, "LROTOR");
+	//RRotorTrueDataName = "RROTOR";
+}
+
+/***********************************************************************************************
+ * AircraftTypeClass::AircraftTypeClass -- This is the constructor for the Aircraft types.     *
+ *                                                                                             *
+ *    This is the constructor used to create the Aircraft types.                               *
+ *                                                                                             *
+ * INPUT:   see below...                                                                       *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   10/30/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+AircraftTypeClass::AircraftTypeClass(int aatype, char const* ininame) :
+	AircraftTypeClass(static_cast<AircraftType>(aatype),
+		TXT_NONE,
+		ininame,
+		0x0000,//vert offset
+		0x0000,//primary offset
+		0x0000,//lat offset
+		false,//fixed wing
+		false,//rotored
+		false,//is_rotorcustom
+		false,//is_landable
+		false,//is_stealthy
+		true, //is_selectable
+		true, // is_legal_target
+		false,// is_insignificant
+		false,// is_immune
+		STRUCT_NONE,
+		255,
+		16,
+		MISSION_HUNT)
+{
+	char message[64];
+	sprintf(message, "Instantiated custom Aircraft %s .\n", ininame);
+	WWDebugString(message);
 }
 
 
@@ -379,17 +428,18 @@ void AircraftTypeClass::Init_Heap(void)
  * HISTORY:                                                                                    *
  *   07/26/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-AircraftType AircraftTypeClass::From_Name(char const * name)
+/*AircraftType AircraftTypeClass::From_Name(char const* name)
 {
 	if (name != NULL) {
-		for (int classid = AIRCRAFT_FIRST; classid < AIRCRAFT_COUNT; classid++) {
+		for (int classid = 0; classid < AircraftTypes.Count(); classid++) {
+
 			if (stricmp(As_Reference((AircraftType)classid).IniName, name) == 0) {
 				return(AircraftType)classid;
 			}
 		}
 	}
 	return(AIRCRAFT_NONE);
-}
+}*/
 
 
 /***********************************************************************************************
@@ -406,13 +456,29 @@ AircraftType AircraftTypeClass::From_Name(char const * name)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/26/1994 JLB : Created.                                                                 *
+ *   10/30/2022 JJ  : Updated to use entire heap                                               *
  *=============================================================================================*/
 void AircraftTypeClass::One_Time(void)
 {
-	for (int index = AIRCRAFT_FIRST; index < AIRCRAFT_COUNT; index++) {
+	LRotorData = MFCD::Retrieve("LROTOR.SHP");
+	RRotorData = MFCD::Retrieve("RROTOR.SHP");
+	for (int index = 0; index < AircraftTypes.Count(); index++) {
 		char fullname[_MAX_FNAME+_MAX_EXT];
-		AircraftTypeClass	const & uclass = As_Reference((AircraftType)index);
-
+		AircraftTypeClass const & uclass = As_Reference((AircraftType)index);
+		if (stricmp(uclass.LRotorDataName, "LROTOR") != 0)
+		{
+			_makepath(fullname, NULL, NULL, uclass.LRotorDataName, ".SHP");
+			((void const*&)uclass.LRotorTrueData) = MFCD::Retrieve(fullname);
+		}
+		else
+			(void const*&)uclass.LRotorTrueData = LRotorData;
+		if (stricmp(uclass.RRotorDataName, "RROTOR") != 0)
+		{
+			_makepath(fullname, NULL, NULL, uclass.RRotorDataName, ".SHP");
+			((void const*&)uclass.RRotorTrueData) = MFCD::Retrieve(fullname);
+		}
+		else
+			(void const*&)uclass.RRotorTrueData = RRotorData;
 		/*
 		**	Fetch the supporting data files for the unit.
 		*/
@@ -427,9 +493,6 @@ void AircraftTypeClass::One_Time(void)
 		_makepath(fullname, NULL, NULL, uclass.Graphic_Name(), ".SHP");
 		((void const *&)uclass.ImageData) = MFCD::Retrieve(fullname);
 	}
-
-	LRotorData = MFCD::Retrieve("LROTOR.SHP");
-	RRotorData = MFCD::Retrieve("RROTOR.SHP");
 }
 
 
@@ -652,4 +715,132 @@ void AircraftTypeClass::Dimensions(int &width, int &height) const
 AircraftTypeClass & AircraftTypeClass::As_Reference(AircraftType aircraft)
 {
 	return(*AircraftTypes.Ptr(aircraft));
+}
+
+/***********************************************************************************************
+ * AircraftTypeClass::Read_INI -- Fetches aircraft override values from the INI database.      *
+ *                                                                                             *
+ *    This routine will retrieve the override values for this aircraft type class object from  *
+ *    the INI database specified.                                                              *
+ *                                                                                             *
+ * INPUT:   ini   -- Reference to the INI database to retrieve the data from.                  *
+ *                                                                                             *
+ * OUTPUT:  bool; Was the aircraft section for this type found and data retrieved from it?     *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   10/30/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+bool AircraftTypeClass::Read_INI(CCINIClass& ini)
+{
+	if (TechnoTypeClass::Read_INI(ini)) {
+		IsFixedWing = ini.Get_Bool(Name(), "FixedWing", IsFixedWing);
+		IsLandable = ini.Get_Bool(Name(), "Lands", IsLandable);
+		IsRotorEquipped = ini.Get_Bool(Name(), "RotorEquipped", IsRotorEquipped);
+		IsRotorCustom = ini.Get_Bool(Name(), "RotorCustom", IsRotorCustom);
+		LandingSpeed = ini.Get_Int(Name(), "LandingSpeed", LandingSpeed);
+		Mission = ini.Get_Mission(IniName, "Mission", Mission);
+		char buffer[64], message[128];
+		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
+			sprintf(message, "AATC.Read_INI %s has Logic : %s \n", Name(), buffer);
+			WWDebugString(message);
+			AircraftType atype = AircraftTypeClass::As_Type(buffer);
+			if (atype != AIRCRAFT_NONE)
+				Type = atype;
+			sprintf(message, "AATC.Read_INI has ID %d and Type %d . \n", ID, (int)Type);
+			WWDebugString(message);
+		}
+		if (ini.Get_String(Name(), "Building", "", buffer, sizeof(buffer))) {
+			BuildingTypeClass* ptr = BuildingTypeClass::As_Pointer(buffer);
+			if (ptr != NULL)
+				Building = ptr->As_Type();
+		}
+		if (ini.Get_String(Name(), "LRotorImage", "", buffer, sizeof(buffer))) {
+			strcpy(LRotorDataName, buffer);
+		}
+		if (ini.Get_String(Name(), "RRotorImage", "", buffer, sizeof(buffer))) {
+			strcpy(RRotorDataName, buffer);
+		}
+		return(true);
+	}
+	return(false);
+}
+/***********************************************************************************************
+ * AircraftTypeClass::As_Type -- Fetch Aircraft Type from specified name.                      *
+ *                                                                                             *
+ *    This routine converts an ASCII representation of a aircraft class and                    *
+ *    converts it into a real aircraft type number.                                            *
+ *                                                                                             *
+ * INPUT:   name  -- ASCII name representing a unit class.                                     *
+ *                                                                                             *
+ * OUTPUT:  Returns with the actual aircraft type number that the string                       *
+ *          represents.                                                                        *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   10/30/2022 JJ  : Created                                                                  *
+ *=============================================================================================*/
+AircraftType AircraftTypeClass::As_Type(char const* name)
+{
+
+	if (name == NULL)
+		return(AIRCRAFT_NONE);
+	AircraftTypeClass* aatc = As_Pointer(name);
+	if (aatc == NULL)
+		return(AIRCRAFT_NONE);
+	return(aatc->Type);
+}
+
+/***********************************************************************************************
+ * AircraftTypeClass::As_Pointer -- Fetch Aircraft type class pointer for specified name.      *
+ *                                                                                             *
+ *    This routine converts an ASCII representation of a Aircraft class and                    *
+ *    converts it into a real Aircraft type class pointer.                                     *
+ *                                                                                             *
+ * INPUT:   name  -- ASCII name representing a Aircraft class.                                 *
+ *                                                                                             *
+ * OUTPUT:  Returns with the actual Aircraft type class pointer that the string                *
+ *          represents.                                                                        *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   10/30/2022 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+AircraftTypeClass* AircraftTypeClass::As_Pointer(char const* name)
+{
+	if (name == NULL)
+		return NULL;
+	AircraftTypeClass* ptr = NULL;
+	for (int index = 0; index < AircraftTypes.Count(); index++) {
+		ptr = AircraftTypes.Ptr(index);
+		if (stricmp(ptr->Name(), name) == 0)
+			return(ptr);
+	}
+	return(NULL);
+}
+
+/***********************************************************************************************
+ * AircraftTypeClass::As_Pointer -- Fetch Aircraft type class pointer for specified index.     *
+ *                                                                                             *
+ *    This routine accepts an index in the aircraft heap and                                   *
+ *    converts it into a real Aircraft type class pointer.                                     *
+ *                                                                                             *
+ * INPUT:   name  -- index representing a Aircraft class.                                      *
+ *                                                                                             *
+ * OUTPUT:  Returns with the actual Aircraft type class pointer that the index                 *
+ *          represents.                                                                        *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   10/30/2022 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+AircraftTypeClass* AircraftTypeClass::As_Pointer(int index)
+{
+	if (index < 0 || index > AircraftTypes.Count())
+		return NULL;
+	return(AircraftTypes.Ptr(index));
 }

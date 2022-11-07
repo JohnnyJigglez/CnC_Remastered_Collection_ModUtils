@@ -76,9 +76,11 @@ class WarheadTypeClass
 		static const WarheadTypeClass * As_Pointer(WarheadType weapon);
 		static const WarheadTypeClass * As_Pointer(char const* name);
 		WarheadType Type(void) const { return (BehavesLike); }
+		bool nameMatches(WarheadType defvalue) const;
 		static const WarheadTypeClass* findorcreate(CCINIClass& ini, const char* value, const WarheadTypeClass* defptr = NULL);
 		static WarheadType findorcreate(CCINIClass& ini, const char* value, WarheadType defvalue = WARHEAD_NONE);
-	    
+		char const* WarheadTypeClass::to_string(void) const;
+		static void Dump(void);
 		//static WarheadType WarheadType_From_Name(char const* name);
 		/*
 		**	This is the ID number of the warhead type. It is index number into the warhead
@@ -144,6 +146,11 @@ class WarheadTypeClass
 		**	Which explosion set to use for warhead impact.
 		*/
 		int ExplosionSet;
+
+		/*
+		**	Which explosion set to use for units using this warhead when they explode.
+		*/
+		int SelfHarm;
 
 		/*
 		**	This specifies the infantry death animation to use if the infantry dies as

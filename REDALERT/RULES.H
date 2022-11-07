@@ -74,6 +74,7 @@ class RulesClass {
 		bool IQ(CCINIClass & ini);
 		bool Objects(CCINIClass & ini);
 		bool Difficulty(CCINIClass & ini);
+		static void Dump();
 
 		/*
 		**	This specifies the turbo boost speed for missiles when they are fired upon
@@ -280,6 +281,10 @@ class RulesClass {
 		MPHType VortexSpeed;
 		int VortexDamage;
 		fixed VortexChance;
+
+		//char ExplodingEntityWarheadName[16];
+		//char FlamingEntityWarheadName[16];
+		//char NukeWarheadName[16];
 
 		/*
 		**	When an explosive object explodes, the damage will spread out
@@ -739,6 +744,7 @@ class RulesClass {
 		**	This specifies the heap maximum for the various game objects.
 		*/
 		int AircraftMax;
+		int AircraftTypeMax;
 		int AnimMax;
 		int AnimTypeMax;
 		int BuildingMax;
@@ -746,6 +752,7 @@ class RulesClass {
 		int BulletMax;
 		int FactoryMax;
 		int InfantryMax;
+		int InfantryTypeMax;
 		int OverlayMax;
 		int SmudgeMax;
 		int TeamMax;

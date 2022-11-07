@@ -1731,7 +1731,7 @@ void TeamTypeClass::Fill_In(char * name, char * entry)
 				/*
 				**	See if this is an aircraft name
 				*/
-				AircraftType a_id = AircraftTypeClass::From_Name(p1);
+				AircraftType a_id = AircraftTypeClass::As_Type(p1);
 				if (a_id != AIRCRAFT_NONE) {
 					otype = &AircraftTypeClass::As_Reference(a_id);
 				} else {

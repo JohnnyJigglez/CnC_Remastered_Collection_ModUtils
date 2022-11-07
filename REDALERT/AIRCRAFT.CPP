@@ -532,11 +532,11 @@ void AircraftClass::Draw_Rotors(int x, int y, WindowNumberType window) const
 		FacingType face = Dir_Facing(SecondaryFacing);
 		Move_Point(xx, yy, SecondaryFacing.Current(), _stretch[face]);
 		// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
-		CC_Draw_Shape(this, "RROTOR", AircraftTypeClass::RRotorData, shapenum, xx, yy-2, window, flags, NULL, DisplayClass::UnitShadow);
+		CC_Draw_Shape(this, Class->RRotorDataName, Class->RRotorTrueData, shapenum, xx, yy-2, window, flags, NULL, DisplayClass::UnitShadow);
 
 		Move_Point(xx, yy, SecondaryFacing.Current()+DIR_S, _stretch[face]*2);
 		// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
-		CC_Draw_Shape(this, "LROTOR", AircraftTypeClass::LRotorData, shapenum, xx, yy-2, window, flags, NULL, DisplayClass::UnitShadow);
+		CC_Draw_Shape(this, Class->LRotorDataName, Class->LRotorTrueData, shapenum, xx, yy-2, window, flags, NULL, DisplayClass::UnitShadow);
 
 	} else {
 
@@ -544,7 +544,7 @@ void AircraftClass::Draw_Rotors(int x, int y, WindowNumberType window) const
 		**	Single rotor centered about shape.
 		*/
 		// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
-		CC_Draw_Shape(this, "RROTOR", AircraftTypeClass::RRotorData, shapenum, x, ((y-Lepton_To_Pixel(Height))-2), window, flags, NULL, DisplayClass::UnitShadow);
+		CC_Draw_Shape(this, Class->RRotorDataName, Class->RRotorTrueData, shapenum, x, ((y-Lepton_To_Pixel(Height))-2), window, flags, NULL, DisplayClass::UnitShadow);
 	}
 }
 
@@ -579,7 +579,7 @@ void AircraftClass::Read_INI(CCINIClass & ini)
 		ini.Get_String(INI_Name(), entry, NULL, buf, sizeof(buf)-1);
 		inhouse = HouseTypeClass::From_Name(strtok(buf, ","));
 		if (inhouse != HOUSE_NONE) {
-			classid = AircraftTypeClass::From_Name(strtok(NULL, ","));
+			classid = AircraftTypeClass::As_Type(strtok(NULL, ","));
 
 			if (classid != AIRCRAFT_NONE) {
 

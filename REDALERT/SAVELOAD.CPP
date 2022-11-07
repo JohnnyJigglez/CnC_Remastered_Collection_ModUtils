@@ -1027,6 +1027,7 @@ if(Special.IsFromWChat || SpawnedFromWChat) {
 				Rule.IQ(mpini);
 				Rule.Objects(mpini);
 				Rule.Difficulty(mpini);
+				Rule.Dump();
 			}
 		}
 

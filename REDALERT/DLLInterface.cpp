@@ -8274,7 +8274,7 @@ void DLLExportClass::Debug_Spawn_Unit(const char *object_name, int x, int y, boo
 		return;
 	}
 
-	AircraftType aircraft_type = AircraftTypeClass::From_Name(object_name);
+	AircraftType aircraft_type = AircraftTypeClass::As_Type(object_name);
 	if (aircraft_type != AIRCRAFT_NONE) {
 
 		AircraftClass * air = new AircraftClass(aircraft_type, house);

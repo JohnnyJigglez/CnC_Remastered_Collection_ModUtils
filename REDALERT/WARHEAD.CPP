@@ -36,6 +36,7 @@
  *   WarheadTypeClass::operator delete -- Returns warhead object back to special memory pool.  *
  *   WarheadTypeClass::operator new -- Allocate a warhead object from the special heap.        *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+#include <string>
 #include    "WARHEAD.H"
 
 
@@ -44,6 +45,8 @@
 */
 //TFixedIHeapClass<WarheadTypeClass> Warheads;
 std::vector<WarheadTypeClass*> Warheads;
+char ExplodingEntityWarheadName[16];
+char FlamingEntityWarheadName[16];
 
 /***********************************************************************************************
  * WarheadTypeClass::Init_Heap -- Initialize the warhead type class heap.                      *
@@ -107,12 +110,12 @@ WarheadTypeClass::WarheadTypeClass(char const* name) :
 	ID = (short)(Warheads.size());
 	Warheads.push_back(this);
 	BehavesLike = static_cast<WarheadType>(ID);
-	for (WarheadType wht = WARHEAD_FIRST; wht < WARHEAD_COUNT; wht++) {
+	/*for (WarheadType wht = WARHEAD_FIRST; wht < WARHEAD_COUNT; wht++) {
 		if (strcmpi(IniName, WarheadTypeName[wht]) == 0) {
 			BehavesLike = wht;
 			break;
 		}
-	}
+	}*/
 	for (ArmorType armor = ARMOR_FIRST; armor < ARMOR_COUNT; armor++) {
 		Modifier[armor] = 1;
 	}
@@ -318,7 +321,7 @@ bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 		IsWoodDestroyer = ini.Get_Bool(Name(), "Wood", IsWoodDestroyer);
 		IsTiberiumDestroyer = ini.Get_Bool(Name(), "Ore", IsTiberiumDestroyer);
 		ExplosionSet = ini.Get_Int(Name(), "Explosion", ExplosionSet);
-		InfantryDeath = ini.Get_Int(Name(), "InfDeath", InfantryDeath);
+		SelfHarm = ini.Get_Int(Name(), "SelfHarm", SelfHarm);
 		InfantryDeath = ini.Get_Int(Name(), "InfDeath", InfantryDeath);
 		Anim = AnimTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Anim"), Anim);
 		BehavesLike = findorcreate(ini, ini.Get_Value(Name(), "BehavesLike"), BehavesLike);
@@ -331,6 +334,7 @@ bool WarheadTypeClass::Read_INI(CCINIClass & ini)
 			}
 		}
 		IsOrganic = (Modifier[ARMOR_STEEL] == 0);
+		if(ExplosionSet > 0 && SelfHarm != ExplosionSet)
 		IsReadfromINI = true;
 		sprintf(message, "WarheadTypeClass.Read_INI parsed %s .\n", Name());
 		WWDebugString(message);
@@ -393,5 +397,59 @@ WarheadType WarheadTypeClass::findorcreate(CCINIClass& ini, const char* value, W
 	}
 	return defvalue;
 }
+
+bool WarheadTypeClass::nameMatches(WarheadType defvalue) const
+{
+	if (defvalue > WARHEAD_COUNT)
+		return false;
+	return !stricmp(WarheadTypeName[defvalue], this->IniName);
+}
+
+
+char const* WarheadTypeClass::to_string(void) const {
+	std::string out = "";
+	out += ("Name=" + std::string(Name()) + '\n');
+	out += ("ID=" + std::to_string(ID) + '\n');
+	out += ("Anim=" + std::to_string(Anim) + '\n');
+	out += ("BehavesLike=" + std::to_string(BehavesLike) + '\n');
+	out += ("Spread=" + std::to_string(SpreadFactor) + '\n');
+	out += ("Wall=" + std::to_string(IsWallDestroyer) + '\n');
+	out += ("Wood=" + std::to_string(IsWoodDestroyer) + '\n');
+	out += ("Ore=" + std::to_string(IsTiberiumDestroyer) + '\n');
+	out += ("Explosion=" + std::to_string(ExplosionSet) + '\n');
+	out += ("InfDeath=" + std::to_string(InfantryDeath) + '\n');
+	return out.c_str();
+}
+//using std::string;
+//using std::to_string;
+void WarheadTypeClass::Dump(void) {
+	char message[256];
+	//sprintf(message, "[Warheads]\n");
+	WWDebugString("[Warheads]\n");
+	WarheadTypeClass* ptr = NULL;
+	std::string out = "";
+	for(int x = 0; x < (int)(Warheads.size()); x++) {
+		WarheadTypeClass* ptr = Warheads.at(x);
+		out = "";
+		out += ("Name=" + std::string(ptr->Name()) + '\n');
+		out += ("ID=" + std::to_string(ptr->ID) + '\n');
+		out += ("Anim=" + std::string(ptr->Anim == ANIM_NONE ? "none" : AnimTypeClass::As_Pointer(ptr->Anim)->Name()) +'\n');
+		out += ("BehavesLike=" + std::to_string(ptr->BehavesLike) + '\n');
+		out += ("Spread=" + std::to_string(ptr->SpreadFactor) + '\n');
+		out.c_str();
+		sprintf(message, out.c_str());
+		WWDebugString(message);
+		out = "";
+		out += ("Wall=" + std::to_string(ptr->IsWallDestroyer) + '\n');
+		out += ("Wood=" + std::to_string(ptr->IsWoodDestroyer) + '\n');
+		out += ("Ore=" + std::to_string(ptr->IsTiberiumDestroyer) + '\n');
+		out += ("Explosion=" + std::to_string(ptr->ExplosionSet) + '\n');
+		out += ("InfDeath=" + std::to_string(ptr->InfantryDeath) + '\n' + '\n');
+		sprintf(message, out.c_str());
+		WWDebugString(message);
+	}
+}
+
+
 
 

@@ -676,7 +676,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 #else
 							int damage = min( (tech->Techno_Type_Class()->MaxStrength) / 3, tech->Strength-1);
 #endif
-							tech->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), this, true);
+							tech->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName), this, true);
 						}
 						BEnd(BENCH_PCP);
 						delete this;
@@ -930,7 +930,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 				return;
 			} else {
 				if (::As_Target(Coord_Cell(Center_Coord())) == NavCom) {
-					Explosion_Damage(Coord, Rule.BridgeStrength, this, WarheadTypeClass::As_Pointer(WARHEAD_HE));
+					Explosion_Damage(Coord, Rule.BridgeStrength, this, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName));
 
 					Stop_Driver();
 					Scatter(Adjacent_Cell(Coord, PrimaryFacing), true, true);
@@ -941,8 +941,8 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 					if (!Target_Legal(NavCom) || Map[As_Cell(NavCom)].Land_Type() == LAND_WATER) {
 						Mark(MARK_DOWN);		// Needed only so that Tanya will get destroyed by the explosion.
 					}
-					Explosion_Damage(Coord, Rule.BridgeStrength, NULL, WarheadTypeClass::As_Pointer(WARHEAD_HE));
-					Explosion_Damage(Coord, Rule.BridgeStrength, NULL, WarheadTypeClass::As_Pointer(WARHEAD_HE));
+					Explosion_Damage(Coord, Rule.BridgeStrength, NULL, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName));
+					Explosion_Damage(Coord, Rule.BridgeStrength, NULL, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName));
 					if (!IsActive) {
 						BEnd(BENCH_PCP);
 						return;
@@ -1000,7 +1000,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 			** Show the animation and get rid of the land mine
 			*/
 			COORDINATE blcoord = bldng->Center_Coord();
-			new AnimClass(Combat_Anim(Rule.APMineDamage, WarheadTypeClass::As_Pointer(WARHEAD_HE), cellptr->Land_Type()), blcoord);
+			new AnimClass(Combat_Anim(Rule.APMineDamage, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName), cellptr->Land_Type()), blcoord);
 			delete bldng;
 			int damage;
 			for (int index = 0; index < Infantry.Count(); index++) {
@@ -1009,7 +1009,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 					int dist = ::Distance(obj->Coord, blcoord);
 					if (dist <= 0xC0) {
 						damage = Rule.APMineDamage;
-						obj->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE));
+						obj->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName));
 					}
 				}
 			}

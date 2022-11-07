@@ -182,7 +182,7 @@ public:
 	AnimType Anim;
 
 	/*
-	**	Projectiles can be assigned an animation to display while in flight to target.
+	**	Projectiles can be logically treated like another Projectile
 	*/
 	BulletType BehavesLike;
 
@@ -209,6 +209,7 @@ public:
     static void Clear_Heap(void);
 	static const BulletTypeClass* findorcreate(CCINIClass& ini, const char* value, const BulletTypeClass* defptr = NULL);
 	static BulletType findorcreate(CCINIClass& ini, const char* value, BulletType defvalue = BULLET_NONE);
+	static void Dump(void);
 };
 
 #endif

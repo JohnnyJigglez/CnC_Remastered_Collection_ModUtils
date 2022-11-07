@@ -1009,14 +1009,14 @@ void UnitTypeClass::Init_Heap(void)
 
 
 /***********************************************************************************************
- * UnitTypeClass::From_Name -- Fetch class pointer from specified name.                        *
+ * UnitTypeClass::As_Type -- Fetch Unit Type from specified name.                              *
  *                                                                                             *
  *    This routine converts an ASCII representation of a unit class and                        *
- *    converts it into a real unit class number.                                               *
+ *    converts it into a real unit type  number.                                               *
  *                                                                                             *
  * INPUT:   name  -- ASCII name representing a unit class.                                     *
  *                                                                                             *
- * OUTPUT:  Returns with the actual unit class number that the string                          *
+ * OUTPUT:  Returns with the actual unit type  number that the string                          *
  *          represents.                                                                        *
  *                                                                                             *
  * WARNINGS:   none                                                                            *
@@ -1028,7 +1028,6 @@ void UnitTypeClass::Init_Heap(void)
  *=============================================================================================*/
 UnitType UnitTypeClass::As_Type(char const * name)
 {
-
 	if(name == NULL)
 		return(UNIT_NONE);
 	UnitTypeClass* utc = As_Pointer(name);
@@ -1038,14 +1037,14 @@ UnitType UnitTypeClass::As_Type(char const * name)
 }
 
 /***********************************************************************************************
- * UnitTypeClass::Class_From_Name -- Fetch unit type class pointer for specified name.         *
+ * UnitTypeClass::As_Pointer -- Fetch unit type class pointer for specified name.              *
  *                                                                                             *
  *    This routine converts an ASCII representation of a unit class and                        *
- *    converts it into a real unit class number.                                               *
+ *    converts it into a real unit type class pointer.                                         *
  *                                                                                             *
  * INPUT:   name  -- ASCII name representing a unit class.                                     *
  *                                                                                             *
- * OUTPUT:  Returns with the actual unit class pointer that the string                         *
+ * OUTPUT:  Returns with the actual unit type class pointer that the string                    *
  *          represents.                                                                        *
  *                                                                                             *
  * WARNINGS:   none                                                                            *

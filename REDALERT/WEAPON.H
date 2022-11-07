@@ -166,6 +166,11 @@ class WeaponTypeClass
 		**	This is the animation to display at the firing coordinate.
 		*/
 		AnimType Anim;
+
+		/*
+		**	This will inform the firing logic whether or not the animation SHP file referenced by Anim has 8 different directions in the file that can be used.
+		*/
+		bool DirectionalFiringAnim;
 };
 
 

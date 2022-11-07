@@ -239,6 +239,8 @@ extern FixedIHeapClass *										HeapPointers[RTTI_COUNT];
 
 extern std::vector<WeaponTypeClass *>							Weapons;
 extern std::vector<WarheadTypeClass*>							Warheads;
+extern char ExplodingEntityWarheadName[16];
+extern char FlamingEntityWarheadName[16];
 extern QueueClass<EventClass, MAX_EVENTS>					OutList;
 extern QueueClass<EventClass, (MAX_EVENTS * 64)>		DoList;
 

@@ -2317,10 +2317,10 @@ bool CellClass::Goodie_Check(FootClass * object)
 									for( j=0; j < UnitTypes.Count(); j++) {
 										ucount += hptr->QuantityU(j);
 									}
-									for( j=0; j < INFANTRY_COUNT; j++) {
+									for( j=0; j < InfantryTypes.Count(); j++) {
 										ucount += hptr->QuantityI(j);
 									}
-									for( j=0; j < AIRCRAFT_COUNT; j++) {
+									for( j=0; j < AircraftTypes.Count(); j++) {
 										ucount += hptr->QuantityA(j);
 									}
 									for( j=0; j < VESSEL_COUNT; j++) {
@@ -2595,13 +2595,13 @@ crate_money:
 			case CRATE_EXPLOSION:
 				if (object != NULL) {
 					int d = CrateData[powerup];
-					object->Take_Damage(d, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), 0, true);
+					object->Take_Damage(d, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName), 0, true);
 				}
 				for (int index = 0; index < 5; index++) {
 					COORDINATE frag_coord = Coord_Scatter(Cell_Coord(), Random_Pick(0, 0x0200));
 					new AnimClass(ANIM_FBALL1, frag_coord);
 					damage = CrateData[powerup];
-					Explosion_Damage(frag_coord, damage, NULL, WarheadTypeClass::As_Pointer(WARHEAD_HE));
+					Explosion_Damage(frag_coord, damage, NULL, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName));
 				}
 				break;
 
@@ -2613,10 +2613,10 @@ crate_money:
 				new AnimClass(ANIM_NAPALM3, coord);
 				if (object != NULL) {
 					int d = CrateData[powerup];
-					object->Take_Damage(d, 0, WarheadTypeClass::As_Pointer(WARHEAD_FIRE), 0, true);
+					object->Take_Damage(d, 0, WarheadTypeClass::As_Pointer(FlamingEntityWarheadName), 0, true);
 				}
 				damage = CrateData[powerup];
-				Explosion_Damage(coord, damage, NULL, WarheadTypeClass::As_Pointer(WARHEAD_FIRE));
+				Explosion_Damage(coord, damage, NULL, WarheadTypeClass::As_Pointer(FlamingEntityWarheadName));
 				break;
 
 			/*

@@ -507,7 +507,7 @@ int harderr_handler(unsigned, unsigned, unsigned __far *);
 int Modify_Damage(int damage, WarheadType warhead, ArmorType armor, int distance);
 int Modify_Damage(int damage, const WarheadTypeClass * warhead, ArmorType armor, int distance);
 void Explosion_Damage(COORDINATE coord, int strength, TechnoClass * source,const WarheadTypeClass * warhead);
-AnimType Combat_Anim(int damage,const WarheadTypeClass * warhead, LandType land);
+AnimType Combat_Anim(int damage,const WarheadTypeClass * warhead, LandType land, bool exploding=false);
 void Wide_Area_Damage(COORDINATE coord, LEPTON radius, int damage, TechnoClass * source,const WarheadTypeClass * warhead);
 
 /*

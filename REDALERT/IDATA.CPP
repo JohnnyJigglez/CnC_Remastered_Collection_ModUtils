@@ -1096,8 +1096,8 @@ InfantryTypeClass::InfantryTypeClass (
 	IsRemapOverride(is_remap_override),
 	Type(type),
 	Pip(pip),
-	DoControls(control),
-	DoControlsVirtual(virtual_control),
+	//DoControls(control),
+	//DoControlsVirtual(virtual_control),
 	FireLaunch(firelaunch),
 	ProneLaunch(pronelaunch),
 	OverrideRemap(override_remap)
@@ -1110,14 +1110,20 @@ InfantryTypeClass::InfantryTypeClass (
 	IsRepairable = false;
 	IsCrew = false;
 	Speed = SPEED_FOOT;
+	if(control != NULL)
+		memcpy(DoControlsData, control, sizeof(DoInfoStruct)*DO_COUNT);
+	DoControls = (DoInfoStruct*)DoControlsData;
+	if(virtual_control != NULL)
+		memcpy(DoControlsVirtualData, virtual_control, sizeof(DoInfoStruct) * DO_COUNT);
+	DoControlsVirtual = (DoInfoStruct*)DoControlsVirtualData;
 }
 
 InfantryTypeClass::InfantryTypeClass(int itype, char const* ininame) :
 	InfantryTypeClass(static_cast<InfantryType>(itype),
 		TXT_NONE,
 		ininame,
-		0x0000,
-		0x0000,
+		0x0000,//vert offset
+		0x0000,//primary offset
 		false,//isFemale
 		false,//hasCrawlingAnim
 		false,//isCivie
@@ -1125,11 +1131,12 @@ InfantryTypeClass::InfantryTypeClass(int itype, char const* ininame) :
 		false,//isNominal
 		false,//isTheatre
 		PIP_CIVILIAN,//TransportPipColour
-		E1DoControls,//jammer
-		E1DoControlsVirtual,//gapper
+		E1DoControls,//animation controls
+		E1DoControlsVirtual,//HD animation controls
 		25,//projectile launchframe number
 		25,//prone projectile launchframe number
-		0)
+		NULL,//override remap
+		0)//horizontal offset
 {
 	char message[64];
 	sprintf(message, "Instantiated custom Infantry %s .\n", ininame);
@@ -1404,7 +1411,7 @@ InfantryType InfantryTypeClass::As_Type(char const * name)
 InfantryTypeClass * InfantryTypeClass::As_Pointer(char const* name)
 {
 	if (name == NULL) return(NULL);
-	static InfantryTypeClass* itc = NULL;
+	InfantryTypeClass* itc = NULL;
 	for (int index = 0; index < InfantryTypes.Count(); index++) {
 		itc = InfantryTypes.Ptr(index);
 		if (stricmp(itc->Name(), name) == 0) {
@@ -1433,7 +1440,7 @@ InfantryTypeClass * InfantryTypeClass::As_Pointer(char const* name)
  *=============================================================================================*/
 void InfantryTypeClass::One_Time(void)
 {
-	for (InfantryType index = INFANTRY_FIRST; index < INFANTRY_COUNT; index++) {
+	for (InfantryType index = INFANTRY_FIRST; index < InfantryTypes.Count(); index++) {
 		char fullname[_MAX_FNAME+_MAX_EXT];
 		InfantryTypeClass	const * uclass;
 		CCFileClass	file;
@@ -1541,12 +1548,75 @@ InfantryTypeClass & InfantryTypeClass::As_Reference(InfantryType type)
 bool InfantryTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (TechnoTypeClass::Read_INI(ini)) {
+		IsFemale = ini.Get_Bool(Name(), "Female", IsFemale);
+		IsCrawling = ini.Get_Bool(Name(), "CanCrawl", IsCrawling);
+		IsCivilian = ini.Get_Bool(Name(), "Civilian", IsCivilian);
 		IsFraidyCat = ini.Get_Bool(Name(), "Fraidycat", IsFraidyCat);
 		IsCapture = ini.Get_Bool(Name(), "Infiltrate", IsCapture);
 		IsBomber = ini.Get_Bool(Name(), "C4", IsBomber);
 		IsDog = ini.Get_Bool(Name(), "IsCanine", IsDog);
+		FireLaunch = ini.Get_Int(Name(), "FireFrames", FireLaunch);
+		ProneLaunch = ini.Get_Int(Name(), "ProneFrames", ProneLaunch);
 		if (IsBomber) IsCapture = true;
 		if (IsDog) IsLeader = false;
+		char buffer[64], message[128];
+		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
+			sprintf(message, "ITC.Read_INI %s has Logic : %s \n", Name(), buffer);
+			WWDebugString(message);
+			InfantryType itype = InfantryTypeClass::As_Type(buffer);
+			if (itype != INFANTRY_NONE)
+				Type = itype;
+			sprintf(message, "ITC.Read_INI has ID %d and Type %d . \n", ID, (int)Type);
+			WWDebugString(message);
+		}
+		if (ini.Get_String(Name(), "Pip", "", buffer, sizeof(buffer))) {
+			Pip = Pip_From_Name(buffer);
+		}
+		char* token;
+		DoControls = (DoInfoStruct*)DoControlsData;
+		for(int x = DO_STAND_READY; x < DO_COUNT; x++){
+			if (ini.Get_String(Name(), DoTypeNames[x], "", buffer, sizeof(buffer)))
+			{
+				//sprintf(message, "ITC.Read_INI %s has %s : %s \n", Name(), DoTypeNames[x], buffer);
+				//WWDebugString(message);
+				token = strtok(buffer, ",");
+				if (token != NULL) {
+					DoControlsData[x].Frame = atoi(token);
+					token = strtok(NULL, ",");
+					if (token != NULL) {
+						DoControlsData[x].Count = atoi(token);
+						token = strtok(NULL, ",");
+						if (token != NULL) {
+							DoControlsData[x].Jump = atoi(token);
+						}
+					}
+				}
+				//sprintf(message, "ITC.Read_INI %s has %s : %d,%d,%d \n", Name(), DoTypeNames[x], DoControls[x].Frame, DoControls[x].Count, DoControls[x].Jump);
+				//WWDebugString(message);
+			}
+		}
+		DoControlsVirtual = (DoInfoStruct*)DoControlsVirtualData;
+		for (int x = DO_STAND_READY; x < DO_COUNT; x++) {
+			char buffer2[16] = "V";
+			if (ini.Get_String(Name(), strcat(buffer2,DoTypeNames[x]), "", buffer, sizeof(buffer)))
+			{
+				//sprintf(message, "ITC.Read_INI %s has %s : %s \n", Name(), buffer2, buffer);
+				//WWDebugString(message);
+				token = strtok(buffer, ",");
+				if (token != NULL) {
+					DoControlsVirtualData[x].Frame = atoi(token);
+					token = strtok(NULL, ",");
+					if (token != NULL) {
+						DoControlsVirtualData[x].Count = atoi(token);
+						token = strtok(NULL, ",");
+						if (token != NULL) {
+							DoControlsVirtualData[x].Jump = atoi(token);
+						}
+					}
+				}
+			}
+
+		}
 		return(true);
 	}
 	return(false);
@@ -1562,4 +1632,36 @@ void InfantryTypeClass::Dimensions(int & width, int & height) const
 	width = 12;
 	height = 16;
 #endif
+}
+
+/***********************************************************************************************
+ * BuildingTypeClass::RTTIType_From_Name -- Given a name, this finds the corresponding rtti    *
+ *                                      											           *
+ *                                                                                             *
+ *    This routine will convert the supplied ASCII name into the rtti type that it             *
+ *    represents.                                                                              *
+ *                                                                                             *
+ * INPUT:   name  -- Pointer to the ASCII name to convert.                                     *
+ *                                                                                             *
+ * OUTPUT:  Returns with the RTTItype enum that matches the name specified. If no match        *
+ *          could be found, then NULL is returned.                                             *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/04/2022 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+PipEnum InfantryTypeClass::Pip_From_Name(char const* name)
+{
+	if (name == NULL)
+		return(PIP_FULL);
+	if (!stricmp("ENGINEER", name))
+		return(PIP_ENGINEER);
+	if (!stricmp("COMMANDO", name))
+		return(PIP_COMMANDO);
+	if (!stricmp("CIVILIAN", name))
+		return(PIP_CIVILIAN);
+	if (!stricmp("NORMAL", name))
+		return(PIP_FULL);
+	return(PIP_FULL);
 }

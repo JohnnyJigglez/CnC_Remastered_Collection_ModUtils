@@ -1596,7 +1596,8 @@ typedef enum InfantryType : char {
 	INFANTRY_FIRST=0
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 ,
-	INFANTRY_RA_COUNT = INFANTRY_SHOCK
+	INFANTRY_RA_COUNT = INFANTRY_SHOCK,
+	INFANTRYT_MAX=127
 #endif
 } InfantryType;
 
@@ -1718,7 +1719,8 @@ typedef enum AircraftType : char {
 
 	AIRCRAFT_COUNT,
 	AIRCRAFT_NONE=-1,
-	AIRCRAFT_FIRST=0
+	AIRCRAFT_FIRST=0,
+	AIRCRAFT_MAX = 127
 } AircraftType;
 
 #define	AIRCRAFTF_TRANSPORT	(1L << AIRCRAFT_TRANSPORT)
@@ -2338,9 +2340,9 @@ typedef enum AnimType : short {
 	ANIM_FIRE_MED2_VIRTUAL,				// Medium flame animation (oranger).
 	ANIM_FIRE_TINY_VIRTUAL,				// Very tiny flames.
 	ANIM_BEACON_VIRTUAL,		// Beacon (virtual).
-
 	ANIM_COUNT,
 	ANIM_FIRST=0,
+	ANIMT_MAX=255
 } AnimType;
 
 
@@ -2379,6 +2381,29 @@ typedef enum DoType : char {
 	DO_FIRST=0
 } DoType;
 
+static const char DoTypeNames[DO_COUNT][16] = {
+	"DO_READY",
+	"DO_GUARD",
+	"DO_PRONE",
+	"DO_WALK",
+	"DO_FIREWEAPON",
+	"DO_LIEDOWN",
+	"DO_CRAWL",
+	"DO_GETUP",
+	"DO_FIREPRONE",
+	"DO_IDLE",
+	"DO_IDLE2",
+	"DO_GUN",
+	"DO_EXPLODE",
+	"DO_EXPLODE2",
+	"DO_GRENADE",
+	"DO_FIRE",
+	"DO_GESTURE",
+	"DO_SALUTE",
+	"DO_GESTURE2",
+	"DO_SALUTE2",
+	"DO_MAUL"
+};
 inline DoType operator++(DoType &, int);
 
 /*
@@ -2681,7 +2706,7 @@ typedef enum WarheadType : short {
 #endif
 	WARHEAD_COUNT,
 	WARHEAD_FIRST=0,
-	WARHEAD_MAX=254
+	WARHEAD_MAX=255
 } WarheadType;
 
 

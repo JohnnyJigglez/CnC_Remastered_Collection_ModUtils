@@ -538,6 +538,7 @@ bool Read_Scenario(char * name)
 				Rule.IQ(ini);
 				Rule.Objects(ini);
 				Rule.Difficulty(ini);
+				Rule.Dump();
 			}
 		}
 #endif

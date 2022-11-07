@@ -58,7 +58,7 @@ class AircraftClass : public FootClass, public FlyClass
 		static void * operator new(size_t, void * ptr) {return(ptr);};
 		static void operator delete(void *);
 		static void operator delete(void*, void* ptr) { delete ptr; }
-		operator AircraftType(void) const {return Class->Type;};
+		operator AircraftType(void) const {return (AircraftType)(Class->ID);};
 		AircraftClass(AircraftType classid, HousesType house);
 		AircraftClass(NoInitClass const & x) : FootClass(x), FlyClass(x), Class(x), SecondaryFacing(x), SightTimer(x) {};
 		virtual ~AircraftClass(void);

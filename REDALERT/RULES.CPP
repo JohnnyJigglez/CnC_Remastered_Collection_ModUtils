@@ -279,8 +279,13 @@ ResourceBarDisplayMode(RB_SELECTED),
 DynamicExplosionSetThreshold(false),
 ExplosionSet4Threshold(90),
 ExplosionSet5Threshold(130),
-ExplosionSet3Threshold(150)
+ExplosionSet3Threshold(150),
+InfantryTypeMax(50),
+AircraftTypeMax(50)
 {
+	strcpy(ExplodingEntityWarheadName, WarheadTypeName[WARHEAD_HE]);
+	strcpy(FlamingEntityWarheadName, WarheadTypeName[WARHEAD_FIRE]);
+	//strcpy(NukeWarheadName, WarheadTypeName[WARHEAD_NUKE]);
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 	NewUnitsEnabled = SecretUnitsEnabled = 0;
 	MTankDistance = 30;
@@ -369,6 +374,26 @@ bool RulesClass::Process(CCINIClass & ini)
 	BEnd(BENCH_RULES);
 
 	return(true);
+}
+
+/***********************************************************************************************
+ * RulesClass::Process -- Fetch the bulk of the rule data from the control file.               *
+ *                                                                                             *
+ *    This routine will fetch the rule data from the control file.                             *
+ *                                                                                             *
+ * INPUT:   file  -- Reference to the rule file to process.                                    *
+ *                                                                                             *
+ * OUTPUT:  bool; Was the rule file processed?                                                 *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   06/17/1996 JLB : Created.                                                                 *
+ *=============================================================================================*/
+void RulesClass::Dump()
+{
+	WarheadTypeClass::Dump();
+	BulletTypeClass::Dump();
 }
 
 
@@ -519,6 +544,13 @@ bool RulesClass::General(CCINIClass & ini)
 		ExplosionSet3Threshold = ini.Get_Int(GENERAL, "ExplosionSet4Threshold", ExplosionSet3Threshold);
 		ExplosionSet4Threshold = ini.Get_Int(GENERAL, "ExplosionSet5Threshold", ExplosionSet4Threshold);
 		ExplosionSet5Threshold = ini.Get_Int(GENERAL, "ExplosionSet3Threshold", ExplosionSet5Threshold);
+		char buffer[16];
+		if (ini.Get_String(GENERAL, "ExplodingWarhead", ExplodingEntityWarheadName, buffer, sizeof(buffer))) {
+			strcpy(ExplodingEntityWarheadName,buffer);
+		}
+		if (ini.Get_String(GENERAL, "FlamingWarhead", FlamingEntityWarheadName, buffer, sizeof(buffer))) {
+			strcpy(FlamingEntityWarheadName, buffer);
+		}
 		ChronalVortex.Set_Range(VortexRange / CELL_LEPTON_W);
 		ChronalVortex.Set_Speed(VortexSpeed);
 		ChronalVortex.Set_Damage(VortexDamage);
@@ -623,6 +655,7 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 	if (ini.Is_Present(MAXIMUMS)) {
 		MaxPlayers = ini.Get_Int(MAXIMUMS, "Players", MaxPlayers);
 		AircraftMax = ini.Get_Int(MAXIMUMS, "Aircraft", AircraftMax);
+		AircraftTypeMax = ini.Get_Int(MAXIMUMS, "AircraftType", AircraftTypeMax);
 		AnimMax = ini.Get_Int(MAXIMUMS, "Anim", AnimMax);
 		AnimTypeMax = ini.Get_Int(MAXIMUMS, "AnimType", AnimTypeMax);
 		BuildingMax = ini.Get_Int(MAXIMUMS, "Building", BuildingMax);
@@ -630,6 +663,7 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		BulletMax = ini.Get_Int(MAXIMUMS, "Bullet", BulletMax);
 		FactoryMax = ini.Get_Int(MAXIMUMS, "Factory", FactoryMax);
 		InfantryMax = ini.Get_Int(MAXIMUMS, "Infantry", InfantryMax);
+		InfantryTypeMax = ini.Get_Int(MAXIMUMS, "InfantryType", InfantryTypeMax);
 		OverlayMax = ini.Get_Int(MAXIMUMS, "Overlay", OverlayMax);
 		SmudgeMax = ini.Get_Int(MAXIMUMS, "Smudge", SmudgeMax);
 		TeamMax = ini.Get_Int(MAXIMUMS, "Team", TeamMax);
@@ -665,13 +699,24 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 	
 	if (Warheads.size() == 0) {
 		//Warheads.Set_Heap(WarheadMax);
-		WarheadTypeClass::Init_Heap();
+		//WarheadTypeClass::Init_Heap();
+		new WarheadTypeClass(ExplodingEntityWarheadName);
+		new WarheadTypeClass(FlamingEntityWarheadName);
 	}
 	if (BulletTypes.size() == 0) {
 		//BulletTypes.Set_Heap(ProjectileMax);
 		BulletTypeClass::Init_Heap();
 	}
 	if (Weapons.size() == 0) {
+		WeaponTypeClass * nuke = new WeaponTypeClass("NUKE_UPWPN");
+		nuke->Attack = 200;
+		nuke->WarheadPtr = WarheadTypeClass::findorcreate(ini,WarheadTypeName[WARHEAD_HE],NULL);
+		nuke->Bullet = BulletTypeClass::findorcreate(ini, BulletTypeName[BULLET_NUKE_UP], NULL);
+		//nuke->Bullet = BulletTypeClass::findorcreate(ini,BulletTypeClass
+		nuke = new WeaponTypeClass("NUKE_DOWNWPN");
+		nuke->Attack = 200;
+		nuke->WarheadPtr = WarheadTypeClass::findorcreate(ini, WarheadTypeName[WARHEAD_NUKE], NULL);
+		nuke->Bullet = BulletTypeClass::findorcreate(ini, BulletTypeName[BULLET_NUKE_DOWN], NULL);
 		//Weapons.Set_Heap(WeaponMax);
 		//WeaponTypeClass::Init_Heap();
 	}
@@ -688,11 +733,11 @@ bool RulesClass::Heap_Maximums(CCINIClass& ini)
 		VesselTypeClass::Init_Heap();
 	}
 	if (InfantryTypes.Count() == 0) {
-		InfantryTypes.Set_Heap(100);
+		InfantryTypes.Set_Heap(InfantryTypeMax);
 		InfantryTypeClass::Init_Heap();
 	}
 	if (AircraftTypes.Count() == 0) {
-		AircraftTypes.Set_Heap(50);
+		AircraftTypes.Set_Heap(AircraftTypeMax);
 		AircraftTypeClass::Init_Heap();
 	}
 
@@ -1103,19 +1148,6 @@ bool RulesClass::Objects(CCINIClass & ini)
 	for (int vindex = 0; vindex < VesselTypes.Count(); vindex++) {
 		VesselTypes.Ptr(vindex)->Read_INI(ini);
 	}
-	/*static char const* const AC = "NewAircraft";
-	if (ini.Is_Present(AC)) {
-		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", AC, ini.Entry_Count(AC));
-		WWDebugString(message);
-		for (int x = 0; x < ini.Entry_Count(AC); x++) {
-			if (AircraftTypeClass::As_Pointer(ini.Get_Value(AC, x)) == NULL)
-				new AircraftTypeClass(atoi(ini.Get_Entry(AC, x)), ini.Get_Value(AC, x));
-		}
-	}*/
-	for (int aindex = 0; aindex < AircraftTypes.Count(); aindex++) {
-		AircraftTypes.Ptr(aindex)->Read_INI(ini);
-	}
-
 	static char const* const BDT = "NewBuildings";
 	if (ini.Is_Present(BDT)) {
 		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", BDT, ini.Entry_Count(BDT));
@@ -1132,6 +1164,18 @@ bool RulesClass::Objects(CCINIClass & ini)
 	}
 	for (int bindex = 0; bindex < BuildingTypes.Count(); bindex++) {
 		BuildingTypes.Ptr(bindex)->Read_INI(ini);
+	}
+	static char const* const AC = "NewAircraft";
+	if (ini.Is_Present(AC)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", AC, ini.Entry_Count(AC));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(AC); x++) {
+			if (AircraftTypeClass::As_Pointer(ini.Get_Value(AC, x)) == NULL)
+				new AircraftTypeClass(atoi(ini.Get_Entry(AC, x)), ini.Get_Value(AC, x));
+		}
+	}
+	for (int aindex = 0; aindex < AircraftTypes.Count(); aindex++) {
+		AircraftTypes.Ptr(aindex)->Read_INI(ini);
 	}
 	/*
 	**	Fetch the house attribute override values.

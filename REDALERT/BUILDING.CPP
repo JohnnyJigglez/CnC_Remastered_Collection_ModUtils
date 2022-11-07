@@ -984,7 +984,7 @@ void BuildingClass::AI(void)
 		}			
 		
 		int damage = Strength;
-		Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_FIRE), As_Techno(WhomToRepay), true);
+		Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_FIRE]), As_Techno(WhomToRepay), true);
 		if (!IsActive) {
 			return;
 		}
@@ -1379,23 +1379,24 @@ ResultType BuildingClass::Take_Damage(int & damage, int distance, const WarheadT
 					CELL cellcenter = Coord_Cell(center);
 
 					BulletClass * bullet;
+					WarheadType whtype = WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_FIRE])->Type();
 
-					bullet = new BulletClass(BULLET_INVISIBLE, ::As_Target(Adjacent_Cell(cellcenter, FACING_N)), 0, 200, WARHEAD_FIRE, MPH_MEDIUM_FAST);
+					bullet = new BulletClass(BULLET_INVISIBLE, ::As_Target(Adjacent_Cell(cellcenter, FACING_N)), 0, 200, whtype, MPH_MEDIUM_FAST);
 					if (bullet) {
 						bullet->Unlimbo(center, DIR_N);
 					}
 
-					bullet = new BulletClass(BULLET_INVISIBLE, ::As_Target(Adjacent_Cell(cellcenter, FACING_E)), 0, 200, WARHEAD_FIRE, MPH_MEDIUM_FAST);
+					bullet = new BulletClass(BULLET_INVISIBLE, ::As_Target(Adjacent_Cell(cellcenter, FACING_E)), 0, 200, whtype, MPH_MEDIUM_FAST);
 					if (bullet) {
 						bullet->Unlimbo(center, DIR_E);
 					}
 
-					bullet = new BulletClass(BULLET_INVISIBLE, ::As_Target(Adjacent_Cell(cellcenter, FACING_S)), 0, 200, WARHEAD_FIRE, MPH_MEDIUM_FAST);
+					bullet = new BulletClass(BULLET_INVISIBLE, ::As_Target(Adjacent_Cell(cellcenter, FACING_S)), 0, 200, whtype, MPH_MEDIUM_FAST);
 					if (bullet) {
 						bullet->Unlimbo(center, DIR_S);
 					}
 
-					bullet = new BulletClass(BULLET_INVISIBLE, ::As_Target(Adjacent_Cell(cellcenter, FACING_W)), 0, 200, WARHEAD_FIRE, MPH_MEDIUM_FAST);
+					bullet = new BulletClass(BULLET_INVISIBLE, ::As_Target(Adjacent_Cell(cellcenter, FACING_W)), 0, 200, whtype, MPH_MEDIUM_FAST);
 					if (bullet) {
 						bullet->Unlimbo(center, DIR_W);
 					}
@@ -1426,7 +1427,7 @@ ResultType BuildingClass::Take_Damage(int & damage, int distance, const WarheadT
 					**	Show pieces of fire to indicate that a significant change in
 					**	damage level has occurred.
 					*/
-					if (warhead->Type() == WARHEAD_FIRE) {
+					if (warhead->nameMatches(WARHEAD_FIRE)) {
 						switch (Random_Pick(0, 5+Class->Width()+Class->Height())) {
 							case 0:
 								break;
@@ -2251,8 +2252,9 @@ void BuildingClass::Update_Buildables(void)
 				break;
 
 			case RTTI_INFANTRYTYPE:
-				for (f = INFANTRY_FIRST; f < INFANTRY_COUNT; f++) {
-					if (PlayerPtr->Can_Build(&InfantryTypeClass::As_Reference((InfantryType)f), ActLike)) {
+				for (f = INFANTRY_FIRST; f < InfantryTypes.Count(); f++) {
+					//if (PlayerPtr->Can_Build(&InfantryTypeClass::As_Reference((InfantryType)f), ActLike)) {
+					if (PlayerPtr->Can_Build(InfantryTypes.Ptr(f), ActLike)) {
 						if (InfantryTypeClass::As_Reference((InfantryType)f).IsDog) {
 							if (*this == STRUCT_KENNEL) {
 								if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
@@ -2275,8 +2277,9 @@ void BuildingClass::Update_Buildables(void)
 				break;
 
 			case RTTI_AIRCRAFTTYPE:
-				for (a = AIRCRAFT_FIRST; a < AIRCRAFT_COUNT; a++) {
-					if (PlayerPtr->Can_Build(&AircraftTypeClass::As_Reference((AircraftType)a), ActLike)) {
+				for (a = AIRCRAFT_FIRST; a < AircraftTypes.Count(); a++) {
+					//if (PlayerPtr->Can_Build(&AircraftTypeClass::As_Reference((AircraftType)a), ActLike)) {
+					if (PlayerPtr->Can_Build(AircraftTypes.Ptr(a), ActLike)) {
 						if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
 							Sidebar_Glyphx_Add(RTTI_AIRCRAFTTYPE, a, House, buildable_via_capture);
 						} else {
@@ -4475,8 +4478,8 @@ int BuildingClass::Mission_Missile(void)
 							CELL center = Coord_Cell(Center_Coord());
 							CELL cell = XY_Cell( Cell_X(center), 1);
 							TARGET targ = ::As_Target(cell);
-
-							BulletClass * bullet = new BulletClass(BULLET_GPS_SATELLITE, targ, this, 200, WARHEAD_FIRE, MPH_ROCKET);
+							//WarheadType whtype = WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_FIRE])->Type();
+							BulletClass * bullet = new BulletClass(BULLET_GPS_SATELLITE, targ, this, 200, WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_FIRE])->Type(), MPH_ROCKET);
 							if (bullet) {
 								COORDINATE launch = Coord_Move(Center_Coord(), (DirType)0xC0, 0x30);
 								if (!bullet->Unlimbo(launch, DIR_N)) {
@@ -4537,7 +4540,8 @@ int BuildingClass::Mission_Missile(void)
 					CELL center = Coord_Cell(Center_Coord());
 					CELL cell = XY_Cell( Cell_X(center), 1);
 					TARGET targ = ::As_Target(cell);
-					BulletClass * bullet = new BulletClass(BULLET_NUKE_UP, targ, this, 200, WARHEAD_HE, MPH_VERY_FAST);
+					const WeaponTypeClass * fakeupweapon = WeaponTypeClass::As_Pointer("NUKE_UPWPN");
+					BulletClass * bullet = new BulletClass(fakeupweapon->Bullet, targ, this, fakeupweapon->Attack, fakeupweapon->WarheadPtr, MPH_VERY_FAST);
 					if (bullet) {
 						COORDINATE launch = Coord_Move(Center_Coord(), (DirType)28, 0xA0);
 						if (!bullet->Unlimbo(launch, DIR_N)) {
@@ -4558,7 +4562,8 @@ int BuildingClass::Mission_Missile(void)
 						if (House->Control.TechLevel <= 10) {
 							return(6);
 						}
-						bullet = new BulletClass(BULLET_NUKE_DOWN, ::As_Target(House->NukeDest), this, 200, WARHEAD_NUKE, MPH_VERY_FAST);
+						fakeupweapon = WeaponTypeClass::As_Pointer("NUKE_DOWNWPN");
+						bullet = new BulletClass(fakeupweapon->Bullet, ::As_Target(House->NukeDest), this, fakeupweapon->Attack, fakeupweapon->WarheadPtr, MPH_VERY_FAST);
 						if (bullet) {
 							int celly = Cell_Y(House->NukeDest);
 							celly -= 64;

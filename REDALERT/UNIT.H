@@ -133,7 +133,7 @@ class UnitClass :	public DriveClass
 		UnitClass(char const * classname, HousesType house);
 		UnitClass(BuildingTypeClass * classid, HousesType house);
 		UnitClass(NoInitClass const & x) : DriveClass(x), Class(x), Reload(x), SecondaryFacing(x) {};
-		operator UnitType(void) const {return Class->Type;};
+		operator UnitType(void) const {return (UnitType)(Class->ID);};
 		virtual ~UnitClass(void);
 
 		/*---------------------------------------------------------------------

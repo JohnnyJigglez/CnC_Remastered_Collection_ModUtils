@@ -1172,7 +1172,7 @@ void HouseClass::AI(void)
 			}
 			if( !iCount )
 			{
-				for( i = 0; i != UNIT_RA_COUNT-3; ++i )
+				for( i = 0; i != UnitTypes.Count()-3; ++i )
 				{
 					iCount += UQuantity[ i ];
 				}
@@ -1186,7 +1186,7 @@ void HouseClass::AI(void)
 					}
 					if( !iCount )
 					{
-						for( i = 0; i != AIRCRAFT_COUNT; ++i )
+						for( i = 0; i != AircraftTypes.Count(); ++i )
 						{
 							iCount += AQuantity[ i ];
 						}
@@ -2749,7 +2749,8 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 		case SPC_NUCLEAR_BOMB:
 			if (SuperWeapon[SPC_NUCLEAR_BOMB].Is_Ready()) {
 				if (SuperWeapon[SPC_NUCLEAR_BOMB].Is_One_Time()) {
-					BulletClass * bullet = new BulletClass(BULLET_NUKE_DOWN, ::As_Target(cell), 0, 200, WARHEAD_NUKE, MPH_VERY_FAST);
+					const WeaponTypeClass * wpn = WeaponTypeClass::As_Pointer("NUKE_DOWNWPN");
+					BulletClass * bullet = new BulletClass(wpn->Bullet->Type(), ::As_Target(cell), 0, 200, wpn->WarheadPtr->Type(), MPH_VERY_FAST);
 					if (bullet) {
 						int celly = Cell_Y(cell);
 						celly -= 15;
@@ -2952,7 +2953,7 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 						inf->Coord = Cell_Coord(cell);
 						inf->Mark(MARK_DOWN);
 						int damage = inf->Strength;
-						inf->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_FIRE), 0, true);
+						inf->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_FIRE]), 0, true);
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 					} else if(tech->What_Am_I() == RTTI_UNIT && *(UnitClass *)tech == UNIT_DEMOTRUCK) {
 						tech->Assign_Target(tech->As_Target());
@@ -4098,7 +4099,7 @@ void HouseClass::Blowup_All(void)
 	InfantryClass * iptr;
 	BuildingClass * bptr;
 	int count;
-	WarheadType warhead;
+	//WarheadType warhead;
 
 	/*
 	**	Find everything owned by this house & blast it with a huge amount of damage
@@ -4126,7 +4127,7 @@ void HouseClass::Blowup_All(void)
 				// damage = uptr->Strength; // Original
 				damage = 0x7fff; // Copied from TD
 
-				uptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
+				uptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName), NULL, true);
 				count++;
 				if (count > 5 && uptr->IsActive) {
 					delete uptr;
@@ -4151,7 +4152,7 @@ void HouseClass::Blowup_All(void)
 			// damage = aptr->Strength; // Original
 			damage = 0x7fff; // Copied from TD
 
-			aptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
+			aptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName), NULL, true);
 			if (!aptr->IsActive) {
 				i--;
 			}
@@ -4172,7 +4173,7 @@ void HouseClass::Blowup_All(void)
 			// damage = vptr->Strength; // Original
 			damage = 0x7fff; // Copied from TD 
 
-			vptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
+			vptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName), NULL, true);
 			if (!vptr->IsActive) {
 				i--;
 			}
@@ -4197,7 +4198,7 @@ void HouseClass::Blowup_All(void)
 				// damage = bptr->Strength; // Original
 				damage = 0x7fff; // Copied from TD 
 
-				bptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE), NULL, true);
+				bptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName), NULL, true);
 				count++;
 				if (count > 5) {
 					delete bptr;
@@ -4226,9 +4227,14 @@ void HouseClass::Blowup_All(void)
 				//
 				// damage = iptr->Strength; // Original
 				damage = 0x7fff; // Copied from TD 
-
-				warhead = Random_Pick(WARHEAD_SA, WARHEAD_FIRE);
-				iptr->Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(warhead), NULL, true);
+				const WarheadTypeClass * picks[4] = {
+					 WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_SA]),
+					 WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_HE]),
+					 WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_AP]),
+					 WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_FIRE])
+				};
+				//warhead = Random_Pick(WARHEAD_SA, WARHEAD_FIRE);
+				iptr->Take_Damage(damage, 0, picks[Random_Pick(0, 3)], NULL, true);
 
 				count++;
 				if (count > 5) {
@@ -8128,15 +8134,15 @@ void HouseClass::Check_Pertinent_Structures(void)
 void HouseClass::Init_Unit_Trackers(void)
 {		
 	if (Session.Type == GAME_INTERNET || Session.Type == GAME_GLYPHX_MULTIPLAYER) {
-		AircraftTotals = new UnitTrackerClass( (int) AIRCRAFT_COUNT);
-		InfantryTotals = new UnitTrackerClass( (int) INFANTRY_COUNT);
-		UnitTotals = new UnitTrackerClass ( (int) UNIT_COUNT);
+		AircraftTotals = new UnitTrackerClass( (int) AircraftTypes.Count());
+		InfantryTotals = new UnitTrackerClass( (int) InfantryTypes.Count());
+		UnitTotals = new UnitTrackerClass ( (int) UnitTypes.Count());
 		BuildingTotals = new UnitTrackerClass ( BuildingTypes.Count());
 		VesselTotals = new UnitTrackerClass ( (int) VESSEL_COUNT);
 
-		DestroyedAircraft = new UnitTrackerClass ( (int) AIRCRAFT_COUNT);
-		DestroyedInfantry = new UnitTrackerClass( (int) INFANTRY_COUNT);
-		DestroyedUnits = new UnitTrackerClass ( (int) UNIT_COUNT);
+		DestroyedAircraft = new UnitTrackerClass ( (int)AircraftTypes.Count());
+		DestroyedInfantry = new UnitTrackerClass( (int) InfantryTypes.Count());
+		DestroyedUnits = new UnitTrackerClass ( (int)UnitTypes.Count());
 		DestroyedBuildings = new UnitTrackerClass (BuildingTypes.Count());
 		DestroyedVessels = new UnitTrackerClass ( (int) VESSEL_COUNT);
 

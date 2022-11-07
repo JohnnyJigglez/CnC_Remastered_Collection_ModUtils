@@ -3388,7 +3388,13 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			case ANIM_SAM_N:
 				a = AnimType(ANIM_SAM_N + Dir_Facing(PrimaryFacing.Current()));
 				break;
+			default:
+				if (weapon->DirectionalFiringAnim)
+					a = (AnimType)(a + Dir_Facing(Fire_Direction()));
+					//a = AnimType(a + Dir_Facing(Fire_Direction()));
+				break;
 		}
+
 
   		/*
 		**	Play any sound effect tied to this weapon type.
@@ -4146,13 +4152,15 @@ ResultType TechnoClass::Take_Damage(int & damage, int distance, const WarheadTyp
 				/*
 				**	The warhead to use is based on the weapon this object is equipped with.
 				*/
-				const WarheadTypeClass * wh = WarheadTypeClass::As_Pointer(WarheadTypeName[WARHEAD_HE]);
+				const WarheadTypeClass * wh = WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName);
 				if (Techno_Type_Class()->PrimaryWeapon != NULL) {
 					wh = Techno_Type_Class()->PrimaryWeapon->WarheadPtr;
 				}
 
 				int damage = Techno_Type_Class()->MaxStrength;
-				new AnimClass(Combat_Anim(damage, wh, Map[Center_Coord()].Land_Type()), Center_Coord());
+				AnimType ctype = Combat_Anim(damage, wh, Map[Center_Coord()].Land_Type(),true);
+				if(ctype != ANIM_NONE)
+					new AnimClass(ctype, Center_Coord());
 				int radius = damage * Rule.ExplosionSpread;
 //				int radius = damage/2;
 				Wide_Area_Damage(Center_Coord(), radius, damage, source, wh);
@@ -6613,13 +6621,14 @@ int TechnoTypeClass::Time_To_Build(HousesType house) const
 		
 		/*
 		** New feature - Turkey has a 10% build speed bonus even though it isn't specified in the rules
+		*  Patched rules.ini.txt to account for this. - JJ 10/31/2022
 		*/
-		if (hptr->ActLike == HOUSE_TURKEY) {
+		/**if (hptr->ActLike == HOUSE_TURKEY) {
 			if (hptr->BuildSpeedBias == fixed(1)) {
 				time *= 9;
 				time /= 10;
 			}
-		}
+		}*/
 		fixed tempbsb = 1;
 		switch (What_Am_I()) {
 			case RTTI_VESSELTYPE:

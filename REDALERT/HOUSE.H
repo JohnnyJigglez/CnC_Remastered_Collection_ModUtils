@@ -577,23 +577,23 @@ class HouseClass {
 		**	building is in construction, it will be reflected in this total.
 		*/
 #ifdef FIXIT_ANTS
-		int BQuantity[STRUCT_COUNT-3];
+		int BQuantity[STRUCT_MAX-3];
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-		int UQuantity[UNIT_RA_COUNT-3];
+		int UQuantity[UNITT_MAX-3];
 #else
-		int UQuantity[UNIT_COUNT-3];
+		int UQuantity[UNITT_MAX-3];
 #endif
 #else
-		int BQuantity[STRUCT_COUNT];
-		int UQuantity[UNIT_COUNT];
+		int BQuantity[STRUCT_MAX];
+		int UQuantity[UNITT_MAX];
 #endif
 
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-		int IQuantity[INFANTRY_RA_COUNT];
+		int IQuantity[INFANTRYT_MAX];
 #else
-		int IQuantity[INFANTRY_COUNT];
+		int IQuantity[INFANTRYT_MAX];
 #endif
-		int AQuantity[AIRCRAFT_COUNT];
+		int AQuantity[AIRCRAFT_MAX];
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 		int VQuantity[VESSEL_RA_COUNT];
 #else

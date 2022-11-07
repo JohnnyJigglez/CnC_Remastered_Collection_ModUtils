@@ -1080,7 +1080,7 @@ ResultType UnitClass::Take_Damage(int & damage, int distance,const WarheadTypeCl
 			**	Tiberium they are carrying.
 			*/
 			if (Tiberium > 0 && Rule.IsExplosiveHarvester) {
-				Wide_Area_Damage(Coord, CELL_LEPTON_W + CELL_LEPTON_W/2, Credit_Load()+Class->MaxStrength, this, WarheadTypeClass::As_Pointer(WARHEAD_HE));
+				Wide_Area_Damage(Coord, CELL_LEPTON_W + CELL_LEPTON_W/2, Credit_Load()+Class->MaxStrength, this, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName));
 			}
 
 			/*
@@ -1912,10 +1912,10 @@ void UnitClass::Per_Cell_Process(PCPType why)
 				*/
 				if (*bldng == STRUCT_AVMINE) {
 					int damage = Rule.AVMineDamage;
-					Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE));
+					Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName));
 				} else {
 					int damage = 10;
-					Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(WARHEAD_HE));
+					Take_Damage(damage, 0, WarheadTypeClass::As_Pointer(ExplodingEntityWarheadName));
 				}
 				delete bldng;
 				if (!IsActive) {

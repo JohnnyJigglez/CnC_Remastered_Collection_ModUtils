@@ -638,7 +638,7 @@ bool Create_Special_Reinforcement(HouseClass * house, TechnoTypeClass const * ty
 int Create_Air_Reinforcement(HouseClass * house, AircraftType air, int number, MissionType mission, TARGET tarcom, TARGET navcom, InfantryType passenger)
 {
 	assert(house != 0);
-	assert((unsigned)air < AIRCRAFT_COUNT);
+	assert((unsigned)air < AircraftTypes.Count());
 	assert(number != 0);
 	assert((unsigned)mission < MISSION_COUNT);
 	/*

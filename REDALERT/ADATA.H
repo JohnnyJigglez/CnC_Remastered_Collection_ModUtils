@@ -169,6 +169,11 @@ public:
 	AnimType ChainTo;
 
 	/*
+	**	If this is a directional weapon firing animation let us declare here the next animation in the list a weapon will need of anims.
+	*/
+	AnimType NextAnim;
+
+	/*
 	**	The number of virtual animation stages. Keeps the animation alive longer for the purpose
 	**  of 4K rendering, but is ignored by legacy rendering.
 	*/

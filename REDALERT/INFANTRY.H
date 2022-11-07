@@ -118,7 +118,7 @@ class InfantryClass : public FootClass
 		InfantryClass(InfantryType classid, HousesType house);
 		InfantryClass(NoInitClass const & x) : FootClass(x), Class(x), Comment(x) {};
 		virtual ~InfantryClass(void);
-		operator InfantryType(void) const {return Class->Type;};
+		operator InfantryType(void) const {return (InfantryType)(Class->ID);};
 
 		/*---------------------------------------------------------------------
 		**	Member function prototypes.

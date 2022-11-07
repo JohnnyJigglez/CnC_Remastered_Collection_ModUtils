@@ -40,6 +40,7 @@
  *   BulletTypeClass::operator new -- Allocates a bullet type object from the special heap.    *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+#include <string>
 #include	"function.h"
 #include    "TYPE.H"
 //#include "PROJECTILE.h"
@@ -348,7 +349,7 @@ bool BulletTypeClass::Read_INI(CCINIClass & ini)
 		IsProximityArmed = ini.Get_Bool(Name(), "Proximity", IsProximityArmed);
 		IsFlameEquipped = ini.Get_Bool(Name(), "Animates", IsFlameEquipped);
 		IsFueled = ini.Get_Bool(Name(), "Ranged", IsFueled);
-		IsInaccurate = ini.Get_Bool(Name(), "Inaccuate", IsInaccurate);
+		IsInaccurate = ini.Get_Bool(Name(), "Inaccurate", IsInaccurate);
 		IsAntiAircraft = ini.Get_Bool(Name(), "AA", IsAntiAircraft);
 		IsAntiGround = ini.Get_Bool(Name(), "AG", IsAntiGround);
 		IsAntiSub = ini.Get_Bool(Name(), "ASW", IsAntiSub);
@@ -472,4 +473,59 @@ BulletType BulletTypeClass::findorcreate(CCINIClass& ini, const char* value, Bul
 		return static_cast<BulletType>(newptr->ID);
 	}
 	return defvalue;
+}
+
+void BulletTypeClass::Dump(void) {
+	char message[256];
+	//sprintf(message, "[Projectiles]\n");
+	WWDebugString("[Projectiles]\n");
+	WarheadTypeClass* ptr = NULL;
+	std::string out = "";
+	for (int x = 0; x < (int)(BulletTypes.size()); x++) {
+		BulletTypeClass * ptr = BulletTypes.at(x);
+		out = "";
+		out += ("Name=" + std::string(ptr->Name()) + '\n');
+		out += ("ID=" + std::to_string(ptr->ID) + '\n');
+		out += ("Anim=" + std::string(ptr->Anim == ANIM_NONE ? "none" : AnimTypeClass::As_Pointer(ptr->Anim)->Name()) + '\n');
+		out += ("BehavesLike=" + std::to_string(ptr->BehavesLike) + '\n');
+		out += ("High=" + std::to_string(ptr->IsHigh) + '\n');
+		out.c_str();
+		sprintf(message, out.c_str());
+		WWDebugString(message);
+		out = "";
+		out += ("Shadow=" + std::to_string(ptr->IsShadow) + '\n');
+		out += ("Arcing=" + std::to_string(ptr->IsArcing) + '\n');
+		out += ("Dropping=" + std::to_string(ptr->IsDropping) + '\n');
+		out += ("Inviso=" + std::to_string(ptr->IsInvisible) + '\n');
+		out += ("Proximity=" + std::to_string(ptr->IsProximityArmed) + '\n');
+		out.c_str();
+		sprintf(message, out.c_str());
+		WWDebugString(message);
+		out = "";
+		out += ("Animates=" + std::to_string(ptr->IsFlameEquipped) + '\n');
+		out += ("Ranged=" + std::to_string(ptr->IsFueled) + '\n');
+		out += ("Rotates=" + std::to_string(ptr->IsFaceless) + '\n');
+		out += ("Inaccurate=" + std::to_string(ptr->IsInaccurate) + '\n');
+		out += ("Translucent=" + std::to_string(ptr->IsTranslucent) + '\n');
+		out.c_str();
+		sprintf(message, out.c_str());
+		WWDebugString(message);
+		out = "";
+		out += ("AA=" + std::to_string(ptr->IsAntiAircraft) + '\n');
+		out += ("AG=" + std::to_string(ptr->IsAntiGround) + '\n');
+		out += ("ASW=" + std::to_string(ptr->IsAntiSub) + '\n');
+		out += ("Degenerates=" + std::to_string(ptr->IsDegenerate) + '\n');
+		out += ("UnderWater=" + std::to_string(ptr->IsSubSurface) + '\n');
+		out.c_str();
+		sprintf(message, out.c_str());
+		WWDebugString(message);
+		out = "";
+		out += ("Parachuted=" + std::to_string(ptr->IsParachuted) + '\n');
+		out += ("Gigundo=" + std::to_string(ptr->IsGigundo) + '\n');
+		out += ("ROT=" + std::to_string(ptr->ROT) + '\n');
+		out += ("Arm=" + std::to_string(ptr->Arming) + '\n');
+		out += ("Frames=" + std::to_string(ptr->Tumble) + '\n' + '\n');
+		sprintf(message, out.c_str());
+		WWDebugString(message);
+	}
 }

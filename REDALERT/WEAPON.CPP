@@ -105,7 +105,8 @@ WeaponTypeClass::WeaponTypeClass(char const * name) :
 	ROF(0),
 	Range(0),
 	Sound(VOC_NONE),
-	Anim(ANIM_NONE)
+	Anim(ANIM_NONE),
+	DirectionalFiringAnim(false)
 {
 	ID = (short)(Weapons.size());
 	Weapons.push_back(this);
@@ -290,6 +291,7 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		sprintf(message, "WeaponTypeClass.Read_INI parsing Weapon %s ...\n", Name());
 		WWDebugString(message);
 		IsSupressed = ini.Get_Bool(Name(), "Supress", IsSupressed);
+		DirectionalFiringAnim = ini.Get_Bool(Name(), "DirectionalAnim", DirectionalFiringAnim);
 		Burst = ini.Get_Int(Name(), "Burst", Burst);
 		BurstDelay = ini.Get_Int(Name(), "BurstDelay", BurstDelay);
 		/* Normalize BurstDelay to the minimum value found in Techno.cpp firing logic */

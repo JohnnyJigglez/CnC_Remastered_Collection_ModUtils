@@ -2910,12 +2910,14 @@ bool AnimTypeClass::Read_INI(CCINIClass& ini)
 		Loops = ini.Get_Short(Name(), "Loops", Loops);
 		Sound = ini.Get_VocType(Name(), "Sound", Sound);
 		char buffer[_MAX_FNAME];
-		const AnimTypeClass* ptr = NULL;
-		if (ini.Get_String(Name(), "ChainTo", "", buffer, sizeof(buffer))) {
+		//const AnimTypeClass* ptr = NULL;
+		ChainTo = findorcreate(ini, ini.Get_Value(Name(), "ChainTo"), ChainTo);
+		/*if (ini.Get_String(Name(), "ChainTo", "", buffer, sizeof(buffer))) {
+			Chainto_findorcreate(ini, buffer, ANIM_NONE);
 			ptr = AnimTypeClass::As_Pointer(buffer);
 			if (ptr)
 				ChainTo = ptr->Type();
-		}
+		}*/
 		VirtualStages = ini.Get_Short(Name(), "VirtualStages", VirtualStages);
 		//VirtualScale = ini.Get_Float(Name(), "Scale", VirtualScale);
 		if (ini.Get_String(Name(), "VirtualName", "", buffer, sizeof(buffer))) {
@@ -2924,11 +2926,13 @@ bool AnimTypeClass::Read_INI(CCINIClass& ini)
 				VirtualName = SecondaryGraphicName;
 			}
 		}
-		if (ini.Get_String(Name(), "VirtualAnim", "", buffer, sizeof(buffer))) {
+		VirtualAnim = findorcreate(ini, ini.Get_Value(Name(), "VirtualAnim"), VirtualAnim);
+		/*if (ini.Get_String(Name(), "VirtualAnim", "", buffer, sizeof(buffer))) {
 			ptr = AnimTypeClass::As_Pointer(buffer);
 			if (ptr)
 				VirtualAnim = ptr->Type();
-		}
+		}*/
+		NextAnim = findorcreate(ini, ini.Get_Value(Name(), "NextAnim"), NextAnim);
 		sprintf(message, "AnimTypeClass.Read_INI parsed %s .\n", Name());
 		WWDebugString(message);
 		return(true);
@@ -2979,6 +2983,7 @@ char const * AnimTypeClass::to_string(void) const
 	//WWDebugString(strdup(out.c_str()));
 	return out.c_str();
 }
+
 const AnimTypeClass* AnimTypeClass::findorcreate(CCINIClass& ini, const char* value, const AnimTypeClass* defptr)
 {
 	if (value == NULL || &ini == NULL || strlen(value) < 2)

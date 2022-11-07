@@ -112,11 +112,11 @@ ResultType TerrainClass::Take_Damage(int & damage, int distance,const WarheadTyp
 	/*
 	**	Small arms can never destroy a terrain element.
 	*/
-	if ((!IsOnFire || warhead->Type() == WARHEAD_FIRE) && warhead->Type() != WARHEAD_SA && !Class->IsImmune) {
+	if ((!IsOnFire && warhead->nameMatches(WARHEAD_FIRE)) && !warhead->nameMatches(WARHEAD_SA) && !Class->IsImmune) {
 
 		res = ObjectClass::Take_Damage(damage, distance, warhead, source, forced);
 
-		if (damage && warhead->Type() == WARHEAD_FIRE) {
+		if (damage && warhead->nameMatches(WARHEAD_FIRE)) {
 			Catch_Fire();
 		}
 

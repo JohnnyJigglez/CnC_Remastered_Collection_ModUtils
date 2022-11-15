@@ -2919,6 +2919,7 @@ static void Init_One_Time_Systems(void)
 	ObjectTypeClass::One_Time();
 	BuildingTypeClass::One_Time();
 	BulletTypeClass::One_Time();
+	WeaponTypeClass::One_Time();
 	HouseTypeClass::One_Time();
 	TemplateTypeClass::One_Time();
 	OverlayTypeClass::One_Time();

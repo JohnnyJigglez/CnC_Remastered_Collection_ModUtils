@@ -466,7 +466,8 @@ void BuildingClass::Draw_It(int x, int y, WindowNumberType window) const
 	**	Actually draw the building shape.
 	*/
 	IsTheaterShape = Class->IsTheater;	//Let Build_Frame know if this is a theater specific shape
-	Techno_Draw_Object(shapefile, Shape_Number(), x, y, window);
+	//Techno_Draw_Object(shapefile, Fetch_Stage(), x, y, window);
+	Techno_Draw_Object(shapefile, Fetch_Stage(), x, y, window);
 	IsTheaterShape = false;
 
 	/*
@@ -599,13 +600,30 @@ int BuildingClass::Shape_Number(void) const
 		**	The Tesla Coil has a stage value that can be overridden by
 		**	its current state.
 		*/
-		if (*this == STRUCT_TESLA) {
+		if (this->Techno_Type_Class()->PrimaryWeapon && this->Techno_Type_Class()->PrimaryWeapon->IsElectric) {
 			if (IsCharged) {
 				shapenum = 3;
 			} else {
 				if (IsCharging) {
 					shapenum = Fetch_Stage();
 				} else {
+					shapenum = 0;
+				}
+			}
+		}
+		/*
+		**	The obelisk has a stage value than can be overridden by
+		**	its current state.
+		*/
+		if (this->Techno_Type_Class()->PrimaryWeapon && this->Techno_Type_Class()->PrimaryWeapon->IsLaser) {
+			if (IsCharged) {
+				shapenum = 3;
+			}
+			else {
+				if (IsCharging) {
+					shapenum = Fetch_Stage();
+				}
+				else {
 					shapenum = 0;
 				}
 			}
@@ -3104,6 +3122,16 @@ FireErrorType BuildingClass::Can_Fire(TARGET target, int which) const
 		** If an obelisk can fire, check the state of charge.
 		*/
 		if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsElectric && !IsCharged) {
+			return(FIRE_BUSY);
+		}
+
+		/*
+		** If an obelisk can fire, check the state of charge.  If it isn't charging
+		** up, start it charging up and return FIRE_BUSY.  If it is charging but
+		** isn't done yet, return FIRE_BUSY.  If it's done charging, stop the
+		** charging process, clear the stage timer, and return FIRE_OK.
+		*/
+		if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsLaser && !IsCharged) {
 			return(FIRE_BUSY);
 		}
 	}
@@ -5757,6 +5785,9 @@ void BuildingClass::Rotation_AI(void)
  *=============================================================================================*/
 void BuildingClass::Charging_AI(void)
 {
+	/*
+	**	TSLA charging logic.
+	*/
 	if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsElectric && BState != BSTATE_CONSTRUCTION) {
 		if (Target_Legal(TarCom) && House->Power_Fraction() >= 1) {
 			if (!IsCharged) {
@@ -5778,6 +5809,39 @@ void BuildingClass::Charging_AI(void)
 				}
 			}
 		} else {
+			if (IsCharging || IsCharged) {
+				Mark(MARK_CHANGE);
+				IsCharging = false;
+				IsCharged = false;
+				Set_Stage(0);
+				Set_Rate(0);
+			}
+		}
+	}
+	/*
+	**	Obelisk charging logic.
+	*/
+	if (Class->PrimaryWeapon != NULL && Class->PrimaryWeapon->IsLaser && BState != BSTATE_CONSTRUCTION) {
+		if (Target_Legal(TarCom) && House->Power_Fraction() >= 1) {
+			if (!IsCharged) {
+				if (IsCharging) {
+						Mark(MARK_CHANGE);
+						if (Fetch_Stage() >= 4) {
+							IsCharged = true;
+							IsCharging = false;
+							Set_Rate(0);
+						}
+				}
+				else if (!Arm[0]) {
+					IsCharged = false;
+					IsCharging = true;
+					Set_Stage(0);
+					Set_Rate(15);
+					Sound_Effect(VOC_NONE, Coord,1,HOUSE_NONE,"OBELPOWR");
+				}
+			}
+		}
+		else {
 			if (IsCharging || IsCharged) {
 				Mark(MARK_CHANGE);
 				IsCharging = false;

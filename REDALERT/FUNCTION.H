@@ -484,12 +484,12 @@ RTTIType RTTIType_From_Name(char const* name);
 VocType Voc_From_Name(char const * name);
 char const * Speech_Name(VoxType speech);
 char const * Voc_Name(VocType voc);
-int Sound_Effect(VocType voc, fixed volume=1, int variation=1, signed short panvalue=0, HousesType house=HOUSE_NONE);
+int Sound_Effect(VocType voc, fixed volume=1, int variation=1, signed short panvalue=0, HousesType house=HOUSE_NONE,const char* name = NULL);
 // void Speak(VoxType voice); // MBL 02.06.2020
 void Speak(VoxType voice, HouseClass *house=NULL, COORDINATE coord=0);
 void Speak_AI(void);
 void Stop_Speaking(void);
-void Sound_Effect(VocType voc, COORDINATE coord, int variation=1, HousesType house=HOUSE_NONE);
+void Sound_Effect(VocType voc, COORDINATE coord, int variation=1, HousesType house=HOUSE_NONE, const char* name = NULL);
 bool Is_Speaking(void);
 
 /*
@@ -587,6 +587,7 @@ short const * Coord_Spillage_List(COORDINATE coord, Rect const & rect, bool noce
 void Normal_Move_Point(short &x, short &y, register DirType dir, unsigned short distance);
 void Move_Point(short &x, short &y, register DirType dir, unsigned short distance);
 COORDINATE Coord_Move(COORDINATE start, DirType facing, unsigned short distance);
+COORDINATE Coord_Move(COORDINATE start, COORDINATE append);
 COORDINATE Coord_Scatter(COORDINATE coord, unsigned distance, bool lock=false);
 DirType Direction(CELL cell1, CELL cell2);
 DirType Direction(COORDINATE coord1, COORDINATE coord2);

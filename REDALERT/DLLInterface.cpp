@@ -185,6 +185,7 @@ class DLLExportClass {
 		static void Convert_Type(const ObjectClass *object, CNCObjectStruct &object_out);
 		static void DLL_Draw_Intercept(int shape_number, int x, int y, int width, int height, int flags, const ObjectClass *object, DirType rotation, long scale, const char *shape_file_name = NULL, char override_owner = HOUSE_NONE);
 		static void DLL_Draw_Pip_Intercept(const ObjectClass* object, int pip);
+		static void DLL_Draw_Line_Intercept(int x, int y, int x1, int y1, unsigned char color, int frame);
 		static bool Place(uint64 player_id, int buildable_type, int buildable_id, short cell_x, short cell_y);
 		static bool Cancel_Placement(uint64 player_id, int buildable_type, int buildable_id);
 		static bool Place_Super_Weapon(uint64 player_id, int buildable_type, int buildable_id, int x, int y);
@@ -228,7 +229,7 @@ class DLLExportClass {
 		static void On_Play_Movie(const char * movie_name, ThemeType theme, bool immediate);
 		static void On_Display_Briefing_Text();
 
-		static void On_Sound_Effect(const HouseClass* player_ptr, int sound_effect_index, const char* extension, int variation, COORDINATE coord);
+		static void On_Sound_Effect(const HouseClass* player_ptr, int sound_effect_index, const char* extension, int variation, COORDINATE coord,const char * name=NULL);
 		static void On_Speech(const HouseClass* player_ptr, int speech_index);
 		static void On_Message(const HouseClass* player_ptr, const char* message, float timeout_seconds, EventCallbackMessageEnum message_type, int64 message_id);
 		static void On_Update_Map_Cell(int cell_x, int cell_y, const char* template_type_name);
@@ -418,12 +419,15 @@ void Display_Briefing_Text_GlyphX()
 }
 
 
-void On_Sound_Effect(int sound_index, int variation, COORDINATE coord, int house)
+void On_Sound_Effect(int sound_index, int variation, COORDINATE coord, int house, char const * name)
 {
 	int voc = sound_index;
 	if (voc == VOC_NONE)
 	{
-		return;
+		if (name != NULL && strlen(name) > 1)
+			DLLExportClass::On_Sound_Effect(PlayerPtr, sound_index, "", variation, coord,name);
+		else
+			return;
 	}
 
 	// Borrowed from RedAlert\AUDIO.CPP Sound_Effect()
@@ -2387,7 +2391,7 @@ void DLLExportClass::On_Display_Briefing_Text()
 *
 * History: 2/20/2019 2:39PM - ST
 **************************************************************************************************/
-void DLLExportClass::On_Sound_Effect(const HouseClass* player_ptr, int sound_effect_index, const char* extension, int variation, COORDINATE coord)
+void DLLExportClass::On_Sound_Effect(const HouseClass* player_ptr, int sound_effect_index, const char* extension, int variation, COORDINATE coord,const char * name)
 {
 	// player_ptr could be NULL
 
@@ -2430,9 +2434,21 @@ void DLLExportClass::On_Sound_Effect(const HouseClass* player_ptr, int sound_eff
 	}
 	else
 	{
-		strncpy( new_event.SoundEffect.SoundEffectName, "BADINDEX", 16 );
-		new_event.SoundEffect.SoundEffectPriority = -1;
-		new_event.SoundEffect.SoundEffectContext = -1;
+		if (sound_effect_index == VOC_NONE && name != NULL && strlen(name) > 1)
+		{
+			strncpy(new_event.SoundEffect.SoundEffectName, name, 16);
+			if (extension != NULL)
+			{
+				strncat(new_event.SoundEffect.SoundEffectName, extension, 16);
+			}
+			new_event.SoundEffect.SoundEffectPriority = 1;
+			new_event.SoundEffect.SoundEffectContext = IN_NOVAR;
+		}
+		else {
+			strncpy(new_event.SoundEffect.SoundEffectName, "BADINDEX", 16);
+			new_event.SoundEffect.SoundEffectPriority = -1;
+			new_event.SoundEffect.SoundEffectContext = -1;
+		}
 	}
 
 	EventCallback(new_event);
@@ -3323,6 +3339,12 @@ void DLL_Draw_Pip_Intercept(const ObjectClass* object, int pip)
 	DLLExportClass::DLL_Draw_Pip_Intercept(object, pip);
 }
 
+void DLL_Draw_Line_Intercept(int x, int y, int x1, int y1, unsigned char color, int frame)
+{
+	DLLExportClass::DLL_Draw_Line_Intercept(x, y, x1, y1, color, frame);
+}
+
+
 
 void DLLExportClass::DLL_Draw_Intercept(int shape_number, int x, int y, int width, int height, int flags, const ObjectClass *object, DirType rotation, long scale, const char *shape_file_name, char override_owner)
 {
@@ -3693,8 +3715,21 @@ void DLLExportClass::DLL_Draw_Pip_Intercept(const ObjectClass* object, int pip)
 	}
 }
 
+void DLLExportClass::DLL_Draw_Line_Intercept(int x, int y, int x1, int y1, unsigned char color, int frame)
+{
+	CNCObjectStruct& root_object = ObjectList->Objects[TotalObjectCount];
+	if (root_object.NumLines < MAX_OBJECT_LINES) {
+		root_object.Lines[root_object.NumLines].X = x;
+		root_object.Lines[root_object.NumLines].Y = y;
+		root_object.Lines[root_object.NumLines].X1 = x1;
+		root_object.Lines[root_object.NumLines].Y1 = y1;
+		root_object.Lines[root_object.NumLines].Frame = frame;
+		root_object.Lines[root_object.NumLines].Color = color;
 
-
+		SortOrder++;
+		root_object.NumLines++;
+	}
+}
 
 /**************************************************************************************************
 * DLLExportClass::Get_Layer_State -- Get game objects from the layers

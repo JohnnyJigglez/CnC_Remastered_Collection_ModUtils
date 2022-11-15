@@ -3367,7 +3367,8 @@ typedef enum VocType : short {
 
 #endif
 	VOC_COUNT,
-	VOC_FIRST=0
+	VOC_FIRST=0,
+	VOC_MAX=1000
 } VocType;
 
 /*

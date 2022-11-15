@@ -69,6 +69,7 @@ class WeaponTypeClass
 		bool IsUsable(void) const { return (Bullet && WarheadPtr); }
 		static int MaxDamage(int explosionset);
 		static const WeaponTypeClass* findorcreate(CCINIClass & ini, const char * value, const WeaponTypeClass* defptr = NULL);
+		static void One_Time(void);
 		/*
 		**	This is the index number in the weapon heap.
 		*/
@@ -104,6 +105,13 @@ class WeaponTypeClass
 		**	value suffices for all other cases.
 		*/
 		unsigned IsElectric:1;
+
+		/*
+		**	If this weapon requires charging before it can fire, then this
+		**	flag is true. In actuality, this only applies to the Obelisk
+		**	which has specific charging animation.
+		*/
+		bool IsLaser;
 
 		/*
 		**	This is the number of shots this weapon first (in rapid succession).
@@ -163,6 +171,11 @@ class WeaponTypeClass
 		VocType Sound;
 
 		/*
+		**	This is the typical sound generated when firing.
+		*/
+		char SoundName[16];
+
+		/*
 		**	This is the animation to display at the firing coordinate.
 		*/
 		AnimType Anim;
@@ -171,6 +184,10 @@ class WeaponTypeClass
 		**	This will inform the firing logic whether or not the animation SHP file referenced by Anim has 8 different directions in the file that can be used.
 		*/
 		bool DirectionalFiringAnim;
+		/*
+		**	Override The lightning shape graphics with the projectile graphics
+		*/
+		bool OverrideZap;
 };
 
 

@@ -254,10 +254,10 @@ class TechnoClass :	public RadioClass,
 		**  Line data is cleared after the specified delay.
 		**  Each line consists of: x, y, x1, y1, color, frame (max frame used to determine duration)
 		*/
-		/*int Lines[3][5];
+		int Lines[3][5];
 		int LineCount;
 		int LineFrame;
-		int LineMaxFrames;*/
+		int LineMaxFrames;
 
 		/*
 		**	This is the amount of money spent to produce this object. This value really
@@ -368,6 +368,7 @@ class TechnoClass :	public RadioClass,
 		bool Evaluate_Object(ThreatType method, int mask, int range, TechnoClass const * object, int & value, int zone=-1) const;
 		int Evaluate_Just_Cell(CELL cell) const;
 		virtual bool Electric_Zap (COORDINATE target_coord, int which, WindowNumberType window, COORDINATE source_coord=0L, unsigned char * remap=NULL) const;
+		//virtual bool Laser_Zap(COORDINATE target_coord, int which, WindowNumberType window, COORDINATE source_coord = 0L, unsigned char* remap = NULL) const;
 		bool Is_Cloaked(HousesType house, bool check_invisible=false) const;
 		bool Is_Cloaked(HouseClass const * house, bool check_invisible=false) const;
 		bool Is_Cloaked(ObjectClass const * object, bool check_invisible=false) const;

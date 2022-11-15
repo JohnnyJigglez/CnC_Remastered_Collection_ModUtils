@@ -290,7 +290,8 @@ struct SoundEffectNameStruct {
 //
 // External handlers. MBL 06.17.2019
 //
-extern void On_Sound_Effect(int sound_index, int variation, COORDINATE coord, int house);
+//extern void On_Sound_Effect(int sound_index, int variation, COORDINATE coord, int house);
+extern void On_Sound_Effect(int sound_index, int variation, COORDINATE coord, int house,char const * name=NULL);
 // extern void On_Speech(int speech_index); MBL 02.06.2020
 extern void On_Speech(int speech_index, HouseClass *house);
 extern void On_Ping(const HouseClass* player_ptr, COORDINATE coord);
@@ -377,12 +378,12 @@ char const * Voc_Name(VocType voc)
  *   09/15/1996 JLB : Revamped volume logic.                                                   *
  *   11/01/1996 JLB : House override control.                                                  *
  *=============================================================================================*/
-void Sound_Effect(VocType voc, COORDINATE coord, int variation, HousesType house)
+void Sound_Effect(VocType voc, COORDINATE coord, int variation, HousesType house, const char* name)
 {
 	//
 	// Intercept sound effect calls. MBL 06.17.2019
 	//
-	On_Sound_Effect((int)voc, variation, coord, (int)house);
+	On_Sound_Effect((int)voc, variation, coord, (int)house,name);
 
 #if 0
 	CELL cell_pos = 0;
@@ -447,7 +448,7 @@ void Sound_Effect(VocType voc, COORDINATE coord, int variation, HousesType house
  *   05/04/1995 JLB : Variation adjustments.                                                   *
  *   11/01/1996 JLB : House override control.                                                  *
  *=============================================================================================*/
-int Sound_Effect(VocType voc, fixed volume, int variation, signed short pan_value, HousesType house)
+int Sound_Effect(VocType voc,fixed volume, int variation, signed short pan_value, HousesType house, const char* name)
 {
 	//
 	// Intercept sound effect calls. MBL 06.17.2019

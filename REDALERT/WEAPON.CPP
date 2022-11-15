@@ -106,13 +106,58 @@ WeaponTypeClass::WeaponTypeClass(char const * name) :
 	Range(0),
 	Sound(VOC_NONE),
 	Anim(ANIM_NONE),
-	DirectionalFiringAnim(false)
+	SoundName(""),
+	DirectionalFiringAnim(false),
+	IsLaser(false),
+	OverrideZap(false)
 {
 	ID = (short)(Weapons.size());
 	Weapons.push_back(this);
 	char message[64];
 	sprintf(message, "Constructed Weapon %s with ID: %d.\n", IniName,ID);
 	WWDebugString(message);
+}
+
+/***********************************************************************************************
+ * WeaponTypeClass::One_Time -- Performs the one time processing for weapons.                  *
+ *                                                                                             *
+ *    This routine is used to perform any one time processing for the bullet type class. It    *
+ *    handles loading of the shape files.                                                      *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   This routine must be called before any rendering of bullets occurs and should   *
+ *             only be called once.                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   11/08/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+void WeaponTypeClass::One_Time(void)
+{
+	for (int x = 0; x < Weapons.size(); x++)
+	{
+		WeaponTypeClass* weap = Weapons.at(x);
+		if (weap->IsElectric && weap->Bullet != NULL && weap->OverrideZap)
+		{
+			char	fullname[_MAX_FNAME + _MAX_EXT];
+			_makepath(fullname, NULL, NULL, weap->Bullet->Graphic_Name(), ".SHP");
+#ifdef NDEBUG
+			((void const*&)weap->Bullet->ImageData) = MFCD::Retrieve(fullname);
+#else
+			RawFileClass file(fullname);
+
+			if (file.Is_Available()) {
+				((void const*&)btc->ImageData) = Load_Alloc_Data(file);
+			}
+			else {
+				((void const*&)btc->ImageData) = MFCD::Retrieve(fullname);
+			}
+#endif
+		}
+
+	}
 }
 
 void WeaponTypeClass::Init_Heap(void) {
@@ -303,52 +348,18 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		ROF = ini.Get_Int(Name(), "ROF", ROF);
 		Range = ini.Get_Lepton(Name(), "Range", Range);
 		Sound = ini.Get_VocType(Name(), "Report", Sound);
+		char buffer[16];
+		if (ini.Get_String(Name(), "Report", "", buffer, sizeof(buffer))) {
+			strcpy(SoundName, buffer);
+		}
 		Anim = AnimTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Anim"), Anim);
 		IsCamera = ini.Get_Bool(Name(), "Camera", IsCamera);
 		IsElectric = ini.Get_Bool(Name(), "Charges", IsElectric);
+		IsLaser = ini.Get_Bool(Name(), "Lasers", IsLaser);
 		IsTurboBoosted = ini.Get_Bool(Name(), "TurboBoost", IsTurboBoosted);
-		//char buffer[64];
 		WarheadPtr = WarheadTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Warhead"), WarheadPtr);
 		Bullet = BulletTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Projectile"), Bullet);
-		/*const char* warheadname = ini.Get_Value(Name(), "Warhead");
-
-		if(warheadname != NULL)
-		{
-			if ((WarheadPtr != NULL && stricmp(WarheadPtr->Name(), warheadname) != 0) || WarheadPtr == NULL)//if we are changing it
-			{
-				const WarheadTypeClass* warhead = WarheadTypeClass::As_Pointer(warheadname);
-				if (warhead == NULL)//did we find this new warhead that is referenced in the ini?
-				{
-					if (ini.Section_Present(warheadname))//does this new warhead exist in the ini?
-					{
-						WarheadTypeClass* bob = new WarheadTypeClass(warheadname);
-						bob->Read_INI(ini);
-						WarheadPtr = WarheadTypeClass::As_Pointer(warheadname);
-						sprintf(message, "WeaponTypeClass.Read_INI %s obtained warhead %s\n", Name(), WarheadPtr->Name());
-						WWDebugString(message);
-						bob = NULL;
-					}
-				}
-				else {
-					WarheadPtr = warhead;
-					sprintf(message, "WeaponTypeClass.ReadINI %s obtained warhead %s\n", Name(), WarheadPtr->Name());
-					WWDebugString(message);
-				}
-				warhead = NULL;
-			}
-		}
-		warheadname = NULL;
-		char pbuffer[16] = "";
-		if (ini.Get_String(Name(), "Projectile", pbuffer, pbuffer, sizeof(pbuffer))) {
-			const BulletTypeClass* tprojptr = BulletTypeClass::As_Pointer(pbuffer);
-			if (tprojptr != NULL) {
-				Bullet = tprojptr;
-			}
-		}
-		if (Bullet) {
-			sprintf(message, "WeaponTypeClass.Read_INI %s has projectile %s.\n", Name(), Bullet->IniName);
-		    WWDebugString(message);
-		}*/
+		OverrideZap = ini.Get_Bool(Name(), "OverrideZap", OverrideZap);
 		sprintf(message, "WeaponTypeClass.Read_INI parsed Weapon %s .\n", Name());
 		WWDebugString(message);
 		return(true);

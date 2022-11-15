@@ -1773,9 +1773,10 @@ COORDINATE InfantryClass::Fire_Coord(int which) const
 	if (IsProne) {
 		TechnoTypeClass const & tclass = *Techno_Type_Class();
 		WeaponTypeClass const * weapon = (which == 0) ? tclass.PrimaryWeapon : tclass.SecondaryWeapon;
-		if (weapon && weapon->IsElectric) {
+		if (weapon && ( weapon->IsElectric || weapon->IsLaser)) {
 			coord = Coord_Add(coord, XY_Coord(0, 48));
 		}
+
 	}
 
 	return coord;

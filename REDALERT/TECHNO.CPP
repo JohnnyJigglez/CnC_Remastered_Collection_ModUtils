@@ -515,7 +515,21 @@ COORDINATE TechnoClass::Fire_Coord(int which) const
 
 	DirType dir = Turret_Facing();
 	TechnoTypeClass const * tclass = Techno_Type_Class();
+	COORDINATE coord;
+	if (tclass->CustomOffsets)
+	{
+		//coord = Center_Coord();
+		
+		if (which == 0) {
+			
+			//coord = Coord_Move(Center_Coord(), tclass->PrimaryOffsets[dir]);
+			return(Coord_Move(Center_Coord(), tclass->PrimaryOffsets[dir>>5]));
+		}
+		else {
 
+			return(Coord_Move(Center_Coord(), tclass->SecondaryOffsets[dir>>5]));
+		}
+	}
 	int dist = 0;
 	int lateral = 0;
 	if (which == 0) {
@@ -526,7 +540,7 @@ COORDINATE TechnoClass::Fire_Coord(int which) const
 		lateral = tclass->SecondaryLateral;
 	}
 
-	COORDINATE coord = Coord_Move(Center_Coord(), DIR_N, tclass->VerticalOffset + Height);
+	coord = Coord_Move(Center_Coord(), DIR_N, tclass->VerticalOffset + Height);
 	coord = Coord_Move(coord, DIR_E, tclass->HorizontalOffset);
 	if (IsSecondShot) {
 		coord = Coord_Move(coord, (DirType)(dir+DIR_E), lateral);
@@ -1128,16 +1142,16 @@ void TechnoClass::Draw_It(int x, int y, WindowNumberType window) const
 	if ((ElectricZapDelay >= 0) && ElectricZapTarget) {
 		Electric_Zap(ElectricZapTarget, ElectricZapWhich, window);
 	}
-	/*if (LineFrame < LineMaxFrames) {
-		// Only draw the last line for virtual window
+	/*
+	** Draw laser zap
+	*/
+	if (LineFrame < LineMaxFrames) {
 		int start_line = (window == WINDOW_VIRTUAL) ? max(0, LineCount - 1) : 0;
 		for (int i = start_line; i < LineCount; i++) {
 			CC_Draw_Line(Lines[i][0], Lines[i][1], Lines[i][2], Lines[i][3], (unsigned char)Lines[i][4], LineFrame, window);
 		}
-		if (window == WINDOW_VIRTUAL) {
-			LineFrame++;
-		}
-	}*/
+		//Laser_Zap(ElectricZapTarget, ElectricZapWhich, window);
+	}
 
 	int width, height;
 	Class_Of().Dimensions(width, height);
@@ -2505,7 +2519,7 @@ void TechnoClass::AI(void)
 	**	If this is a vehicle that heals itself (e.g., Mammoth Tank), then it will perform
 	**	the heal logic here.
 	*/
-	if (Techno_Type_Class()->IsSelfHealing && (Frame % (Rule.RepairRate * TICKS_PER_MINUTE)) == 0 && Health_Ratio() <= Rule.ConditionYellow) {
+	if (Techno_Type_Class()->IsSelfHealing && (Frame % (Rule.RepairRate * TICKS_PER_MINUTE)) == 0 && Health_Ratio() <= Techno_Type_Class()->SelfHealThreshold) {
 		Strength++;
 		Mark(MARK_CHANGE);
 	}
@@ -2568,6 +2582,25 @@ void TechnoClass::AI(void)
 		if (--ElectricZapDelay < 0) {
 			ElectricZapTarget = 0;
 			ElectricZapWhich = 0;
+		}
+	}
+	/*
+	**	Handle laser logic.
+	
+	if (LineFrame <= LineMaxFrames) {
+		Map.Flag_To_Redraw(true);
+		if (++LineFrame > LineMaxFrames) {
+			LineMaxFrames = -1;
+			LineFrame = -1;
+			LineCount = -1;
+		}
+	}*/
+	if (LineMaxFrames > 0) {
+		Map.Flag_To_Redraw(true);
+		if (++LineFrame >= LineMaxFrames) {
+			LineCount = 0;
+			LineFrame = 0;
+			LineMaxFrames = 0;
 		}
 	}
 }
@@ -3174,10 +3207,23 @@ bool TechnoClass::Electric_Zap(COORDINATE target_coord, int which, WindowNumberT
 				// Electric zap coordinates are always tactical, so don't use the partial window if passed - SKY
 				x += _xadd[facing][lastfacing];
 				y += _yadd[facing][lastfacing];
-				if (remap != NULL) {
-					CC_Draw_Shape(this, "LITNING", LightningShapes, _shape[facing]+(shots ? 4 : 0), x, y, (window != WINDOW_PARTIAL) ? window : WINDOW_TACTICAL, SHAPE_FADING|SHAPE_CENTER|SHAPE_WIN_REL, remap);
-				} else {
-					CC_Draw_Shape(this, "LITNING", LightningShapes, _shape[facing]+(shots ? 4 : 0), x, y, (window != WINDOW_PARTIAL) ? window : WINDOW_TACTICAL, SHAPE_CENTER|SHAPE_WIN_REL);
+				TechnoTypeClass* techno = Techno_Type_Class();
+				const WeaponTypeClass* weap = (which ? techno->SecondaryWeapon : techno->PrimaryWeapon);
+				if (weap != NULL && weap->OverrideZap && weap->Bullet != NULL) {
+					if (remap != NULL) {
+						CC_Draw_Shape(this, weap->Bullet->Graphic_Name(), weap->Bullet->Get_Image_Data(), _shape[facing] + (shots ? 4 : 0), x, y, (window != WINDOW_PARTIAL) ? window : WINDOW_TACTICAL, SHAPE_FADING | SHAPE_CENTER | SHAPE_WIN_REL, remap);
+					}
+					else {
+						CC_Draw_Shape(this, weap->Bullet->Graphic_Name(), weap->Bullet->Get_Image_Data(), _shape[facing] + (shots ? 4 : 0), x, y, (window != WINDOW_PARTIAL) ? window : WINDOW_TACTICAL, SHAPE_CENTER | SHAPE_WIN_REL);
+					}
+				}
+				else {
+					if (remap != NULL) {
+						CC_Draw_Shape(this, "LITNING", LightningShapes, _shape[facing] + (shots ? 4 : 0), x, y, (window != WINDOW_PARTIAL) ? window : WINDOW_TACTICAL, SHAPE_FADING | SHAPE_CENTER | SHAPE_WIN_REL, remap);
+					}
+					else {
+						CC_Draw_Shape(this, "LITNING", LightningShapes, _shape[facing] + (shots ? 4 : 0), x, y, (window != WINDOW_PARTIAL) ? window : WINDOW_TACTICAL, SHAPE_CENTER | SHAPE_WIN_REL);
+					}
 				}
 				lastfacing = facing;
 			}
@@ -3186,7 +3232,6 @@ bool TechnoClass::Electric_Zap(COORDINATE target_coord, int which, WindowNumberT
 
 	return (gonnadraw);
 }
-
 
 /***********************************************************************************************
  * TechnoClass::Fire_At -- Fires projectile at target specified.                               *
@@ -3252,39 +3297,6 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 	**	Get the location where the projectile should appear.
 	*/
 	fire_coord = Fire_Coord(which);
-	/*if (strcmpi(btype.Name(), "Laser") == 0) {
-		int x, y, x1, y1;
-		//COORDINATE source, dest;
-		//dest = As_Coord(target);
-		if (SpecialDialog == SDLG_NONE) {
-			Map.Coord_To_Pixel(fire_coord, x, y);
-			Map.Coord_To_Pixel(target_coord, x1, y1);
-			x += Map.TacPixelX;
-			x1 += Map.TacPixelX;
-			y += Map.TacPixelY;
-			y1 += Map.TacPixelY;
-			Lines[0][0] = x + 1;
-			Lines[0][1] = y;
-			Lines[0][2] = x1;
-			Lines[0][3] = y1;
-			Lines[0][4] = 0x7D;
-			Lines[1][0] = x - 1;
-			Lines[1][1] = y;
-			Lines[1][2] = x1;
-			Lines[1][3] = y1;
-			Lines[1][4] = 0x7D;
-			Lines[2][0] = x;
-			Lines[2][1] = y;
-			Lines[2][2] = x1;
-			Lines[2][3] = y1;
-			Lines[2][4] = 0x7F;
-			LineCount = 3;
-			LineFrame = 0;
-			LineMaxFrames = 5;
-			Map.Flag_To_Redraw(true);
-		}
-		new SmudgeClass(Random_Pick(SMUDGE_SCORCH1, SMUDGE_SCORCH6), As_Coord(target));
-	}*/
 
 	/*
 	**	If the projectile is a homing type (such as a missile), then it will
@@ -3399,7 +3411,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
   		/*
 		**	Play any sound effect tied to this weapon type.
 		*/
-		Sound_Effect(weapon->Sound, Fire_Coord(which));
+		Sound_Effect(weapon->Sound, Fire_Coord(which),1,HOUSE_NONE, weapon->SoundName);
 
 		/*
 		**	If there is a special firing animation, then create and attach it
@@ -3436,6 +3448,55 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 			if (tech != NULL)  {
 				tech->Clicked_As_Target(PlayerPtr->Class->House, 4); // 2019/09/20 JAS - Added record of who clicked on the object
 			}
+		}
+
+		/*
+		**	Laser animation.
+		*/
+		if (weapon->IsLaser) {
+			int x, y, x1, y1;
+			//ElectricZapDelay = 1;
+			//ElectricZapTarget = target_coord;
+			//ElectricZapWhich = which;
+			if (SpecialDialog == SDLG_NONE) {
+				Map.Coord_To_Pixel(fire_coord, x, y);
+				Map.Coord_To_Pixel(target_coord, x1, y1);
+				x += Map.TacPixelX;
+				x1 += Map.TacPixelX;
+				y += Map.TacPixelY;
+				y1 += Map.TacPixelY;
+				Lines[0][0] = x + 1;
+				Lines[0][1] = y;
+				Lines[0][2] = x1;
+				Lines[0][3] = y1;
+				Lines[0][4] = 0x7D;
+				Lines[1][0] = x - 1;
+				Lines[1][1] = y;
+				Lines[1][2] = x1;
+				Lines[1][3] = y1;
+				Lines[1][4] = 0x7D;
+				Lines[2][0] = x;
+				Lines[2][1] = y;
+				Lines[2][2] = x1;
+				Lines[2][3] = y1;
+				Lines[2][4] = 0x7F;
+				LineCount = 3;
+				LineFrame = 0;
+				LineMaxFrames = 5;
+			}
+			if(What_Am_I() != RTTI_INFANTRY) {
+				Set_Stage(0);
+				Set_Rate(0);
+			}
+			if (What_Am_I() == RTTI_BUILDING) {
+				((BuildingClass *)this)->IsCharged = false;
+				//((BuildingClass*)this)->IsCharging = true;
+			}
+			TechnoClass* tech = As_Techno(target);
+			if (tech != NULL) {
+				tech->Clicked_As_Target(PlayerPtr->Class->House, 4); // 2019/09/20 JAS - Added record of who clicked on the object
+			}
+			new SmudgeClass(Random_Pick(SMUDGE_SCORCH1, SMUDGE_SCORCH6), As_Coord(target));
 		}
 
 		/*
@@ -3500,6 +3561,12 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 		** For electric zaps, immediately perform bullet logic.
 		*/
 		if (weapon->IsElectric && bullet != NULL) {
+			bullet->AI();
+		}
+		/*
+		** For lasers, immediately perform bullet logic.
+		*/
+		if (weapon->IsLaser && bullet != NULL) {
 			bullet->AI();
 		}
 
@@ -6521,7 +6588,9 @@ TechnoTypeClass::TechnoTypeClass(
 	SecondaryLateral(secondarylateral),
 	Points(0),
     IsIndependentFire(false),
-	BuildSpeedBias(1)
+	BuildSpeedBias(1),
+	SelfHealThreshold(Rule.ConditionYellow),
+	CustomOffsets(false)
 {
 	//char message[64];
 	//sprintf(message, "Instantiated TECHNO %s .\n", ininame);
@@ -6895,7 +6964,7 @@ static inline int _Scale_To_256(int val)
 bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ObjectTypeClass::Read_INI(ini)) {
-		char message[128];
+		char message[256];
 		sprintf(message, "TechnoTypeClass.Read_INI parsing %s ...\n", Name());
 		WWDebugString(message);
 		//GlyphX_Debug_Print(message);
@@ -6933,67 +7002,11 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		IsDoubleOwned = ini.Get_Bool(Name(), "DoubleOwned", IsDoubleOwned);
 		ThreatRange = ini.Get_Lepton(Name(), "GuardRange", ThreatRange);
 		IsExploding = ini.Get_Bool(Name(), "Explodes", IsExploding);
-		//PrimaryWeapon = ini.Get_WeaponType(Name(), "Primary", PrimaryWeapon);
 		PrimaryWeapon = WeaponTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Primary"), PrimaryWeapon);
 		SecondaryWeapon = WeaponTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Secondary"), SecondaryWeapon);
-		/*const WeaponTypeClass* weapon = NULL;
-		if (ini.Get_String(Name(), "Primary", "", buffer, sizeof(buffer))) 
-		{
-			if ((PrimaryWeapon != NULL && stricmp(PrimaryWeapon->Name(), buffer) != 0) || PrimaryWeapon == NULL)//if we are changing it
-			{
-				weapon = WeaponTypeClass::As_Pointer(buffer);
-				if (weapon == NULL)//did we find this new weapon that is referenced in the ini?
-				{
-					if (ini.Section_Present(buffer))//does this new weapon exist in the ini 
-					{
-						WeaponTypeClass* bob = new WeaponTypeClass(ini.Get_Value(Name(), "Primary"));
-						bob->Read_INI(ini);
-						PrimaryWeapon = WeaponTypeClass::As_Pointer(buffer);
-						sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
-						WWDebugString(message);
-						bob = NULL;
-					}
-				}
-				else {
-					PrimaryWeapon = weapon;
-					sprintf(message, "TTC.ReadINI %s obtained pri %s\n", Name(), PrimaryWeapon ? PrimaryWeapon->Name() : "None");
-					WWDebugString(message);
-				}
-				weapon = NULL;
-			}
-		}
-		if (ini.Get_String(Name(), "Secondary", "", buffer, sizeof(buffer)))
-		{
-			if ((SecondaryWeapon != NULL && stricmp(SecondaryWeapon->Name(), buffer) != 0) || SecondaryWeapon == NULL)//if we are changing it
-			{
-				weapon = WeaponTypeClass::As_Pointer(buffer);
-				if (weapon == NULL)//did we find this new weapon that is referenced in the ini?
-				{
-					if (ini.Section_Present(buffer))//does this new weapon exist in the ini 
-					{
-						WeaponTypeClass* bob = new WeaponTypeClass(ini.Get_Value(Name(), "Secondary"));//make it so.
-						bob->Read_INI(ini);//parse it up
-						SecondaryWeapon = WeaponTypeClass::As_Pointer(buffer);//deliver it to the techno
-						sprintf(message, "TTC.ReadINI %s obtained sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
-						WWDebugString(message);
-					}
-				}
-				else {
-					SecondaryWeapon = weapon;
-					sprintf(message, "TTC.ReadINI %s obtained sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
-					WWDebugString(message);
-				}
-			}
-		}*/
-		//SecondaryWeapon = ini.Get_WeaponType(Name(), "Secondary", SecondaryWeapon);
-		//sprintf(message, "TTC.ReadINI %s has sec %s\n", Name(), SecondaryWeapon ? SecondaryWeapon->Name() : "None");
-		//WWDebugString(message);
 		IsCloakable = ini.Get_Bool(Name(), "Cloakable", IsCloakable);
-		//IsCrushable = ini.Get_Bool(Name(), "Crushable", IsCrushable);
 		IsScanner = ini.Get_Bool(Name(), "Sensors", IsScanner);
-		//Armor = ini.Get_ArmorType(Name(), "Armor", Armor);
 		Prerequisite = ini.Get_Buildings(Name(), "Prerequisite", Prerequisite);
-		//MaxStrength = ini.Get_Int(Name(), "Strength", MaxStrength);
 		SightRange = ini.Get_Int(Name(), "Sight", SightRange);
 		Level = ini.Get_Int(Name(), "TechLevel", Level);
 		MaxSpeed = MPHType(_Scale_To_256(ini.Get_Int(Name(), "Speed", fixed(MaxSpeed, 256) * 100)));
@@ -7010,7 +7023,7 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		IsIndependentFire = ini.Get_Bool(Name(), "IndependentFire", IsIndependentFire);
 		IsTurretEquipped = ini.Get_Bool(Name(), "Turret", IsTurretEquipped);
 		BuildSpeedBias = ini.Get_Fixed(Name(), "BuildTime", BuildSpeedBias);
-		//ini.Get_String(Name(), "Image", GraphicName, GraphicName, sizeof(GraphicName));
+		SelfHealThreshold = ini.Get_Fixed(Name(), "RegenThreshold", SelfHealThreshold);
 		HorizontalOffset = ini.Get_Int(Name(), "HOffset", HorizontalOffset); 		
 		VerticalOffset = ini.Get_Int(Name(), "VOffset", VerticalOffset);			
 		PrimaryOffset = ini.Get_Int(Name(), "PrimaryOffset", PrimaryOffset);			
@@ -7018,9 +7031,47 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		SecondaryOffset = ini.Get_Int(Name(), "SecondaryOffset", SecondaryOffset);
 		SecondaryLateral = ini.Get_Int(Name(), "SecondaryLateral", SecondaryLateral);
 		Rotation = ini.Get_Int(Name(), "Rotation", Rotation);
-		//Scale = ini.Get_Float(Name(), "Scale", Scale);
-		//ini.Get_String(Name(), "SecondaryImage", SecondaryGraphicName, SecondaryGraphicName, sizeof(SecondaryGraphicName));
 		IsLeader = false;
+		//CustomOffsets = ini.Get_Bool(Name(), "CustomOffsets", CustomOffsets);
+		if (ini.Get_String(Name(), "PrimaryOffsets", "", buffer, sizeof(buffer))) {
+			//sprintf(message, "TTC.Read_INI Techno has PrimaryOffsets : %s \n", buffer);
+			//WWDebugString(message);
+			short count = 0;
+			char* token = NULL;
+			char* rest = buffer;
+			short xcoord = 0, ycoord = 0;
+			COORDINATE tempexitlist[8];
+			char* xytoken = strtok_s(rest, "|", &rest);
+			while (xytoken != NULL && count < 8) {
+				token = strtok(xytoken, ",");
+				if (token != NULL) {
+					xcoord = atoi(token);
+					token = strtok(NULL, ",");
+					if (token != NULL)
+						ycoord = atoi(token);
+					//sprintf(message, "BTC.Read_INI Building has ExitList with coord %d : %d , %d \n", count, xcoord, ycoord);
+					//WWDebugString(message);
+					tempexitlist[count] = XY_Coord(xcoord, ycoord);
+				}
+				else
+					break;
+				xytoken = strtok_s(rest, "|", &rest);
+				count++;
+			}
+			//tempexitlist[count] = REFRESH_EOL;
+			memcpy(PrimaryOffsets, tempexitlist, sizeof(tempexitlist));
+			//sprintf(message, "TTC.Read_INI Techno has parsed PrimaryOffsets ");
+			//WWDebugString(message);
+			//for (int x = 0; x < 8;x++)
+			//{
+			//	sprintf(message, "%d,%d|", Coord_X(PrimaryOffsets[x]), Coord_Y(PrimaryOffsets[x]));
+			//	WWDebugString(message);
+			//}
+			//sprintf(message, "\n");
+			//WWDebugString(message);
+			//ExitList = (short*)ExitListData;
+			CustomOffsets = true;
+		}
 		if (PrimaryWeapon != NULL && PrimaryWeapon->Attack > 0) {
 			IsLeader = true;
 		}

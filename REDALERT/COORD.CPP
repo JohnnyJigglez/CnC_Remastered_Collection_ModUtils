@@ -359,6 +359,39 @@ COORDINATE Coord_Move(COORDINATE start, register DirType dir, unsigned short dis
 	return(start);
 }
 
+/***********************************************************************************************
+ * Coord_Move -- Moves a coordinate an arbitrary direction for an arbitrary distance           *
+ *                                                                                             *
+ *    This function will move a coordinate in a using SIN and COS arithmetic.                  *
+ *                                                                                             *
+ * INPUT:   start    -- The starting coordinate.                                               *
+ *                                                                                             *
+ *          dir      -- The direction to move the coordinate.                                  *
+ *                                                                                             *
+ *          distance -- The distance to move the coordinate position (in leptons).             *
+ *                                                                                             *
+ * OUTPUT:  Returns the new coordinate position.                                               *
+ *                                                                                             *
+ * WARNINGS:   This routine uses multiplies -- use with caution.                               *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   05/27/1994 JLB : Created.                                                                 *
+ *=============================================================================================*/
+COORDINATE Coord_Move(COORDINATE start, COORDINATE append)
+{
+#ifdef NEVER
+	short x = Coord_X(start);
+	short y = Coord_Y(start);
+
+	Move_Point(x, y, dir, distance);
+	return(XY_Coord(x, y));
+#endif
+	//short x = Coord_XLepton(start) + Coord_XLepton(append);
+	//short y = Coord_Y(start) + Coord_Y(append);
+	//Coord_Add(start,append)
+	return(Coord_Add(start, append));
+}
+
 
 /***********************************************************************************************
  * Coord_Scatter -- Determines a random coordinate from an anchor point.                       *

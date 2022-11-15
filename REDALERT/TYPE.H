@@ -440,6 +440,12 @@ class TechnoTypeClass : public ObjectTypeClass
 		unsigned IsSelfHealing:1;
 
 		/*
+		**	Can this object self heal up to half strength? Mammoth tanks from C&C had this
+		**	feature.
+		*/
+		fixed SelfHealThreshold;
+
+		/*
 		**	If this object explodes violently when destroyed, then this flag will be true.
 		**	The type of explosion is based on the warhead type and the damage generated
 		**	corresponds to the full strength of the object.
@@ -571,6 +577,9 @@ class TechnoTypeClass : public ObjectTypeClass
 		int SecondaryOffset;
 		int SecondaryLateral;
 
+		COORDINATE PrimaryOffsets[8];
+		COORDINATE SecondaryOffsets[8];
+		bool CustomOffsets;
 		/*
 		** Points you're awarded for destroying an object of this type, and
 		** points you lose if you lose an object of this type.

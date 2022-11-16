@@ -136,7 +136,7 @@ WeaponTypeClass::WeaponTypeClass(char const * name) :
  *=============================================================================================*/
 void WeaponTypeClass::One_Time(void)
 {
-	for (int x = 0; x < Weapons.size(); x++)
+	for (int x = 0; x < (int)(Weapons.size()); x++)
 	{
 		WeaponTypeClass* weap = Weapons.at(x);
 		if (weap->IsElectric && weap->Bullet != NULL && weap->OverrideZap)

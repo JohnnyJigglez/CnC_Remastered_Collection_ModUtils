@@ -64,7 +64,9 @@
 
 #include "function.h"
 
-
+extern void Logic_Switch_Player_Context(ObjectClass* object);
+extern void Logic_Switch_Player_Context(HouseClass* object);
+extern void On_Special_Weapon_Targetting(const HouseClass* player_ptr, SpecialWeaponType weapon_type);
 /***********************************************************************************************
  * VesselClass::VesselClass -- Constructor for vessel class objects.                           *
  *                                                                                             *
@@ -414,7 +416,7 @@ void VesselClass::Draw_It(int x, int y, WindowNumberType window) const
 		int			tfacing = Dir_To_32(SecondaryFacing);
 		DirType		rotation = DIR_N;
 		int			scale = 0x0100;
-
+		scale *= Class->Scale;
 		/*
 		**	Actually perform the draw. Overlay an optional shimmer effect as necessary.
 		*/
@@ -434,16 +436,27 @@ void VesselClass::Draw_It(int x, int y, WindowNumberType window) const
 			*/
 			int shapenum = TechnoClass::BodyShape[tfacing]+32;
 			DirType turdir = DirType(Dir_To_16(PrimaryFacing)*16);
-
-			switch (Class->Type) {
+			turret_shape_name = Class->Secondary_Graphic_Name();
+			shapefile = Class->SecondaryImageData;
+			shapenum = TechnoClass::BodyShape[Dir_To_32(SecondaryFacing)];
+			Class->Turret_Adjust(turdir, xx, yy);
+			if (Class->hasDualTurrets && turret_shape_name != NULL)
+			{
+				Techno_Draw_Object_Virtual(shapefile, shapenum, xx, yy, window, DIR_N, scale, turret_shape_name);
+				xx = x;
+				yy = y;
+				turdir = DirType(Dir_To_16(PrimaryFacing + DIR_S) * 16);
+				Class->Turret_Adjust(turdir, xx, yy);
+			}
+			/*switch (Class->Type) {
 				case VESSEL_CA:
-					turret_shape_name = "TURR";
-					shapefile = Class->TurretShapes;
+					turret_shape_name = Class->SecondaryGraphicName;
+					shapefile = Class->SecondaryImageData;
 					shapenum = TechnoClass::BodyShape[Dir_To_32(SecondaryFacing)];
 					Class->Turret_Adjust(turdir, xx, yy);
 					// Add shape file name forl new shape draw intercept. ST - 8/19/2019 1:42PM
 					//Techno_Draw_Object(shapefile, shapenum, xx, yy, window);
-					Techno_Draw_Object_Virtual(shapefile, shapenum, xx, yy, window, DIR_N, 0x0100, turret_shape_name);
+					Techno_Draw_Object_Virtual(shapefile, shapenum, xx, yy, window, DIR_N, scale, turret_shape_name);
 					xx = x;
 					yy = y;
 					turdir = DirType(Dir_To_16(PrimaryFacing+DIR_S)*16);
@@ -468,14 +481,14 @@ void VesselClass::Draw_It(int x, int y, WindowNumberType window) const
 					shapenum = TechnoClass::BodyShape[Dir_To_32(SecondaryFacing)];
 					Class->Turret_Adjust(turdir, xx, yy);
 					break;
-			}
+			}*/
 
 			/*
 			**	Actually perform the draw. Overlay an optional shimmer effect as necessary.
 			*/
 			// Add shape file name forl new shape draw intercept. ST - 8/19/2019 1:42PM
 			if (turret_shape_name) {
-				Techno_Draw_Object_Virtual(shapefile, shapenum, xx, yy, window, DIR_N, 0x0100, turret_shape_name);
+				Techno_Draw_Object_Virtual(shapefile, shapenum, xx, yy, window, DIR_N, scale, turret_shape_name);
 			} else {
 				Techno_Draw_Object(shapefile, shapenum, xx, yy, window);
 			}
@@ -785,7 +798,15 @@ ActionType VesselClass::What_Action(ObjectClass const * object) const
 	ActionType action = DriveClass::What_Action(object);
 
 	if (action == ACTION_SELF) {
-		if (Class->Max_Passengers() == 0 || !How_Many() ) {
+		if (this->Class->CanTeleport) {
+				// If the chrono tank's counter is still charging up, don't allow deploy.  Or,
+				// if it's a player-controlled chrono tank, and the player's currently trying
+				// to teleport a different unit, don't allow teleporting this unit.
+				if (MoebiusCountDown || (IsOwnedByPlayer && House->UnitToTeleport && Map.IsTargettingMode == SPC_CHRONO2)) {
+					action = ACTION_NO_DEPLOY;
+				}
+		}
+		else if (Class->Max_Passengers() == 0 || !How_Many() ) {
 			action = ACTION_NONE;
 		} else {
 // check to see if the transporter can unload.
@@ -1120,7 +1141,7 @@ Mono_Set_Cursor(0,0);
 				return(FIRE_CANT);
 			} else {
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-				if (Is_Target_Vessel(target) && (*As_Vessel(target) != VESSEL_SS && *As_Vessel(target) != VESSEL_MISSILESUB) ) {
+				if (Is_Target_Vessel(target) && !(As_Vessel(target)->Class->isBoat)) {
 #else
 				if (Is_Target_Vessel(target) && *As_Vessel(target) != VESSEL_SS) {
 #endif
@@ -1131,7 +1152,7 @@ Mono_Set_Cursor(0,0);
 			}
 		} else {
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-			if (Is_Target_Vessel(target) && (*As_Vessel(target) == VESSEL_SS || *As_Vessel(target) == VESSEL_MISSILESUB)) {
+			if (Is_Target_Vessel(target) && As_Vessel(target)->Class->isBoat) {
 #else
 			if (Is_Target_Vessel(target) && *As_Vessel(target) == VESSEL_SS) {
 #endif
@@ -1197,7 +1218,7 @@ FireDataType VesselClass::Fire_Data(int which) const
 
 	COORDINATE coord = Center_Coord();
 
-	if (*this == VESSEL_CA) {
+	if (this->Class->hasDualTurrets) {
 		if (IsSecondShot) {
 			coord = Coord_Move(coord, PrimaryFacing + DIR_S, 0x0100);
 		} else {
@@ -1223,7 +1244,7 @@ COORDINATE VesselClass::Fire_Coord(int which) const
 
 	COORDINATE coord = Center_Coord();
 
-	if (*this == VESSEL_CA) {
+	if (this->Class->hasDualTurrets) {
 		if (IsSecondShot) {
 			coord = Coord_Move(coord, PrimaryFacing + DIR_S, 0x0100);
 		} else {
@@ -1773,7 +1794,6 @@ int VesselClass::Mission_Unload(void)
 	};
 	DirType	dir;
 	CELL		cell;
-
 	switch (Class->Type) {
 		case VESSEL_TRANSPORT:
 			switch (Status) {
@@ -1893,6 +1913,19 @@ int VesselClass::Mission_Unload(void)
 			break;
 
 		default:
+			if (Class->CanTeleport)
+			{
+				if (IsOwnedByPlayer) {
+					Map.IsTargettingMode = SPC_CHRONO2;
+					HouseClass* old_player_ptr = PlayerPtr;
+					Logic_Switch_Player_Context(this);
+					Unselect_All();
+					On_Special_Weapon_Targetting(PlayerPtr, Map.IsTargettingMode);
+					Logic_Switch_Player_Context(old_player_ptr);
+				}
+				House->UnitToTeleport = As_Target();
+				Assign_Mission(MISSION_GUARD);
+			}
 			break;
 	}
 	return(MissionControl[Mission].Normal_Delay());
@@ -1961,6 +1994,10 @@ void VesselClass::Assign_Destination(TARGET target)
  *=============================================================================================*/
 int VesselClass::Pip_Count(void) const
 {
+	if (this->Class->CanTeleport) {
+		int fulldur = ChronoTankDuration * TICKS_PER_MINUTE;
+		return((fulldur - MoebiusCountDown) / (fulldur / 5));
+	}
 	if (Techno_Type_Class()->Max_Passengers() > 0) {
 		int passengers = 0;
 		ObjectClass const * object = Attached_Object();
@@ -2080,7 +2117,7 @@ void VesselClass::Read_INI(CCINIClass & ini)
 		ini.Get_String(INI_Name(), entry, NULL, buf, sizeof(buf));
 		inhouse = HouseTypeClass::From_Name(strtok(buf, ","));
 		if (inhouse != HOUSE_NONE) {
-			classid = VesselTypeClass::From_Name(strtok(NULL, ","));
+			classid = VesselTypeClass::As_Type(strtok(NULL, ","));
 
 			if (classid != VESSEL_NONE) {
 

@@ -467,7 +467,7 @@ void BuildingClass::Draw_It(int x, int y, WindowNumberType window) const
 	*/
 	IsTheaterShape = Class->IsTheater;	//Let Build_Frame know if this is a theater specific shape
 	//Techno_Draw_Object(shapefile, Fetch_Stage(), x, y, window);
-	Techno_Draw_Object(shapefile, Fetch_Stage(), x, y, window);
+	Techno_Draw_Object(shapefile, Shape_Number(), x, y, window);
 	IsTheaterShape = false;
 
 	/*
@@ -2232,8 +2232,8 @@ void BuildingClass::Update_Buildables(void)
 			int v;
 
 			case RTTI_VESSELTYPE:
-				for (v = VESSEL_FIRST; v < VESSEL_COUNT; v++) {
-					if (PlayerPtr->Can_Build(&VesselTypeClass::As_Reference((VesselType)v), ActLike)) {
+				for (v = 0; v < VesselTypes.Count(); v++) {
+					if (PlayerPtr->Can_Build(VesselTypes.Ptr(v), ActLike)) {
 						if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
 							Sidebar_Glyphx_Add(RTTI_VESSELTYPE, v, House, buildable_via_capture);
 						} else {

@@ -1207,7 +1207,7 @@ void UnitTypeClass::One_Time(void)
 	if (WakeShapes == NULL) {
 		WakeShapes = MFCD::Retrieve("WAKE.SHP");
 	}
-	if (TurretShapes == NULL) {
+	/*if (TurretShapes == NULL) {
 		TurretShapes = MFCD::Retrieve("TURR.SHP");
 	}
 	if (SamShapes == NULL) {
@@ -1215,7 +1215,7 @@ void UnitTypeClass::One_Time(void)
 	}
 	if (MGunShapes == NULL) {
 		MGunShapes = MFCD::Retrieve("MGUN.SHP");
-	}
+	}*/
 }
 
 

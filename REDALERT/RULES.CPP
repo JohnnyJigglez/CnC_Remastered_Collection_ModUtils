@@ -1136,7 +1136,7 @@ bool RulesClass::Objects(CCINIClass & ini)
 	for (int iindex = 0; iindex < InfantryTypes.Count(); iindex++) {
 		InfantryTypes.Ptr(iindex)->Read_INI(ini);
 	}
-	/*static char const* const NV = "NewVessels";
+	static char const* const NV = "NewVessels";
 	if (ini.Is_Present(NV)) {
 		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", NV, ini.Entry_Count(NV));
 		WWDebugString(message);
@@ -1144,7 +1144,7 @@ bool RulesClass::Objects(CCINIClass & ini)
 			if (VesselTypeClass::As_Pointer(ini.Get_Value(NV, x)) == NULL)
 				new VesselTypeClass(atoi(ini.Get_Entry(NV, x)), ini.Get_Value(NV, x));
 		}
-	}*/
+	}
 	for (int vindex = 0; vindex < VesselTypes.Count(); vindex++) {
 		VesselTypes.Ptr(vindex)->Read_INI(ini);
 	}

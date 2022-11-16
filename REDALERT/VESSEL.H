@@ -79,7 +79,7 @@ class VesselClass : public DriveClass
 		static void * operator new(size_t , void * ptr) {return(ptr);};
 		static void operator delete(void *ptr);
 		static void operator delete(void*, void* ptr) { delete ptr; }
-		operator VesselType(void) const {return Class->Type;};
+		operator VesselType(void) const {return (VesselType)Class->ID;};
 
 		static void Init(void);
 

@@ -1739,7 +1739,7 @@ void TeamTypeClass::Fill_In(char * name, char * entry)
 					/*
 					**	See if this is a vessel name.
 					*/
-					VesselType v_id = VesselTypeClass::From_Name(p1);
+					VesselType v_id = VesselTypeClass::As_Type(p1);
 					if (v_id != VESSEL_NONE) {
 						otype = &VesselTypeClass::As_Reference(v_id);
 					}

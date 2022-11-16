@@ -8319,7 +8319,7 @@ void DLLExportClass::Debug_Spawn_Unit(const char *object_name, int x, int y, boo
 		return;
 	}
 
-	VesselType vessel_type = VesselTypeClass::From_Name(object_name);
+	VesselType vessel_type = VesselTypeClass::As_Type(object_name);
 	if (vessel_type != VESSEL_NONE) {
 		
 		VesselClass *boat = new VesselClass(vessel_type, house);

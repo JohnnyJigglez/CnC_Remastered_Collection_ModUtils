@@ -631,9 +631,9 @@ class TechnoTypeClass : public ObjectTypeClass
 		**	This is a pointer to the wake shape (as needed by the gunboat).
 		*/
 		static void const * WakeShapes;
-		static void const * TurretShapes;
-		static void const * SamShapes;
-		static void const * MGunShapes;
+		//static void const * TurretShapes;
+		//static void const * SamShapes;
+		//static void const * MGunShapes;
 };
 
 
@@ -1163,6 +1163,21 @@ class VesselTypeClass : public TechnoTypeClass
 		int MaxSize;
 
 		/*
+		**	Is this like a cruiser?
+		*/
+		bool hasDualTurrets;
+
+		/*
+		**	Is this a submarine?
+		*/
+		bool isBoat;
+
+		/*
+		**	Can it Chronoshift like the USS Eldridge tried to?
+		*/
+		bool CanTeleport;
+
+		/*
 		**	This is the explicit unit class constructor.
 		*/
 		VesselTypeClass(NoInitClass const & x) : TechnoTypeClass(x) {}
@@ -1180,8 +1195,11 @@ class VesselTypeClass : public TechnoTypeClass
 						bool is_nominal,
 						bool is_turret_equipped,
 						int rotation,
-						int toffset
-						);
+						int toffset,
+						const char *,
+						bool has2turrets,
+						bool is_sub);
+		VesselTypeClass(int vtype, char const* ininame);
 
 		static void * operator new(size_t);
 		static void * operator new(size_t , void * ptr) {return(ptr);};
@@ -1189,12 +1207,13 @@ class VesselTypeClass : public TechnoTypeClass
 		static void operator delete(void*, void* ptr) { delete ptr; }
 
 		static void Init_Heap(void);
-		static VesselType From_Name(char const * name);
+		static VesselType As_Type(char const * name);
 		static VesselTypeClass & As_Reference(VesselType type);
+		static VesselTypeClass * As_Pointer(char const* name);
 		static void Init(TheaterType ) {};
 		static void One_Time(void);
 		static void Prep_For_Add(void);
-
+		virtual bool Read_INI(CCINIClass& ini);
 		virtual void Dimensions(int &width, int &height) const;
 		virtual bool Create_And_Place(CELL cell, HousesType house) const;
 		virtual ObjectClass * Create_One_Of(HouseClass * house) const;

@@ -66,8 +66,10 @@ static VesselTypeClass const VesselSubmarine(
 		true,					// Always use the given name for the vehicle?
 		false,				// Is it equipped with a combat turret?
 	8,							// Rotation stages.
-	14							// Turret center offset along body centerline.
-);
+	14,							// Turret center offset along body centerline.
+NULL,
+false,
+true);
 
 // Destroyer
 static VesselTypeClass const VesselDestroyer(
@@ -84,8 +86,10 @@ static VesselTypeClass const VesselDestroyer(
 		true,					// Always use the given name for the vehicle?
 		true,					// Is it equipped with a combat turret?
 	8,							// Rotation stages.
-	14							// Turret center offset along body centerline.
-);
+	14,							// Turret center offset along body centerline.
+"SSAM",
+false,
+false);
 
 // Cruiser
 static VesselTypeClass const VesselCruiser(
@@ -102,8 +106,10 @@ static VesselTypeClass const VesselCruiser(
 		true,					// Always use the given name for the vehicle?
 		true,					// Is it equipped with a combat turret?
 	8,							// Rotation stages.
-	14							// Turret center offset along body centerline.
-);
+	14,							// Turret center offset along body centerline.
+"TURR",
+true,
+false);
 
 // Transport
 static VesselTypeClass const VesselTransport(
@@ -120,8 +126,10 @@ static VesselTypeClass const VesselTransport(
 		true,					// Always use the given name for the vehicle?
 		false,				// Is it equipped with a combat turret?
 	0,							// Rotation stages.
-	0							// Turret center offset along body centerline.
-);
+	0,							// Turret center offset along body centerline.
+NULL,
+false,
+false);
 
 // Gun Boat
 static VesselTypeClass const VesselPTBoat(
@@ -138,8 +146,10 @@ static VesselTypeClass const VesselPTBoat(
 		true,					// Always use the given name for the vehicle?
 		true,					// Is it equipped with a combat turret?
 	8,							// Rotation stages.
-	14							// Turret center offset along body centerline.
-);
+	14,							// Turret center offset along body centerline.
+"MGUN",
+false,
+false);
 
 
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
@@ -158,8 +168,10 @@ static VesselTypeClass const VesselMissileSubmarine(
 		true,					// Always use the given name for the vehicle?
 		false,				// Is it equipped with a combat turret?
 	8,							// Rotation stages.
-	14							// Turret center offset along body centerline.
-);
+	14,							// Turret center offset along body centerline.
+NULL,
+false,
+true);
 #endif
 
 #ifdef FIXIT_CARRIER	//	checked - ajw 9/28/98
@@ -178,8 +190,10 @@ static VesselTypeClass const VesselCarrier(
 		true,					// Always use the given name for the vehicle?
 		false,				// Is it equipped with a combat turret?
 	0,							// Rotation stages.
-	0							// Turret center offset along body centerline.
-);
+	0,							// Turret center offset along body centerline.
+NULL, //the string name the turret graphic
+false, //is a dual shooter like the cruiser?
+false);
 #endif
 
 /***********************************************************************************************
@@ -198,51 +212,55 @@ static VesselTypeClass const VesselCarrier(
  *   03/14/1996 JLB : Created                                                                  *
  *=============================================================================================*/
 VesselTypeClass::VesselTypeClass(
-				VesselType type,
-				int name,
-				char const * ininame,
-				AnimType exp,
-				int verticaloffset,
-				int primaryoffset,
-				int primarylateral,
-				int secondaryoffset,
-				int secondarylateral,
-				bool is_eight,
-				bool is_nominal,
-				bool is_turret_equipped,
-				int rotation,
-				int toffset
-				) :
-					TechnoTypeClass(
-										RTTI_VESSELTYPE,
-										int(type),
-										name,
-										ininame,
-										REMAP_NORMAL,
-										verticaloffset,
-										primaryoffset,
-										primarylateral,
-										secondaryoffset,
-										secondarylateral,
-										is_nominal,
-										false,
-										true,
-										true,
-										false,
-										false,
-										false,
-										is_turret_equipped,
-										true,
-										true,
-										rotation,
-										SPEED_FLOAT
-										),
+	VesselType type,
+	int name,
+	char const* ininame,
+	AnimType exp,
+	int verticaloffset,
+	int primaryoffset,
+	int primarylateral,
+	int secondaryoffset,
+	int secondarylateral,
+	bool is_eight,
+	bool is_nominal,
+	bool is_turret_equipped,
+	int rotation,
+	int toffset,
+	const char* tname,
+	bool has2turrets,
+	bool is_sub) :
+	TechnoTypeClass(
+		RTTI_VESSELTYPE,
+		int(type),
+		name,
+		ininame,
+		REMAP_NORMAL,
+		verticaloffset,
+		primaryoffset,
+		primarylateral,
+		secondaryoffset,
+		secondarylateral,
+		is_nominal,
+		false,
+		true,
+		true,
+		false,
+		false,
+		false,
+		is_turret_equipped,
+		true,
+		true,
+		rotation,
+		SPEED_FLOAT
+	),
 	IsPieceOfEight(is_eight),
 	Type(type),
 	TurretOffset(toffset),
 	Mission(MISSION_GUARD),
 	Explosion(exp),
-	MaxSize(0)
+	MaxSize(0),
+	hasDualTurrets(has2turrets),
+	isBoat(is_sub)
 {
 	/*
 	**	Forced vessel overrides from the default.
@@ -250,6 +268,46 @@ VesselTypeClass::VesselTypeClass(
 	IsCrew = false;
 	Speed = SPEED_FLOAT;
 	IsScanner = true;
+	if(tname != NULL)
+		strcpy(SecondaryGraphicName,tname);
+}
+
+/***********************************************************************************************
+ * VesselTypeClass::VesselTypeClass -- This is the constructor for the vessel types.           *
+ *                                                                                             *
+ *    This is the constructor used to create the vessel types.                                 *
+ *                                                                                             *
+ * INPUT:   see below...                                                                       *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   11/11/2022 JJ : Created.                                                                  *
+ *=============================================================================================*/
+VesselTypeClass::VesselTypeClass(int vtype, char const* ininame) :
+	VesselTypeClass(static_cast<VesselType>(vtype),
+		TXT_NONE,
+		ininame,
+		ANIM_FRAG1,
+		0x0000,
+		0x0000,
+		0x0000,
+		0x0000,
+		0x0000,
+		false,//is_eight
+		true,//is_nominal
+		false,//is_turret_equipped
+		0,//rotation
+		0, //offset
+		NULL,
+		false,
+	false)
+{
+	char message[64];
+	sprintf(message, "Instantiated custom Vessel %s .\n", ininame);
+	WWDebugString(message);
 }
 
 
@@ -551,34 +609,38 @@ void VesselTypeClass::Dimensions(int & width, int & height) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   03/20/1996 JLB : Created.                                                                 *
+ *   11/11/2022 JJ : Updated to use dynamic heap.                                              *
  *=============================================================================================*/
 void VesselTypeClass::One_Time(void)
 {
-	for (VesselType index = VESSEL_FIRST; index < VESSEL_COUNT; index++) {
-		char	fullname[_MAX_FNAME+_MAX_EXT];
+	for (int index = 0; index < VesselTypes.Count(); index++) {
+		char	fullname[_MAX_FNAME + _MAX_EXT];
 		char	buffer[_MAX_FNAME];
-		VesselTypeClass const & uclass = As_Reference(index);
+		VesselTypeClass const& uclass = *(VesselTypes.Ptr(index));
 #ifdef FIXIT_CARRIER	//	checked - ajw 9/28/98
-		if (uclass.Level != -1 || index==VESSEL_CARRIER) {
+		if (uclass.Level != -1 || index == VESSEL_CARRIER) {
 #else
 		if (uclass.Level != -1) {
 #endif
-//		if (uclass.IsBuildable) {
+			//		if (uclass.IsBuildable) {
 
-			/*
-			**	Fetch the supporting data files for the unit.
-			*/
+						/*
+						**	Fetch the supporting data files for the unit.
+						*/
 			sprintf(buffer, "%sICON", uclass.Graphic_Name());
 			_makepath(fullname, NULL, NULL, buffer, ".SHP");
-			((void const *&)uclass.CameoData) = MFCD::Retrieve(fullname);
+			((void const*&)uclass.CameoData) = MFCD::Retrieve(fullname);
 		}
 
 		/*
 		**	Fetch a pointer to the unit's shape data.
 		*/
 		_makepath(fullname, NULL, NULL, uclass.Graphic_Name(), ".SHP");
-		((void const *&)uclass.ImageData) = MFCD::Retrieve(fullname);
-
+		((void const*&)uclass.ImageData) = MFCD::Retrieve(fullname);
+		if (uclass.IsTurretEquipped && uclass.Secondary_Graphic_Name() != NULL) {
+			_makepath(fullname, NULL, NULL, uclass.Secondary_Graphic_Name(), ".SHP");
+			((void const*&)uclass.SecondaryImageData) = MFCD::Retrieve(fullname);
+		}
 		((int &)uclass.MaxSize) = 26;
 	}
 }
@@ -661,7 +723,7 @@ short const * VesselTypeClass::Overlap_List(void) const
 
 
 /***********************************************************************************************
- * VesselTypeClass::From_Name -- Converts a name into a vessel type.                           *
+ * VesselTypeClass::As_Type -- Converts a name into a vessel type.                             *
  *                                                                                             *
  *    Use this routine to convert an ASCII version of a vessel type into the corresponding     *
  *    VesselType id value. Typical use of this would be to parse the INI file.                 *
@@ -674,17 +736,43 @@ short const * VesselTypeClass::Overlap_List(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   03/20/1996 JLB : Created.                                                                 *
+ *   11/11/2022 JJ : Refactored to use new functions.                                          *
  *=============================================================================================*/
-VesselType VesselTypeClass::From_Name(char const * name)
+VesselType VesselTypeClass::As_Type(char const * name)
 {
-	if (name != NULL) {
-		for (VesselType classid = VESSEL_FIRST; classid < VESSEL_COUNT; classid++) {
-			if (stricmp(As_Reference(classid).IniName, name) == 0) {
-				return(classid);
-			}
-		}
-	}
+	VesselTypeClass* vessel = As_Pointer(name);
+	if (vessel != NULL)
+		return (vessel->Type);
 	return(VESSEL_NONE);
+}
+
+/***********************************************************************************************
+ * VesselTypeClass::As_Pointer -- Fetch vessel type class pointer for specified name.          *
+ *                                                                                             *
+ *    This routine converts an ASCII representation of a vessel class and                      *
+ *    converts it into a real vessel type class pointer.                                       *
+ *                                                                                             *
+ * INPUT:   name  -- ASCII name representing a vessel class.                                   *
+ *                                                                                             *
+ * OUTPUT:  Returns with the actual vessel type class pointer that the string                  *
+ *          represents.                                                                        *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   11/11/2022 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+VesselTypeClass * VesselTypeClass::As_Pointer(char const* name)
+{
+	VesselTypeClass* vessel = NULL;
+	if (name == NULL || strlen(name) < 1)
+		return NULL;
+	for (int index = 0; index < VesselTypes.Count(); index++) {
+		vessel = VesselTypes.Ptr(index);
+		if (stricmp(vessel->Name(), name) == 0)
+			return(vessel);
+	}
+	return(NULL);
 }
 
 
@@ -706,4 +794,44 @@ VesselType VesselTypeClass::From_Name(char const * name)
 int VesselTypeClass::Max_Pips(void) const
 {
 	return(Max_Passengers());
+}
+
+/***********************************************************************************************
+ * VesselTypeClass::Read_INI -- Fetch the vessel type data from the INI database.              *
+ *                                                                                             *
+ *    This routine will find the section in the INI database for this vessel type object and   *
+ *    then fill in the override values specified.                                              *
+ *                                                                                             *
+ * INPUT:   ini   -- Reference to the INI database that will be examined.                      *
+ *                                                                                             *
+ * OUTPUT:  bool; Was the section for this vessel found in the database and the data extracted?*
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   11/11/2022 JJ  : Created.                                                                 *
+ *=============================================================================================*/
+bool VesselTypeClass::Read_INI(CCINIClass& ini)
+{
+	if (TechnoTypeClass::Read_INI(ini)) {
+		IsPieceOfEight = ini.Get_Bool(IniName, "EightFacings", IsPieceOfEight);
+		CanTeleport = ini.Get_Bool(IniName, "Teleport", CanTeleport);
+		hasDualTurrets = ini.Get_Bool(IniName, "TwoTurret", hasDualTurrets);
+		isBoat = ini.Get_Bool(IniName, "Sub", isBoat);
+		Mission = ini.Get_Mission(IniName, "Mission", Mission);
+		TurretOffset = ini.Get_Int(IniName, "TurretOffset", TurretOffset);
+		MaxSize = ini.Get_Int(IniName, "MaxSize", MaxSize);
+		Explosion = AnimTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Explosion"), Explosion);
+		char buffer[64], message[128];
+		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
+			sprintf(message, "VTC.Read_INI %s has Logic : %s \n", Name(), buffer);
+			WWDebugString(message);
+			VesselType utype = VesselTypeClass::As_Type(buffer);
+			if (utype != VESSEL_NONE)
+				Type = utype;
+			sprintf(message, "VTC.Read_INI has ID %d and Type %d . \n", ID, (int)Type);
+			WWDebugString(message);
+		}
+	}
+	return(false);
 }

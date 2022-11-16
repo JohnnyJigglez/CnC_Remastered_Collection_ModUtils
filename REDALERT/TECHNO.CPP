@@ -148,9 +148,9 @@ extern bool DLL_Export_Get_Input_Key_State(KeyNumType key);
 **	These are the pointers to the special shape data that the units may need.
 */
 void const * TechnoTypeClass::WakeShapes = 0;
-void const * TechnoTypeClass::TurretShapes = 0;
-void const * TechnoTypeClass::SamShapes = 0;
-void const * TechnoTypeClass::MGunShapes = 0;
+//void const * TechnoTypeClass::TurretShapes = 0;
+//void const * TechnoTypeClass::SamShapes = 0;
+//void const * TechnoTypeClass::MGunShapes = 0;
 
 //Xlat Tables for French and German
 // For name overriding
@@ -1700,7 +1700,7 @@ bool TechnoClass::Evaluate_Object(ThreatType method, int mask, int range, Techno
 	** If we're a sub and the subject is a structure, bail if the structure
 	** is other than a sub pen or shipyard.
 	*/
-	if (otype == RTTI_BUILDING && What_Am_I() == RTTI_VESSEL && *(VesselClass *)this == VESSEL_SS) {
+	if (otype == RTTI_BUILDING && What_Am_I() == RTTI_VESSEL && ((VesselClass *)this)->Class->isBoat) {
 		StructType ostruc = *(BuildingClass *)object;
 		if (ostruc != STRUCT_SUB_PEN && ostruc != STRUCT_SHIP_YARD) {
 			BEnd(BENCH_EVAL_OBJECT);
@@ -2917,7 +2917,7 @@ FireErrorType TechnoClass::Can_Fire(TARGET target, int which) const
 	**	If the object is on the ground, then don't allow firing if it can't fire upon ground objects.
 	*/
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-	if (object != NULL && object->Height == 0 && (object->What_Am_I() != RTTI_VESSEL || (*((VesselClass*)object) != VESSEL_SS && *((VesselClass*)object) != VESSEL_MISSILESUB )) &&
+	if (object != NULL && object->Height == 0 && (object->What_Am_I() != RTTI_VESSEL || !(((VesselClass*)object)->Class->isBoat)) &&
 #else
 	if (object != NULL && object->Height == 0 && (object->What_Am_I() != RTTI_VESSEL || *((VesselClass*)object) != VESSEL_SS) &&
 #endif
@@ -3484,7 +3484,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 				LineFrame = 0;
 				LineMaxFrames = 5;
 			}
-			if(What_Am_I() != RTTI_INFANTRY) {
+			if(What_Am_I() != RTTI_INFANTRY && What_Am_I() != RTTI_VESSEL && What_Am_I() != RTTI_UNIT && What_Am_I() != RTTI_AIRCRAFT) {
 				Set_Stage(0);
 				Set_Rate(0);
 			}
@@ -6044,7 +6044,7 @@ void TechnoClass::Draw_Pips(int x, int y, WindowNumberType window) const
 		/*
 		** Check if it's a Chrono tank, to show the recharge gauge.
 		*/
-		else if (What_Am_I() == RTTI_UNIT && *(UnitClass *)this == UNIT_CHRONOTANK) {
+		else if ((What_Am_I() == RTTI_UNIT && *(UnitClass *)this == UNIT_CHRONOTANK) || (What_Am_I() == RTTI_VESSEL && ((VesselClass*)(this))->Class->CanTeleport)) {
 			for (int index = 0; index < 5; index++) {
 				int shape = PIP_EMPTY;
 				if (index < pips) {

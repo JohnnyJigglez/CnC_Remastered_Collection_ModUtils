@@ -1529,7 +1529,7 @@ void HouseClass::Super_Weapon_Handler(void)
 					if (Map.IsTargettingMode == SPC_CHRONOSPHERE || Map.IsTargettingMode == SPC_CHRONO2) {
 						if (Map.IsTargettingMode == SPC_CHRONO2) {
 							TechnoClass * tech = (TechnoClass *)::As_Object(UnitToTeleport);
-							if (tech && tech->IsActive && tech->What_Am_I() == RTTI_UNIT && *(UnitClass *)tech == UNIT_CHRONOTANK) {
+							if (tech && tech->IsActive && ((tech->What_Am_I() == RTTI_UNIT && *(UnitClass*)tech == UNIT_CHRONOTANK) || (tech->What_Am_I() == RTTI_VESSEL && ((VesselClass*)(tech))->Class->CanTeleport))) {
 							} else {
 								 Map.IsTargettingMode = SPC_NONE;
 							}
@@ -2913,7 +2913,7 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 						if (tech->What_Am_I() != RTTI_UNIT || !((UnitClass *)tech)->IsDeploying) {
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 	bool porthim = true;
-	if(tech->What_Am_I() == RTTI_UNIT && ((UnitClass *)tech)->Class->Type == UNIT_CHRONOTANK) {
+	if((tech->What_Am_I() == RTTI_UNIT && ((UnitClass *)tech)->Class->Type == UNIT_CHRONOTANK) || (tech->What_Am_I() == RTTI_VESSEL && ((VesselClass*)tech)->Class->CanTeleport)) {
 		porthim = false;
 	}
 	if (porthim) {
@@ -2967,12 +2967,19 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 						oldcell = drive->MoebiusCell;
 						drive->Teleport_To(cell);
 						drive->IsMoebius = true;
+						//VesselClass * unitdrive = (VesselClass*)tech;
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 	if(tech->What_Am_I() == RTTI_UNIT && *(UnitClass *)tech == UNIT_CHRONOTANK) {
 		drive->IsMoebius = false;
 	}
+	if (tech->What_Am_I() == RTTI_VESSEL && ((VesselClass*)(tech))->Class->CanTeleport){
+		drive->IsMoebius = false;
+	}
 	drive->MoebiusCountDown = Rule.ChronoDuration * TICKS_PER_MINUTE;
 	if (tech->What_Am_I() == RTTI_UNIT && *(UnitClass *)tech == UNIT_CHRONOTANK) {
+		drive->MoebiusCountDown = ChronoTankDuration * TICKS_PER_MINUTE;
+	}
+	if (tech->What_Am_I() == RTTI_VESSEL && ((VesselClass*)(tech))->Class->CanTeleport) {
 		drive->MoebiusCountDown = ChronoTankDuration * TICKS_PER_MINUTE;
 	}
 #else
@@ -2997,7 +3004,7 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 					Map.IsTargettingMode = SPC_NONE;
 				}
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-	if(tech && tech->IsActive && (tech->What_Am_I() != RTTI_UNIT || *(UnitClass *)tech != UNIT_CHRONOTANK)) {
+	if(tech && tech->IsActive && (tech->What_Am_I() != RTTI_UNIT || *(UnitClass *)tech != UNIT_CHRONOTANK) && (tech->What_Am_I() != RTTI_VESSEL || ((VesselClass*)(tech))->Class->CanTeleport)) {
 #endif
 				SuperWeapon[SPC_CHRONOSPHERE].Discharged(this == PlayerPtr);
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
@@ -6173,12 +6180,14 @@ int HouseClass::AI_Vessel(void)
 
 	if (Session.Type == GAME_NORMAL) {
 
-		int counter[VESSEL_COUNT];
+		int counter[VESSELT_MAX];
 		if (Session.Type == GAME_NORMAL) {
 			memset(counter, 0x00, sizeof(counter));
 		} else {
-			for (VesselType index = VESSEL_FIRST; index < VESSEL_COUNT; index++) {
-				if (Can_Build(&VesselTypeClass::As_Reference(index), Class->House) && VesselTypeClass::As_Reference(index).Level <= (unsigned)Control.TechLevel) {
+			VesselTypeClass* vclass = NULL;
+			for (int index = 0; index < VesselTypes.Count(); index++) {
+				vclass = VesselTypes.Ptr(index);
+				if (Can_Build(vclass, Class->House) && vclass->Level <= (unsigned)Control.TechLevel) {
 					counter[index] = 16;
 				} else {
 					counter[index] = 0;
@@ -6231,8 +6240,8 @@ int HouseClass::AI_Vessel(void)
 		*/
 		for (int vindex = 0; vindex < Vessels.Count(); vindex++) {
 			VesselClass * unit = Vessels.Ptr(vindex);
-			if (unit != NULL && unit->Is_Recruitable(this) && counter[unit->Class->Type] > 0) {
-				counter[unit->Class->Type]--;
+			if (unit != NULL && unit->Is_Recruitable(this) && counter[unit->Class->ID] > 0) {
+				counter[unit->Class->ID]--;
 			}
 		}
 
@@ -6242,14 +6251,16 @@ int HouseClass::AI_Vessel(void)
 		*/
 		int bestval = -1;
 		int bestcount = 0;
-		VesselType bestlist[VESSEL_COUNT];
-		for (VesselType utype = VESSEL_FIRST; utype < VESSEL_COUNT; utype++) {
-			if (counter[utype] > 0 && Can_Build(&VesselTypeClass::As_Reference(utype), Class->House) && VesselTypeClass::As_Reference(utype).Cost_Of() <= Available_Money()) {
+		VesselType bestlist[VESSELT_MAX];
+		VesselTypeClass* vclass = NULL;
+		for (int utype = 0; utype < VesselTypes.Count(); utype++) {
+			vclass = VesselTypes.Ptr(index);
+			if (counter[utype] > 0 && Can_Build(vclass, Class->House) && vclass->Cost_Of() <= Available_Money()) {
 				if (bestval == -1 || bestval < counter[utype]) {
 					bestval = counter[utype];
 					bestcount = 0;
 				}
-				bestlist[bestcount++] = utype;
+				bestlist[bestcount++] = (VesselType)utype;
 			}
 		}
 
@@ -8134,17 +8145,17 @@ void HouseClass::Check_Pertinent_Structures(void)
 void HouseClass::Init_Unit_Trackers(void)
 {		
 	if (Session.Type == GAME_INTERNET || Session.Type == GAME_GLYPHX_MULTIPLAYER) {
-		AircraftTotals = new UnitTrackerClass( (int) AircraftTypes.Count());
-		InfantryTotals = new UnitTrackerClass( (int) InfantryTypes.Count());
-		UnitTotals = new UnitTrackerClass ( (int) UnitTypes.Count());
+		AircraftTotals = new UnitTrackerClass(AircraftTypes.Count());
+		InfantryTotals = new UnitTrackerClass( InfantryTypes.Count());
+		UnitTotals = new UnitTrackerClass ( UnitTypes.Count());
 		BuildingTotals = new UnitTrackerClass ( BuildingTypes.Count());
-		VesselTotals = new UnitTrackerClass ( (int) VESSEL_COUNT);
+		VesselTotals = new UnitTrackerClass (VesselTypes.Count());
 
-		DestroyedAircraft = new UnitTrackerClass ( (int)AircraftTypes.Count());
-		DestroyedInfantry = new UnitTrackerClass( (int) InfantryTypes.Count());
-		DestroyedUnits = new UnitTrackerClass ( (int)UnitTypes.Count());
+		DestroyedAircraft = new UnitTrackerClass (AircraftTypes.Count());
+		DestroyedInfantry = new UnitTrackerClass(  InfantryTypes.Count());
+		DestroyedUnits = new UnitTrackerClass ( UnitTypes.Count());
 		DestroyedBuildings = new UnitTrackerClass (BuildingTypes.Count());
-		DestroyedVessels = new UnitTrackerClass ( (int) VESSEL_COUNT);
+		DestroyedVessels = new UnitTrackerClass ( VesselTypes.Count());
 
 		CapturedBuildings = new UnitTrackerClass (BuildingTypes.Count());
 		TotalCrates = new UnitTrackerClass ( CRATE_COUNT );

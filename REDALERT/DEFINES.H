@@ -815,7 +815,8 @@ typedef enum SpecialWeaponType : char {
 
 	SPC_COUNT,
 	SPC_FIRST=0,
-	SPC_ANY=1
+	SPC_ANY=1,
+	SPC_MAX=127
 } SpecialWeaponType;
 #define	SPC_CHRONO2	(SPC_COUNT)
 
@@ -1672,7 +1673,7 @@ typedef enum UnitType : char {
 **	The naval vessels are enumerated below.
 */
 typedef enum VesselType : char {
-	VESSEL_NONE=-1,
+	VESSEL_NONE = -1,
 
 	VESSEL_SS,						// Submarine
 	VESSEL_DD,						// Medium weapon patrol craft
@@ -1681,14 +1682,15 @@ typedef enum VesselType : char {
 	VESSEL_PT,						// Light weapon patrol craft
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 // CS II ONLY
-	VESSEL_MISSILESUB,			// Missile-equipped submarine
+VESSEL_MISSILESUB,			// Missile-equipped submarine
 #endif
 #ifdef FIXIT_CARRIER	//	checked - ajw 9/28/98
-	VESSEL_CARRIER,
+VESSEL_CARRIER,
 #endif
 
-	VESSEL_COUNT,
-	VESSEL_FIRST=0
+VESSEL_COUNT,
+VESSEL_FIRST = 0,
+VESSELT_MAX = 127
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 ,
 	VESSEL_RA_COUNT = VESSEL_MISSILESUB

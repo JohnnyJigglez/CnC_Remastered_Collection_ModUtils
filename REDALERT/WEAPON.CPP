@@ -121,14 +121,14 @@ WeaponTypeClass::WeaponTypeClass(char const * name) :
 /***********************************************************************************************
  * WeaponTypeClass::One_Time -- Performs the one time processing for weapons.                  *
  *                                                                                             *
- *    This routine is used to perform any one time processing for the bullet type class. It    *
+ *    This routine is used to perform any one time processing for the weapon type class. It    *
  *    handles loading of the shape files.                                                      *
  *                                                                                             *
  * INPUT:   none                                                                               *
  *                                                                                             *
  * OUTPUT:  none                                                                               *
  *                                                                                             *
- * WARNINGS:   This routine must be called before any rendering of bullets occurs and should   *
+ * WARNINGS:   This routine must be called before any rendering of weapon  occurs and should   *
  *             only be called once.                                                            *
  *                                                                                             *
  * HISTORY:                                                                                    *
@@ -139,6 +139,7 @@ void WeaponTypeClass::One_Time(void)
 	for (int x = 0; x < (int)(Weapons.size()); x++)
 	{
 		WeaponTypeClass* weap = Weapons.at(x);
+		const BulletTypeClass * btc = weap->Bullet;
 		if (weap->IsElectric && weap->Bullet != NULL && weap->OverrideZap)
 		{
 			char	fullname[_MAX_FNAME + _MAX_EXT];

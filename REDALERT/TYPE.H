@@ -399,7 +399,12 @@ class TechnoTypeClass : public ObjectTypeClass
 		**	and many vehicles contain a turret. If a turret is present, special rendering and
 		**	combat logic must be performed.
 		*/
-		unsigned IsTurretEquipped:1;
+		unsigned IsTurretEquipped : 1;
+
+		/*
+		**	This technotype is not sturdy and should suffer recoil when firing weaponry
+		*/
+		unsigned DoRecoil:1;
 
 		/*
 		**	Certain objects can be repaired. For buildings, they repair "in place". For units,
@@ -670,6 +675,11 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	attached to the structure when it is placed.
 		*/
 		unsigned IsBibbed:1;
+
+		/*
+		**	This flag controls whether the building is should be treated like an ore silo for animation purposes
+		*/
+		unsigned IsStorage : 1;
 
 		/*
 		**	If this building is a special wall type, such that it exists as a building
@@ -957,6 +967,19 @@ class UnitTypeClass : public TechnoTypeClass
 		unsigned IsCrusher:1;
 
 		/*
+		**	Does this have an offset turret LUT for purposes of animating like the MGG/MLRS/MSAM?
+		*/
+		unsigned HasOffsetTurret : 1;
+
+		unsigned PrimaryWeaponBoundToTurret : 1;
+		unsigned SecondaryWeaponBoundToTurret : 1;
+
+		/*
+		**	Does this have a dual rocket turret for purposes of animating like the MSAM?
+		*/
+		unsigned HasRocketTurret : 1;
+
+		/*
 		**	Does this unit go into harvesting mode when it stops on a tiberium
 		**	field?  Typically, only one unit does this and that is the harvester.
 		*/
@@ -1012,6 +1035,13 @@ class UnitTypeClass : public TechnoTypeClass
 		unsigned IsNoFireWhileMoving:1;
 
 		/*
+		**	This is the distance along the centerline heading in the direction the body
+		**	is facing used to reach the center point of the turret. This distance is
+		**	in leptons.
+		*/
+		signed char TurretOffsetX;
+		signed char TurretOffsetY;
+		/*
 		**	This value represents the unit class. It can serve as a unique
 		**	identification number for this unit class.
 		*/
@@ -1039,6 +1069,20 @@ class UnitTypeClass : public TechnoTypeClass
 		**	The width or height of the largest dimension for this unit.
 		*/
 		int MaxSize;
+
+		/*
+		**	Determines the ammo reload time for units that have an ammo count.  Default is 0, meaning it will never regen ammo.
+		*/
+		int AmmoRegenTime;
+
+		/*
+		**	Does this vehicle have a turret which has 2 states: opened or closed.
+		*/
+		bool HasPopupTurret;
+		/*
+		**	Should this vehicle be treated liked a V2 launcher for purposes of firing/reload/graphics logics?
+		*/
+		bool IsV2RL;
 
 		/*
 		**	This is the explicit unit class constructor.

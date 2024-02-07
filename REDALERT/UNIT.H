@@ -139,6 +139,7 @@ class UnitClass :	public DriveClass
 		/*---------------------------------------------------------------------
 		**	Member function prototypes.
 		*/
+		virtual COORDINATE Fire_Coord(int which) const;
 		virtual ObjectTypeClass const & Class_Of(void) const;
 		static void Init(void);
 

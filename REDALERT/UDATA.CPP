@@ -396,7 +396,7 @@ static UnitTypeClass const UnitJeep(
 		false,				// Is the unit capable of jamming radar?
 		false,				// Is the unit a mobile gap generator?
 	32,						// Rotation stages.
-	0,							// Turret center offset along body centerline.
+	-4,							// Turret center offset along body centerline.
 	MISSION_HUNT			// ORDERS:		Default order to give new unit.
 );
 
@@ -817,28 +817,28 @@ UnitTypeClass::UnitTypeClass(
 				int rotation,
 				int toffset,
 				MissionType order) :
-					TechnoTypeClass(RTTI_UNITTYPE,
-										int(type),
-										name,
-										ininame,
-										remap,
-										verticaloffset,
-										primaryoffset,
-										primarylateral,
-										secondaryoffset,
-										secondarylateral,
-										is_nominal,
-										is_stealthy,
-										true,
-										true,
-										is_insignificant,
-										false,
-										false,
-										is_turret_equipped,
-										true,
-										true,
-										rotation,
-										SPEED_TRACK),
+TechnoTypeClass(RTTI_UNITTYPE,
+	int(type),
+	name,
+	ininame,
+	remap,
+	verticaloffset,
+	primaryoffset,
+	primarylateral,
+	secondaryoffset,
+	secondarylateral,
+	is_nominal,
+	is_stealthy,
+	true,
+	true,
+	is_insignificant,
+	false,
+	false,
+	is_turret_equipped,
+	true,
+	true,
+	rotation,
+	SPEED_TRACK),
 	IsCrateGoodie(is_goodie),
 	IsCrusher(is_crusher),
 	IsToHarvest(is_harvest),
@@ -851,15 +851,29 @@ UnitTypeClass::UnitTypeClass(
 	IsGapper(is_gapper),
 	IsNoFireWhileMoving(false),
 	Type(type),
-	//TurretOffset(toffset),
+	TurretOffsetY(toffset),
 	Mission(order),
 	Explosion(exp),
-	MaxSize(0)
+	MaxSize(0),
+	TurretOffsetX(0),
+	HasOffsetTurret(false),
+	HasRocketTurret(false),
+	AmmoRegenTime(0),
+	HasPopupTurret(false),
+	PrimaryWeaponBoundToTurret(false),
+	SecondaryWeaponBoundToTurret(false),
+	IsV2RL(false)
 {
 	/*
 	**	Forced unit overrides form the default.
 	*/
 	Speed = SPEED_WHEEL;
+	if (strcmpi(IniName, "MGG") == 0)
+		HasOffsetTurret = true;
+	if (strcmpi(IniName, "V2RL") == 0) {
+		AmmoRegenTime = 30;
+		IsV2RL = true;
+	}
 }
 
 /***********************************************************************************************
@@ -1388,45 +1402,52 @@ int UnitTypeClass::Max_Pips(void) const
  *=============================================================================================*/
 void UnitTypeClass::Turret_Adjust(DirType dir, int &x, int &y) const
 {
-	static struct {
-		signed char X,Y;
-	} _adjust[32] = {
-	  	{1,2},	// N
-	  	{-1,1},
-	  	{-2,0},
-	  	{-3,0},
-	  	{-3,1},	// NW
-	  	{-4,-1},
-	  	{-4,-1},
-	  	{-5,-2},
-	  	{-5,-3},	// W
-	  	{-5,-3},
-	  	{-3,-3},
-	  	{-3,-4},
-	  	{-3,-4},	// SW
-	  	{-3,-5},
-	  	{-2,-5},
-	  	{-1,-5},
-	  	{0,-5},	// S
-	  	{1,-6},
-	  	{2,-5},
-	  	{3,-5},
-	  	{4,-5},	// SE
-	  	{6,-4},
-	  	{6,-3},
-	  	{6,-3},
-	  	{6,-3},	// E
-	  	{5,-1},
-	  	{5,-1},
-	  	{4,0},
-	  	{3,0},	// NE
-	  	{2,0},
-	  	{2,1},
-	  	{1,2}
-	};
-
-	int index = 0;
-	switch (Type) {
+	if (HasOffsetTurret) {
+		static struct {
+			signed char X, Y;
+		} _adjust[32] = {
+			{1,2},	// N
+			{-1,1},
+			{-2,0},
+			{-3,0},
+			{-3,1},	// NW
+			{-4,-1},
+			{-4,-1},
+			{-5,-2},
+			{-5,-3},	// W
+			{-5,-3},
+			{-3,-3},
+			{-3,-4},
+			{-3,-4},	// SW
+			{-3,-5},
+			{-2,-5},
+			{-1,-5},
+			{0,-5},	// S
+			{1,-6},
+			{2,-5},
+			{3,-5},
+			{4,-5},	// SE
+			{6,-4},
+			{6,-3},
+			{6,-3},
+			{6,-3},	// E
+			{5,-1},
+			{5,-1},
+			{4,0},
+			{3,0},	// NE
+			{2,0},
+			{2,1},
+			{1,2}
+		};
+		int index = Dir_To_32(dir);
+		x += _adjust[index].X;
+		y += _adjust[index].Y;
+	}
+	else {
+		y += TurretOffsetY;
+		x += TurretOffsetX;
+	}
+	/*switch (Type) {
 		case UNIT_JEEP:
 			y -= 4;
 			break;
@@ -1438,8 +1459,10 @@ void UnitTypeClass::Turret_Adjust(DirType dir, int &x, int &y) const
 			break;
 
 		default:
+			y += TurretOffsetY;
+			x += TurretOffsetX;
 			break;
-	}
+	}*/
 }
 
 
@@ -1473,8 +1496,17 @@ bool UnitTypeClass::Read_INI(CCINIClass & ini)
 		IsAnimating = ini.Get_Bool(IniName, "Animating", IsAnimating);
 		IsJammer = ini.Get_Bool(IniName, "Jammer", IsJammer);
 		IsGapper = ini.Get_Bool(IniName, "Gapper", IsGapper);
+		HasOffsetTurret = ini.Get_Bool(IniName, "OffsetTurret", HasOffsetTurret);
+		HasRocketTurret = ini.Get_Bool(IniName, "TwoRocket", HasRocketTurret);
+		HasPopupTurret = ini.Get_Bool(IniName, "PopupTurret", HasPopupTurret);
+		IsV2RL = ini.Get_Bool(IniName, "V2RL", IsV2RL);
 		Mission = ini.Get_Mission(IniName, "Mission", Mission);
 		Explosion = AnimTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Explosion"), Explosion);
+		TurretOffsetX = ini.Get_Int(IniName, "TurretOffsetX", TurretOffsetX);
+		TurretOffsetY = ini.Get_Int(IniName, "TurretOffsetY", TurretOffsetY);
+		PrimaryWeaponBoundToTurret = ini.Get_Bool(IniName, "BindToTurretPrimary", PrimaryWeaponBoundToTurret);
+		SecondaryWeaponBoundToTurret = ini.Get_Bool(IniName, "BindToTurretSecondary", SecondaryWeaponBoundToTurret);
+		AmmoRegenTime = ini.Get_Int(IniName, "ReloadTime", AmmoRegenTime);
 		char buffer[64], message[128];
 		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
 			sprintf(message, "UTC.Read_INI %s has Logic : %s \n", Name(),buffer);

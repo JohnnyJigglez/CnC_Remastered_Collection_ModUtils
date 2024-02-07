@@ -579,6 +579,8 @@ void InfantryClass::Draw_It(int x, int y, WindowNumberType window) const
 	**	there is no shape image, then it certainly can't be drawn -- bail.
 	*/
 	void const * shapefile = Get_Image_Data();
+	int			scale = 0x0100;
+	scale *= Class->Scale;
 
 	if (shapefile == NULL) return;
 
@@ -588,7 +590,7 @@ void InfantryClass::Draw_It(int x, int y, WindowNumberType window) const
 	/*
 	**	Actually draw the root body of the unit.
 	*/
-	Techno_Draw_Object(shapefile, Shape_Number(window), x, y, window);
+	Techno_Draw_Object(shapefile, Shape_Number(window), x, y, window,DIR_N, scale,Class->Graphic_Name());
 
 	FootClass::Draw_It(x, y, window);
 }

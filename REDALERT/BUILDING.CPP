@@ -676,7 +676,7 @@ int BuildingClass::Shape_Number(void) const
 				**	Special render stage for silos. The stage is dependent on the current
 				**	Tiberium collected as it relates to Tiberium capacity. TODO: detach this logic from the unique building type class
 				*/
-				if (*this == STRUCT_STORAGE) {
+				if (Class->IsStorage) {
 
 					int level = 0;
 					if (House->Capacity) {
@@ -5072,13 +5072,22 @@ InfantryType BuildingClass::Crew_Type(void) const
 	assert(Buildings.ID(this) == ID);
 	assert(IsActive);
 
+	if (Class->IsStorage) {
+		if (Percent_Chance(50)) {
+			return(INFANTRY_C1);
+		}
+		else {
+			return(INFANTRY_C7);
+		}
+	}
+
 	switch (Class->Type) {
-		case STRUCT_STORAGE:
+		/*case STRUCT_STORAGE:
 			if (Percent_Chance(50)) {
 				return(INFANTRY_C1);
 			} else {
 				return(INFANTRY_C7);
-			}
+			}*/
 
 		case STRUCT_CONST:
 			if (!IsCaptured && House->IsHuman && Percent_Chance(25)) {

@@ -648,14 +648,14 @@ bool UnitClass::Edge_Of_World_AI(void)
  *=============================================================================================*/
 void UnitClass::Reload_AI(void)
 {
-	if (*this == UNIT_V2_LAUNCHER && Ammo < Class->MaxAmmo) {
+	if (Class->AmmoRegenTime > 0 && Ammo < Class->MaxAmmo) {
 		if (IsDriving) {
 			Reload = Reload + 1;
 		} else {
 			if (Reload == 0) {
 				Ammo++;
 				if (Ammo < Class->MaxAmmo) {
-					Reload = TICKS_PER_SECOND*30;
+					Reload = TICKS_PER_SECOND*Class->AmmoRegenTime;
 				}
 				Mark(MARK_CHANGE);
 			}
@@ -1069,7 +1069,7 @@ ResultType UnitClass::Take_Damage(int & damage, int distance,const WarheadTypeCl
 			**	SSM launchers will really explode big if they are carrying
 			**	missiles at the time of the explosion.
 			*/
-			if (*this == UNIT_V2_LAUNCHER && Ammo) {
+			if ((Class->IsV2RL || Class->HasRocketTurret) && Ammo) {
 				anim = ANIM_NAPALM3;
 			}
 
@@ -2086,7 +2086,7 @@ int UnitClass::Shape_Number(void) const
 	**	The body of the V2 launcher indicates whether it is loaded with a missile
 	**	or not.
 	*/
-	if (*this == UNIT_V2_LAUNCHER) {
+	if (Class->IsV2RL) {
 		if (Ammo == 0) shapenum += 32;
 	}
 
@@ -2145,16 +2145,16 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 		shapenum = Shape_Number();
 
 		/*
-		**	The artillery unit should have its entire body recoil when it fires.
+		**	The artillery unit or any other unit should have its entire body recoil when it fires.
 		*/
-		if (*this == UNIT_ARTY && IsInRecoilState) {
+		if (Class->DoRecoil && IsInRecoilState && !Class->IsTurretEquipped) {
 			Recoil_Adjust(PrimaryFacing.Current(), x, y);
 		}
 
 		/*
 		**	Actually perform the draw. Overlay an optional shimmer effect as necessary.
 		*/
-		Techno_Draw_Object(shapefile, shapenum, x, y, window, rotation, scale);
+		Techno_Draw_Object(shapefile, shapenum, x, y, window, rotation, scale, Class->Graphic_Name());
 
 		/*
 		**	If there is a rotating radar dish, draw it now.
@@ -2164,7 +2164,7 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 				int x2 = x, y2 = y;
 				shapenum = 32 + (Frame & 7);
 				Class->Turret_Adjust(PrimaryFacing, x2, y2);
-				Techno_Draw_Object(shapefile, shapenum, x2, y2, window,DIR_N,scale);
+				Techno_Draw_Object(shapefile, shapenum, x2, y2, window,DIR_N,scale, Class->Graphic_Name());
 			} else {
 //#ifdef FIXIT_PHASETRANSPORT	//	checked - ajw 9/28/98
 //				if (*this == UNIT_PHASE) {
@@ -2199,16 +2199,28 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 			**	Determine which turret shape to use. This depends on if there
 			**	is any firing animation in progress.
 			*/
-			shapenum = TechnoClass::BodyShape[tfacing]+32;
+			shapenum = TechnoClass::BodyShape[tfacing] + 32;
+
 #ifdef FIXIT_PHASETRANSPORT	//	checked - ajw 9/28/98
 			if (*this == UNIT_PHASE) {
 				shapenum += 6;
 			}
 #endif
+
+			if (Class->HasRocketTurret) {
+				if (Ammo == 0) shapenum += 64;
+				if (Ammo == 1) shapenum += 32;
+			}
+
+			if (Class->HasPopupTurret && !IsDriving)
+			{
+				shapenum += 32;
+			}
+
 			/*
 			**	A recoiling turret moves "backward" one pixel.
 			*/
-			if (IsInRecoilState) {
+			if (IsInRecoilState && Class->DoRecoil) {
 				Recoil_Adjust(SecondaryFacing, xx, yy);
 			}
 
@@ -2217,7 +2229,7 @@ void UnitClass::Draw_It(int x, int y, WindowNumberType window) const
 			/*
 			**	Actually perform the draw. Overlay an optional shimmer effect as necessary.
 			*/
-			if(tshapefile == NULL)
+			if(tshapefile == NULL) //check if there is a special shapefile/data to use.
 				Techno_Draw_Object(shapefile, shapenum, xx, yy, window, DIR_N, scale);
 			else
 				Techno_Draw_Object(tshapefile, shapenum, xx, yy, window,DIR_N, scale,Class->SecondaryGraphicName);
@@ -4233,7 +4245,7 @@ DirType UnitClass::Fire_Direction(void) const
 	assert(Units.ID(this) == ID);
 	assert(IsActive);
 
-	if (Class->IsTurretEquipped) {
+	if (Class->IsTurretEquipped) {/* We'll never hit this below because a V2RL is not turretted.
 		if (*this == UNIT_V2_LAUNCHER) {
 			int diff1 = SecondaryFacing.Difference(DIR_E);
 			int diff2 = SecondaryFacing.Difference(DIR_W);
@@ -4246,7 +4258,7 @@ DirType UnitClass::Fire_Direction(void) const
 			} else {
 				return(DirType)(SecondaryFacing + (DirType)adj);
 			}
-		}
+		}*/
 		return(SecondaryFacing.Current());
 	}
 
@@ -4400,13 +4412,51 @@ if(Class->Type == UNIT_DEMOTRUCK && IsActive) delete this;
 			/*
 			**	Possible reload timer set.
 			*/
-			if ((*this == UNIT_V2_LAUNCHER) && Reload == 0) {
-				Reload = TICKS_PER_SECOND * 30;
+			if (Class->AmmoRegenTime > 0 && Reload == 0) {
+				Reload = TICKS_PER_SECOND * Class->AmmoRegenTime;
 			}
 		}
 	}
 
 	return(bullet);
+}
+
+/***********************************************************************************************
+ * UnitClass::Fire_Coord -- Determine the coordinate where bullets appear.                     *
+ *                                                                                             *
+ *    This routine will determine the coordinate to use when this vehicle fires. The           *
+ *    coordinate is the location where bullets appear (or fire effects appear) when the        *
+ *    object fires its weapon.                                                                 *
+ *                                                                                             *
+ * INPUT:   which -- Which weapon is the coordinate to be calculated for? 0 means primary      *
+ *                   weapon, 1 means secondary weapon.                                         *
+ *                                                                                             *
+ * OUTPUT:  Returns with the coordinate that any bullets fired from the specified weapon       *
+ *          should appear.                                                                     *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   02/06/2024 JJ : Created.                                                                  *
+ *=============================================================================================*/
+COORDINATE UnitClass::Fire_Coord(int which) const
+{
+	COORDINATE coord = DriveClass::Fire_Coord(which);
+	if ((Class->PrimaryWeaponBoundToTurret && which == 0) || (Class->SecondaryWeaponBoundToTurret && which == 1)) {
+		if (Class->IsTurretEquipped) {
+			int x = 0;
+			int y = 0;
+			/*Turret Adjust is only for the final stage of drawing a unit, so there we must use it wisely here because of the different
+			* coordinate systems in use.
+			* For Turrets that use the built-in LUT for display on a vehicle, the facing of the vehicle body (primary) is used to determine
+			* where exactly the turret is.  It's still not perfect on account of the different coordinate systems that I don't know how
+			* they work yet.
+			*/
+			Class->Turret_Adjust(PrimaryFacing, x, y);
+			coord = Coord_Move(coord, XYP_Coord(x, y));
+		}
+	}
+	return coord;
 }
 
 

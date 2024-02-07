@@ -171,7 +171,7 @@ class WeaponTypeClass
 		VocType Sound;
 
 		/*
-		**	This is the typical sound generated when firing.
+		**	This is the string name of the typical sound generated when firing.
 		*/
 		char SoundName[16];
 

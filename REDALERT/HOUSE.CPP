@@ -2065,7 +2065,7 @@ void HouseClass::Silo_Redraw_Check(long oldtib, long oldcap)
 	if (oldratio != newratio) {
 		for (int index = 0; index < Buildings.Count(); index++) {
 			BuildingClass * b = Buildings.Ptr(index);
-			if (b && !b->IsInLimbo && b->House == this && *b == STRUCT_STORAGE) {
+			if (b && !b->IsInLimbo && b->House == this && b->Class->IsStorage) {
 				b->Mark(MARK_CHANGE);
 			}
 		}

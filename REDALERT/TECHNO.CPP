@@ -539,7 +539,6 @@ COORDINATE TechnoClass::Fire_Coord(int which) const
 		dist = tclass->SecondaryOffset;
 		lateral = tclass->SecondaryLateral;
 	}
-
 	coord = Coord_Move(Center_Coord(), DIR_N, tclass->VerticalOffset + Height);
 	coord = Coord_Move(coord, DIR_E, tclass->HorizontalOffset);
 	if (IsSecondShot) {
@@ -3296,7 +3295,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 	/*
 	**	Get the location where the projectile should appear.
 	*/
-	fire_coord = Fire_Coord(which);
+	fire_coord = Fire_Coord(which);  //should invoke the derived class' function if defined, not this class' function.
 
 	/*
 	**	If the projectile is a homing type (such as a missile), then it will
@@ -3347,7 +3346,7 @@ BulletClass * TechnoClass::Fire_At(TARGET target, int which)
 		} else {
 			delete bullet;
 		}
-		if (tclass.IsTurretEquipped) {
+		if (/*tclass.IsTurretEquipped && */ tclass.DoRecoil) {
 			IsInRecoilState = true;
 			Mark(MARK_CHANGE_REDRAW);
 		}
@@ -6372,25 +6371,40 @@ int TechnoClass::Anti_Air(void) const
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   10/02/1995 JLB : Created.                                                                 *
+ *   02/04/1995 JJ  : Updated to handle both Primary and Secondary weapons                     *
  *=============================================================================================*/
 int TechnoClass::Anti_Armor(void) const
 {
 	assert(IsActive);
 
 	if (Is_Weapon_Equipped()) {
-		if (!Techno_Type_Class()->PrimaryWeapon->Bullet->IsAntiGround) return(0);
+		WeaponTypeClass const* weapon1 = Techno_Type_Class()->PrimaryWeapon;
+		BulletTypeClass const* bullet1 = weapon1->Bullet;
+		WeaponTypeClass const* weapon2 = Techno_Type_Class()->SecondaryWeapon;
+		BulletTypeClass const* bullet2 = bullet1;
+		if (weapon2 != NULL) {
+			bullet2 = weapon2->Bullet;
+		}
+		if (!bullet1->IsAntiGround && !bullet2->IsAntiGround) return(0);
+		WarheadTypeClass const * warhead1 = weapon1->WarheadPtr;
+		int mrange = min(weapon1->Range, 0x0400);
 
-		WeaponTypeClass const * weapon = Techno_Type_Class()->PrimaryWeapon;
-		BulletTypeClass const * bullet = weapon->Bullet;
-		WarheadTypeClass const * warhead = weapon->WarheadPtr;
-		int mrange = min(weapon->Range, 0x0400);
-
-		int value = ((weapon->Attack * warhead->Modifier[ARMOR_STEEL]) * mrange * warhead->SpreadFactor) / weapon->ROF;
+		int value = ((weapon1->Attack * warhead1->Modifier[ARMOR_STEEL]) * mrange * warhead1->SpreadFactor) / weapon1->ROF;
 		if (Techno_Type_Class()->Is_Two_Shooter()) {
 			value *= 2;
 		}
-		if (bullet->IsInaccurate) {
+		if (bullet1->IsInaccurate) {
 			value /= 2;
+		}
+		if (weapon2 != NULL && (weapon2 != weapon1)) {
+			mrange = min(weapon2->Range, 0x0400);
+			WarheadTypeClass const* warhead2 = weapon2->WarheadPtr;
+			int value2 = ((weapon2->Attack * warhead2->Modifier[ARMOR_STEEL]) * mrange * warhead2->SpreadFactor) / weapon2->ROF;
+			if (weapon2->Burst > 1)
+				value2 *= 2;
+			if (bullet2->IsInaccurate)
+				value /= 2;
+			value = max(value, value2);
 		}
 		return(value/50);
 	}
@@ -6590,7 +6604,8 @@ TechnoTypeClass::TechnoTypeClass(
     IsIndependentFire(false),
 	BuildSpeedBias(1),
 	SelfHealThreshold(Rule.ConditionYellow),
-	CustomOffsets(false)
+	CustomOffsets(false),
+	DoRecoil(true)
 {
 	//char message[64];
 	//sprintf(message, "Instantiated TECHNO %s .\n", ininame);
@@ -7022,6 +7037,8 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		MaxPassengers = ini.Get_Int(Name(), "Passengers", MaxPassengers);
 		IsIndependentFire = ini.Get_Bool(Name(), "IndependentFire", IsIndependentFire);
 		IsTurretEquipped = ini.Get_Bool(Name(), "Turret", IsTurretEquipped);
+		//if (!IsTurretEquipped)
+		//	TurretCount = 0;
 		BuildSpeedBias = ini.Get_Fixed(Name(), "BuildTime", BuildSpeedBias);
 		SelfHealThreshold = ini.Get_Fixed(Name(), "RegenThreshold", SelfHealThreshold);
 		HorizontalOffset = ini.Get_Int(Name(), "HOffset", HorizontalOffset); 		
@@ -7085,6 +7102,7 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		if (Speed == SPEED_FLOAT) {
 			MZone = MZONE_WATER;
 		}
+		DoRecoil = ini.Get_Bool(Name(), "Recoils", DoRecoil);
 		sprintf(message, "TechnoTypeClass.Read_INI parsed %s.\n", Name());
 		WWDebugString(message);
 		return(true);

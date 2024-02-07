@@ -688,6 +688,12 @@ void VesselTypeClass::Turret_Adjust(DirType dir, int & x, int & y) const
 			x = xx;
 			y = yy-4;
 			break;
+
+		default:
+			Normal_Move_Point(xx, yy, dir, TurretOffset);
+			x = xx;
+			y = yy + 1;
+			break;
 	}
 }
 

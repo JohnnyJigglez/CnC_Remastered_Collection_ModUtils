@@ -2842,14 +2842,17 @@ TechnoTypeClass(RTTI_BUILDINGTYPE,
 	Capacity(0),
 	Power(0),
 	Drain(0),
-	Size{translateSize[size][0],translateSize[size][1]},
+	Size{translateSize[size][0],translateSize[size][1] },
 	OccupyList(sizelist),
 	OverlapList(overlap),
-	BuildupData(0)
+	BuildupData(0),
+	IsStorage(false)
 {
 	//char message[64];
 	//sprintf(message, "Instantiated BTC %s .\n", ininame);
 	//WWDebugString(message);
+	if (strcmpi(IniName, "SILO") == 0)
+		IsStorage = true;
 	Anims[BSTATE_CONSTRUCTION].Start = 0;
 	Anims[BSTATE_CONSTRUCTION].Count = 1;
 	Anims[BSTATE_CONSTRUCTION].Rate = 0;
@@ -3980,6 +3983,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		IsCaptureable = ini.Get_Bool(Name(), "Capturable", IsCaptureable);
 		IsPowered = ini.Get_Bool(Name(), "Powered", IsPowered);
 		IsBibbed = ini.Get_Bool(Name(), "Bib", IsBibbed);
+		IsStorage = ini.Get_Bool(Name(), "StorageSilo", IsStorage);
 		IsUnsellable = ini.Get_Bool(Name(), "Unsellable", IsUnsellable);
 		IsBase = ini.Get_Bool(Name(), "BaseNormal", IsBase);
 		Power = ini.Get_Int(Name(), "Power", (Power > 0) ? Power : -Drain);

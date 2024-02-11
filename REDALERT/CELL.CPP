@@ -2349,8 +2349,8 @@ bool CellClass::Goodie_Check(FootClass * object)
 			**	Possibly force it to be an MCV if there is
 			**	sufficient money and no buildings left.
 			*/
-			if (	object->House->BScan == 0 &&
-					object->House->Available_Money() > ( (BuildingTypeClass::As_Reference(STRUCT_REFINERY).Cost + BuildingTypeClass::As_Reference(STRUCT_POWER).Cost) * object->House->CostBias) &&
+			if (	object->House->BScan.none() &&
+					object->House->Available_Money() > ( (BuildingTypeClass::As_Reference("PROC").Cost + BuildingTypeClass::As_Reference("POWR").Cost) * object->House->CostBias) &&
 					Session.Options.Bases &&
 					!(object->House->UScan & UNITF_MCV)) {
 				powerup = CRATE_UNIT;
@@ -2361,10 +2361,11 @@ bool CellClass::Goodie_Check(FootClass * object)
 			**	If the powerup is money but there is insufficient money to build a refinery but there is a construction
 			**	yard available, then force the money to be enough to rebuild the refinery.
 			*/
-			if (powerup == CRATE_MONEY && (object->House->BScan & (STRUCTF_CONST|STRUCTF_REFINERY)) == STRUCTF_CONST &&
-						object->House->Available_Money() < BuildingTypeClass::As_Reference(STRUCT_REFINERY).Cost * object->House->CostBias) {
+			if (powerup == CRATE_MONEY && !object->House->BScan[BuildingTypeClass::As_Reference("PROC").As_Type()]
+				&& object->House->BScan[BuildingTypeClass::As_Reference("FACT").As_Type()]
+				&& (object->House->Available_Money() < BuildingTypeClass::As_Reference("PROC").Cost * object->House->CostBias)) {
 
-				force_money = BuildingTypeClass::As_Reference(STRUCT_REFINERY).Cost * object->House->CostBias;
+				force_money = BuildingTypeClass::As_Reference("PROC").Cost * object->House->CostBias;
 			}
 
 			/*
@@ -2476,7 +2477,7 @@ crate_money:
 				**	If the player has a base and a refinery, but no harvester, then give him
 				**	a free one.
 				*/
-				if (utp == NULL && (object->House->BScan & STRUCTF_REFINERY) && !(object->House->UScan & UNITF_HARVESTER)) {
+				if (utp == NULL && object->House->BScan[BuildingTypeClass::As_Reference("PROC").As_Type()] && !(object->House->UScan & UNITF_HARVESTER)) {
 					utp = &UnitTypeClass::As_Reference(UNIT_HARVESTER);
 				}
 

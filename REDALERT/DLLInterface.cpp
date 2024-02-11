@@ -4457,8 +4457,8 @@ bool DLLExportClass::Get_Sidebar_State(uint64 player_id, unsigned char *buffer_i
 		sidebar->PowerProduced = PlayerPtr->Power;
 		sidebar->PowerDrained = PlayerPtr->Drain;
 
-		sidebar->RepairBtnEnabled = PlayerPtr->BScan > 0;
-		sidebar->SellBtnEnabled = PlayerPtr->BScan > 0;
+		sidebar->RepairBtnEnabled = PlayerPtr->BScan.any();
+		sidebar->SellBtnEnabled = PlayerPtr->BScan.any();
 		sidebar->RadarMapActive = PlayerPtr->Radar == RADAR_ON;
 
 

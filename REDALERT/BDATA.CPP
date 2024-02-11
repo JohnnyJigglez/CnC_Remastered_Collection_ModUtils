@@ -4096,32 +4096,120 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 			WWDebugString(message);
 			OverlapList = OverlapListData;
 		}
-		/*if (OccupyList != NULL) {
-			sprintf(message, "BTC.Read_INI Building has OccupyList : ");
-			//WWDebugString(message);
-			int count = 0;
-			short curr = -1;
-			for (int x = 0; x < 6; x++) {
-				for (int y = 0; y < 6; y++)
-				{
-					curr = OccupyList[count];
-					if (curr == REFRESH_EOL)
-						break;
-					if(y > 0)
-						sprintf(message, "%s,%d",message, curr);
-					else
-						sprintf(message, "%s%d", message, curr);
-					//WWDebugString(message);
-					count++;
-				}
-				if (curr == REFRESH_EOL)
-					break;
-				sprintf(message, "%s|", message);
-				//WWDebugString(message);
+		if (ini.Get_String(Name(), "AnimIDLE", "", buffer, sizeof(buffer))) {
+			char delim = ',';
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_IDLE].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_IDLE].Start = atoi(token);
 			}
-			sprintf(message, "%s .\n", message);
-			WWDebugString(message);
-		}*/
+			else {
+				Anims[BSTATE_IDLE].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_IDLE].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_IDLE].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_IDLE].Rate = atoi(token);
+			//sprintf(message, "BTC.Read_INI Building overlaps %d cells \n", count);
+			//WWDebugString(message);
+		}
+		if (ini.Get_String(Name(), "AnimCONST", "", buffer, sizeof(buffer))) {
+			char delim = ',';
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_CONSTRUCTION].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_CONSTRUCTION].Start = atoi(token);
+			}
+			else {
+				Anims[BSTATE_CONSTRUCTION].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_CONSTRUCTION].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_CONSTRUCTION].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_CONSTRUCTION].Rate = atoi(token);
+			//sprintf(message, "BTC.Read_INI Building overlaps %d cells \n", count);
+			//WWDebugString(message);
+		}
+		if (ini.Get_String(Name(), "AnimACTIVE", "", buffer, sizeof(buffer))) {
+			char delim = ',';
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_ACTIVE].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_ACTIVE].Start = atoi(token);
+			}
+			else {
+				Anims[BSTATE_ACTIVE].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_ACTIVE].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_ACTIVE].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_ACTIVE].Rate = atoi(token);
+			//sprintf(message, "BTC.Read_INI Building overlaps %d cells \n", count);
+			//WWDebugString(message);
+		}
+		if (ini.Get_String(Name(), "AnimFULL", "", buffer, sizeof(buffer))) {
+			char delim = ',';
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_FULL].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_FULL].Start = atoi(token);
+			}
+			else {
+				Anims[BSTATE_FULL].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_FULL].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_FULL].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_FULL].Rate = atoi(token);
+			//sprintf(message, "BTC.Read_INI Building overlaps %d cells \n", count);
+			//WWDebugString(message);
+		}
+		if (ini.Get_String(Name(), "AnimAUX1", "", buffer, sizeof(buffer))) {
+			char delim = ',';
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_AUX1].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_AUX1].Start = atoi(token);
+			}
+			else {
+				Anims[BSTATE_AUX1].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_AUX1].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_AUX1].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_AUX1].Rate = atoi(token);
+			//sprintf(message, "BTC.Read_INI Building overlaps %d cells \n", count);
+			//WWDebugString(message);
+		}
+		if (ini.Get_String(Name(), "AnimAUX2", "", buffer, sizeof(buffer))) {
+			char delim = ',';
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_AUX2].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_AUX2].Start = atoi(token);
+			}
+			else {
+				Anims[BSTATE_AUX2].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_AUX2].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_AUX2].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_AUX2].Rate = atoi(token);
+			//sprintf(message, "BTC.Read_INI Building overlaps %d cells \n", count);
+			//WWDebugString(message);
+		}
 		if (ini.Get_String(Name(), "Logic", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building has Logic : %s \n", buffer);
 			WWDebugString(message);

@@ -37,6 +37,7 @@
  *   WarheadTypeClass::operator new -- Allocate a warhead object from the special heap.        *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 #include <string>
+#include <vector>
 #include    "WARHEAD.H"
 
 
@@ -436,7 +437,7 @@ void WarheadTypeClass::Dump(void) {
 		out += ("Anim=" + std::string(ptr->Anim == ANIM_NONE ? "none" : AnimTypeClass::As_Pointer(ptr->Anim)->Name()) +'\n');
 		out += ("BehavesLike=" + std::to_string(ptr->BehavesLike) + '\n');
 		out += ("Spread=" + std::to_string(ptr->SpreadFactor) + '\n');
-		out.c_str();
+		//out.c_str();
 		sprintf(message, out.c_str());
 		WWDebugString(message);
 		out = "";

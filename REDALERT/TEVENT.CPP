@@ -43,6 +43,7 @@
 
 
 #include	"function.h"
+#include <bitset>
 
 /*
 **	This is the text name for all of the trigger events. These are used by the scenario editor
@@ -335,7 +336,7 @@ bool TEventClass::operator () (TDEventClass & td, TEventType event, HousesType h
 			**	Ensure that there are no more factories left.
 			*/
 			case TEVENT_NOFACTORIES:
-				if (hptr->BScan & (STRUCTF_AIRSTRIP|STRUCTF_TENT|STRUCTF_WEAP|STRUCTF_BARRACKS|STRUCTF_CONST)) return(false);
+				if ((hptr->BScan & std::bitset<128>(STRUCTF_AIRSTRIP|STRUCTF_TENT|STRUCTF_WEAP|STRUCTF_BARRACKS|STRUCTF_CONST)).any()) return(false);
 				break;
 
 			/*
@@ -359,7 +360,7 @@ bool TEventClass::operator () (TDEventClass & td, TEventType event, HousesType h
 			**	Verify that the structure has been built.
 			*/
 			case TEVENT_BUILDING_EXISTS:
-				if ((hptr->ActiveBScan & (1 << Data.Structure)) == 0) return(false);
+				if (!hptr->ActiveBScan[Data.Structure]) return(false);
 //				if (hptr->Get_Quantity(Data.Structure) == 0) return(false);
 				break;
 
@@ -440,7 +441,7 @@ bool TEventClass::operator () (TDEventClass & td, TEventType event, HousesType h
 			**	Verify that all buildings have been destroyed.
 			*/
 			case TEVENT_BUILDINGS_DESTROYED:
-				if (hptr->ActiveBScan) return(false);
+				if (hptr->ActiveBScan.any()) return(false);
 				break;
 
 			/*
@@ -455,7 +456,7 @@ bool TEventClass::operator () (TDEventClass & td, TEventType event, HousesType h
 			**	Verify that all buildings and units have been destroyed.
 			*/
 			case TEVENT_ALL_DESTROYED:
-				if (hptr->ActiveBScan | hptr->ActiveUScan | hptr->ActiveIScan | hptr->ActiveVScan) return(false);
+				if (hptr->ActiveBScan.any() || hptr->ActiveUScan != 0 || hptr->ActiveIScan != 0 || hptr->ActiveVScan != 0) return(false);
 				break;
 
 			default:

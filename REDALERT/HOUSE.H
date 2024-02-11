@@ -34,18 +34,17 @@
 
 #ifndef HOUSE_H
 #define HOUSE_H
-
 #include	"type.h"
 #include	"region.h"
 #include	"vector.h"
 #include "Credits.h"
+#include <bitset>
 
 class TriggerClass;
 class FootClass;
 class FactoryClass;
 
 #define HOUSE_NAME_MAX	12
-
 
 /****************************************************************************
 **	Certain aspects of the house "country" are initially set by the scenario
@@ -366,10 +365,12 @@ class HouseClass {
 		**	accumulated over time, the "New" element contains the under-construction
 		**	version.
 		*/
-		unsigned long BScan;
-		unsigned long ActiveBScan;
-		unsigned long OldBScan;
-
+		std::bitset<128> BScan;
+		std::bitset<128> ActiveBScan;
+		std::bitset<128> OldBScan;
+		//unsigned long BScan;
+		//unsigned long ActiveBScan;
+		//unsigned long OldBScan;
 		/*
 		**	This is the last working scan bits for units. For every existing unit
 		**	type owned by this house, a corresponding bit is set in this element. As
@@ -745,6 +746,14 @@ class HouseClass {
 		void Tracking_Add(TechnoClass const * techno);
 		void Active_Remove(TechnoClass const * techno);
 		void Active_Add(TechnoClass const * techno);
+		bool Has_Buildings(void) {
+			return(BScan.any());
+			/*for (int index = 0; index < BScan.size(); index++)
+			{
+				if (BScan[index])
+					return BScan > 0;
+			}*/
+		}
 
 		UrgencyType Check_Attack(void) const;
 		UrgencyType Check_Build_Power(void) const;
@@ -769,7 +778,12 @@ class HouseClass {
 		bool AI_Lower_Power(UrgencyType urgency) const;
 
 		bool Can_Make_Money(void) const {
-			return(Available_Money() > 300 || (BScan & STRUCTF_REFINERY));
+			//BuildingTypeClass* ptr = BuildingTypeClass::As_Pointer("PROC");
+		//	StructType btype = STRUCT_NONE;
+			//if (ptr)
+			//	btype = ptr->As_Type();
+			//return(Available_Money() > 300 || ((btype != STRUCT_NONE) ? BScan[btype] : false));
+			return(Available_Money() > 300 || BScan[STRUCT_REFINERY]);
 		};
 
 		static void Init(void);

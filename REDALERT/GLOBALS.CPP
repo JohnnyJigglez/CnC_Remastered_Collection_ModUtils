@@ -214,7 +214,46 @@ PKey SlowKey;
 char const * NameOverride[25];
 int NameIDOverride[25];
 #endif
+/*
+typedef struct {
+	char ImageName[_MAX_FNAME] = {};
+	void const* ImageData = NULL;
+} ImageDataNode;
 
+std::vector<ImageDataNode*> ImageDataPool;
+
+
+int GetImageIndex(char* imagename) {
+	for (int index = 0; index < (int)(ImageDataPool.size()); index++) {
+		ImageDataNode* node = ImageDataPool.at(index);
+		if (stricmp(node->ImageName, imagename) == 0)
+			return index;
+	}
+	return -1;
+}
+
+void const* GetImageData(char* imagename) {
+	int index = GetImageIndex(imagename);
+	if (index == -1)
+		return NULL;
+	return ImageDataPool.at(index)->ImageData;
+}
+
+
+
+int AppendImage(char* imagename, void const* imagedata) {
+	if (imagename == NULL || imagedata == NULL)
+		return -1;
+	int index = -1;
+	if ((index = GetImageIndex(imagename)) != -1)
+		return index;
+	ImageDataNode node;
+	node.ImageData = imagedata;
+	strcpy(node.ImageName, imagename);
+	ImageDataPool.push_back(&node);
+	return (ImageDataPool.size() - 1);
+}
+*/
 /***************************************************************************
 **	These are the mission control structures. They hold the information about
 **	how the missions should behave in the system.

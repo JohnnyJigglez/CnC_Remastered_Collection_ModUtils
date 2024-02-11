@@ -1,8 +1,5 @@
 #ifndef PROJECTILE_H
 #define PROJECTILE_H
-//#include "CONST.CPP"
-//#include "TYPE.H"
-//#include "FUNCTION.h"
 #include <vector>
 /***************************************************************************
 **	These are the text names for the various built-in bullet types a weapon

@@ -37,6 +37,7 @@
 
 #include	"mission.h"
 #include	"target.h"
+#include <bitset>
 
 class MapEditClass;
 class HouseClass;
@@ -506,7 +507,13 @@ class TechnoTypeClass : public ObjectTypeClass
 		**	This specifies the building prerequisites required before an object
 		**	of this type can be produced.
 		*/
-		long Prerequisite;
+		//long Prerequisite;
+		std::bitset<128> Prerequisite;
+
+		/*
+		* Prerequisite Entity Names that a player must build to build this.
+		*/
+		//std::vector<char*> PrerequisiteNames;
 
 		/*
 		**	The risk and reward values are used to determine targets and paths
@@ -590,7 +597,7 @@ class TechnoTypeClass : public ObjectTypeClass
 		** points you lose if you lose an object of this type.
 		*/
 		int Points;
-
+		
 		//--------------------------------------------------------------------
 		TechnoTypeClass(NoInitClass const & x) : ObjectTypeClass(x) {}
 		TechnoTypeClass(
@@ -801,11 +808,12 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	control the appearance of all normal buildings. Turrets and SAM sites are
 		**	an exception since their animation is not merely cosmetic.
 		*/
-		typedef struct {
+		struct AnimControlType {
+			int ImagePoolIndex = -1;
 			int	Start;			// Starting frame of animation.
 			int	Count;			// Number of frames in this animation.
 			int	Rate;				// Number of ticks to delay between each frame.
-		} AnimControlType;
+		};
 		AnimControlType Anims[BSTATE_COUNT];
 
 		/*

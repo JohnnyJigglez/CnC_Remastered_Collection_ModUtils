@@ -1111,7 +1111,23 @@ bool RulesClass::Objects(CCINIClass & ini)
 		//sprintf(message, "Weapons Vector has %s with ID %d\n", Weapons.at(windex)->Name(), Weapons.at(windex)->ID);
 		//WWDebugString(message);
 	}
-
+	static char const* const BDT = "NewBuildings";
+	if (ini.Is_Present(BDT)) {
+		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", BDT, ini.Entry_Count(BDT));
+		WWDebugString(message);
+		for (int x = 0; x < ini.Entry_Count(BDT); x++) {
+			BuildingTypeClass* btc = BuildingTypeClass::As_Pointer(ini.Get_Value(BDT, x));
+			if (btc == NULL)
+				new BuildingTypeClass(atoi(ini.Get_Entry(BDT, x)), ini.Get_Value(BDT, x));
+			else {
+				sprintf(message, "RulesClass.Objects found %s .\n", btc->Name());
+				WWDebugString(message);
+			}
+		}
+	}
+	for (int bindex = 0; bindex < BuildingTypes.Count(); bindex++) {
+		BuildingTypes.Ptr(bindex)->Read_INI(ini);
+	}
 	static char const* const UT = "NewVehicles";
 	if (ini.Is_Present(UT)) {
 		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", UT, ini.Entry_Count(UT));
@@ -1147,23 +1163,6 @@ bool RulesClass::Objects(CCINIClass & ini)
 	}
 	for (int vindex = 0; vindex < VesselTypes.Count(); vindex++) {
 		VesselTypes.Ptr(vindex)->Read_INI(ini);
-	}
-	static char const* const BDT = "NewBuildings";
-	if (ini.Is_Present(BDT)) {
-		sprintf(message, "RulesClass.Objects found %s Section with %d Entries.\n", BDT, ini.Entry_Count(BDT));
-		WWDebugString(message);
-		for (int x = 0; x < ini.Entry_Count(BDT); x++) {
-			BuildingTypeClass * btc = BuildingTypeClass::As_Pointer(ini.Get_Value(BDT, x));
-			if(btc == NULL)
-				new BuildingTypeClass(atoi(ini.Get_Entry(BDT, x)), ini.Get_Value(BDT, x));
-			else {
-				sprintf(message, "RulesClass.Objects found %s .\n", btc->Name());
-				WWDebugString(message);
-			}
-		}
-	}
-	for (int bindex = 0; bindex < BuildingTypes.Count(); bindex++) {
-		BuildingTypes.Ptr(bindex)->Read_INI(ini);
 	}
 	static char const* const AC = "NewAircraft";
 	if (ini.Is_Present(AC)) {

@@ -3444,45 +3444,45 @@ void CC_Draw_Shape(void const * shapefile, int shapenum, int x, int y, WindowNum
 
 void CC_Draw_Shape(const ObjectClass* object, void const* shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const* fadingdata, void const* ghostdata, DirType rotation, long virtualscale, int width, int height, const char* shape_file_name)
 {
-	if (window == WINDOW_VIRTUAL) {
+	//if (window == WINDOW_VIRTUAL) {
 		if (width == 0) width = Get_Build_Frame_Width(shapefile);
 		if (height == 0) height = Get_Build_Frame_Height(shapefile);
 		DLL_Draw_Intercept(shapenum, x, y, width, height, (int)flags, object, rotation, virtualscale, shape_file_name, HOUSE_NONE);
 		return;
-	}
-	CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
+	//}
+	//CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
 }
 
 void CC_Draw_Shape(const ObjectClass *object, const char *shape_file_name, void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata, void const * ghostdata, DirType rotation, long virtualscale, char override_owner)
 {
-	if (window == WINDOW_VIRTUAL) {
+	//if (window == WINDOW_VIRTUAL) {
 		int width = Get_Build_Frame_Width(shapefile);
 		int height = Get_Build_Frame_Height(shapefile);
 		DLL_Draw_Intercept(shapenum, x, y, width, height, (int)flags, object, rotation, virtualscale, shape_file_name, override_owner);
 		return;
-	}
-	CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
+	//}
+	//CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
 }
 
 
 void CC_Draw_Pip(const ObjectClass *object, void const * shapefile, int shapenum, int x, int y, WindowNumberType window, ShapeFlags_Type flags, void const * fadingdata, void const * ghostdata, DirType rotation)
 {
-	if (window == WINDOW_VIRTUAL) {
+	//if (window == WINDOW_VIRTUAL) {
 		DLL_Draw_Pip_Intercept(object, shapenum);
 		return;
-	}
+	//}
 
-	CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
+	//CC_Draw_Shape(shapefile, shapenum, x, y, window, flags, fadingdata, ghostdata, rotation);
 }
 
 void CC_Draw_Line(int x, int y, int x1, int y1, unsigned char color, int frame, WindowNumberType window)
 {
-	if (window == WINDOW_VIRTUAL) {
+	//if (window == WINDOW_VIRTUAL) {
 		DLL_Draw_Line_Intercept(x, y, x1, y1, color, frame);
 		return;
-	}
+	//}
 
-	LogicPage->Draw_Line(x, y, x1, y1, color);
+	//LogicPage->Draw_Line(x, y, x1, y1, color);
 }
 
 

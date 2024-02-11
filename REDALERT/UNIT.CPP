@@ -99,6 +99,7 @@
 
 #include	"function.h"
 #include "COORDA.h"
+#include <bitset>
 
 
 extern void Logic_Switch_Player_Context(ObjectClass *object);
@@ -2934,8 +2935,8 @@ int UnitClass::Mission_Harvest(void)
 	/*
 	**	If there are no more refineries, then drop into guard mode.
 	*/
-	if (!(House->ActiveBScan & STRUCTF_REFINERY)) {
-		Assign_Mission(MISSION_GUARD);
+	if (!House->ActiveBScan[STRUCT_REFINERY]) {
+		Assign_Mission(MISSION_RETREAT);//make refineries return to base if without refineries
 		return(1);
 	}
 
@@ -3048,7 +3049,7 @@ int UnitClass::Mission_Harvest(void)
 				*/
 				if (nearest != NULL && Transmit_Message(RADIO_HELLO, nearest) == RADIO_ROGER) {
 					Status = HEADINGHOME;
-					if (nearest->House == PlayerPtr && (PlayerPtr->Capacity - PlayerPtr->Tiberium) < 300 && PlayerPtr->Capacity > 500 && (PlayerPtr->ActiveBScan & (STRUCTF_REFINERY | STRUCTF_CONST))) {
+					if (nearest->House == PlayerPtr && (PlayerPtr->Capacity - PlayerPtr->Tiberium) < 300 && PlayerPtr->Capacity > 500 && (PlayerPtr->ActiveBScan[STRUCT_REFINERY] || PlayerPtr->ActiveBScan[STRUCT_CONST])) {
 						Speak(VOX_NEED_MO_CAPACITY);
 					}
 				} else {
@@ -3077,7 +3078,7 @@ int UnitClass::Mission_Harvest(void)
 		*/
 		case GOINGTOIDLE:
 			if (IsUseless) {
-				if (House->ActiveBScan & STRUCTF_REPAIR) {
+				if (House->ActiveBScan[STRUCT_REPAIR]) {
 					Assign_Mission(MISSION_REPAIR);
 				} else {
 					Assign_Mission(MISSION_HUNT);
@@ -4199,7 +4200,7 @@ int UnitClass::Mission_Repair(void)
 	**	into idle state.
 	*/
 	if (nearest == NULL) {
-		if (!(House->ActiveBScan & STRUCTF_REFINERY)) {
+		if (!House->ActiveBScan[STRUCT_REFINERY]) {
 			Enter_Idle_Mode();
 		}
 	} else {

@@ -132,6 +132,7 @@
 
 #include	"function.h"
 #include	"vortex.h"
+#include <bitset>
 
 //#include "WolDebug.h"
 
@@ -139,6 +140,11 @@
 ** New sidebar for GlyphX multiplayer. ST - 8/7/2019 10:10AM
 */
 #include "SidebarGlyphx.h"
+
+inline static std::bitset<128> shifty(long bob) {
+	std::bitset<128> longbits(bob);
+	return longbits;
+}
 
 TFixedIHeapClass<HouseClass::BuildChoiceClass> HouseClass::BuildChoice;
 
@@ -565,7 +571,6 @@ Blockage(0),
 RepairTimer(0),
 AlertTime(0),
 BorrowedTime(0),
-BScan(0),
 ActiveBScan(0),
 OldBScan(0),
 UScan(0),
@@ -821,7 +826,7 @@ bool HouseClass::Can_Build(ObjectTypeClass const * type, HousesType house) const
 	/*
 	**	Perform some equivalency fixups for the building existence flags.
 	*/
-	long flags = ActiveBScan;
+	std::bitset<128> flags = ActiveBScan;
 
 	/*
 	**	The computer records prerequisite buildings because it can't relay on the
@@ -831,18 +836,24 @@ bool HouseClass::Can_Build(ObjectTypeClass const * type, HousesType house) const
 		flags = OldBScan;
 	}
 
-	int pre = ((TechnoTypeClass const *)type)->Prerequisite;
+	std::bitset<128> pre = ((TechnoTypeClass const *)type)->Prerequisite;
 
 	/*
 	**	Advanced power also serves as a prerequisite for normal power.
 	*/
-	if (flags & STRUCTF_ADVANCED_POWER) flags |= STRUCTF_POWER;
+	if (flags[BuildingTypeClass::As_Reference("APWR").As_Type()])
+		flags[BuildingTypeClass::As_Reference("POWR").As_Type()] = true;
 
 	/*
 	**	Either tech center counts as a prerequisite.
 	*/
 	if (Session.Type != GAME_NORMAL) {
-		if ((flags & (STRUCTF_SOVIET_TECH|STRUCTF_ADVANCED_TECH)) != 0) flags |= STRUCTF_SOVIET_TECH|STRUCTF_ADVANCED_TECH;
+		StructType atek = BuildingTypeClass::As_Reference("atek").As_Type();
+		StructType stek = BuildingTypeClass::As_Reference("atek").As_Type();
+		if (flags[atek] || flags[stek]) {
+			flags[atek] = true;
+			flags[stek] = true;
+		}
 	}
 
 	int level = Control.TechLevel;
@@ -1067,7 +1078,8 @@ void HouseClass::AI(void)
 	**	If there are no more buildings to sell, then automatically cancel the
 	**	sell mode.
 	*/
-	if (PlayerPtr == this && !ActiveBScan && Map.IsSellMode) {
+
+	if (PlayerPtr == this && ActiveBScan.none() && Map.IsSellMode) {
 		Map.Sell_Mode_Control(0);
 	}
 
@@ -1088,16 +1100,15 @@ void HouseClass::AI(void)
 				Session.Messages.Add_Message(NULL, text_id, text, PCOLOR_GREEN, TPF_6PT_GRAD | TPF_USE_GRAD_PAL | TPF_FULLSHADOW, Rule.MessageDelay * TICKS_PER_MINUTE);
 			}
 		}
-
 		if (SpeakMaxedDelay == 0 && IsMaxedOut) {
 			IsMaxedOut = false;
-			if ((Capacity - Tiberium) < 300 && Capacity > 500 && (ActiveBScan & (STRUCTF_REFINERY | STRUCTF_CONST))) {
+			if (((Capacity - Tiberium) < 300) && (Capacity > 500) && (ActiveBScan[STRUCT_REFINERY] || ActiveBScan[STRUCT_CONST])) {
  				Speak(VOX_NEED_MO_CAPACITY);
 				SpeakMaxedDelay = Options.Normalize_Delay(TICKS_PER_MINUTE * Rule.SpeakDelay);
 			}
 		}
 		if (SpeakPowerDelay == 0 && Power_Fraction() < 1) {
-			if (ActiveBScan & STRUCTF_CONST) {
+			if (ActiveBScan[STRUCT_CONST]) {
 				Speak(VOX_LOW_POWER);
 				SpeakPowerDelay = Options.Normalize_Delay(TICKS_PER_MINUTE * Rule.SpeakDelay);
 				Map.Flash_Power();
@@ -1228,7 +1239,7 @@ void HouseClass::AI(void)
 	** through each object's AI before it will be properly set.
 	*/
 	if (Session.Type != GAME_NORMAL && !IsDefeated &&
-		!ActiveBScan && !ActiveAScan && !UScan && !ActiveIScan && !ActiveVScan && Frame > 0) {
+		!(ActiveBScan.any()) && !ActiveAScan && !UScan && !ActiveIScan && !ActiveVScan && Frame > 0) {
 		MPlayer_Defeated();
 	}
 
@@ -1277,7 +1288,7 @@ void HouseClass::AI(void)
 		Map.Set_Jammed(this, jammed);
 // Need to add in here where we activate it when only GPS is active.
 		if (Map.Is_Radar_Active()) {
-			if (ActiveBScan & STRUCTF_RADAR) {
+			if (ActiveBScan[STRUCT_RADAR]) {
 				if (Power_Fraction() < 1 && !IsGPSActive) {
 					Map.Radar_Activate(0);
 				}
@@ -1288,7 +1299,7 @@ void HouseClass::AI(void)
 			}
 
 		} else {
-			if (IsGPSActive || (ActiveBScan & STRUCTF_RADAR)) {
+			if (IsGPSActive || ActiveBScan[STRUCT_RADAR]) {
 				if (Power_Fraction() >= 1 || IsGPSActive) {
 					Map.Radar_Activate(1);
 				}
@@ -1298,7 +1309,7 @@ void HouseClass::AI(void)
 				}
 			}
 		}
-		if (!IsGPSActive && !(ActiveBScan & STRUCTF_RADAR)) {
+		if (!IsGPSActive && !(ActiveBScan[STRUCT_RADAR])) {
 			Radar = RADAR_NONE;
 		} else {
 			Radar = (Map.Is_Radar_Active() || Map.Is_Radar_Activating()) ? RADAR_ON : RADAR_OFF;
@@ -1415,7 +1426,7 @@ void HouseClass::Super_Weapon_Handler(void)
 	** Check to see if they have launched the GPS, but subsequently lost their
 	** tech center.  If so, remove the GPS, and shroud the map.
 	*/
-	if (IsGPSActive && !(ActiveBScan & STRUCTF_ADVANCED_TECH) ) {
+	if (IsGPSActive && !(ActiveBScan[STRUCT_ADVANCED_TECH])) {
 		IsGPSActive = false;
 
 		/*
@@ -1441,7 +1452,7 @@ void HouseClass::Super_Weapon_Handler(void)
 	** is another good example, because it's a one-shot item.
 	*/
 	if (SuperWeapon[SPC_GPS].Is_Present()) {
-		if (!(ActiveBScan & STRUCTF_ADVANCED_TECH) || IsGPSActive || IsDefeated) {
+		if (!(ActiveBScan[STRUCT_ADVANCED_TECH]) || IsGPSActive || IsDefeated) {
 			/*
 			**	Remove the missile capability when there is no advanced tech facility.
 			*/
@@ -1474,7 +1485,7 @@ void HouseClass::Super_Weapon_Handler(void)
 		**	If there is no GPS satellite present, but there is a GPS satellite
 		**	facility available, then make the GPS satellite available as well.
 		*/
-		if ((ActiveBScan & STRUCTF_ADVANCED_TECH) != 0 &&
+		if (ActiveBScan[STRUCT_ADVANCED_TECH] &&
 			!IsGPSActive &&
 			Control.TechLevel >= Rule.GPSTechLevel &&
 			(IsHuman || IQ >= Rule.IQSuperWeapons)) {
@@ -1517,7 +1528,7 @@ void HouseClass::Super_Weapon_Handler(void)
 	**	being destroyed is a good example of this.
 	*/
 	if (SuperWeapon[SPC_CHRONOSPHERE].Is_Present()) {
-		if ( (!(ActiveBScan & STRUCTF_CHRONOSPHERE) && !SuperWeapon[SPC_CHRONOSPHERE].Is_One_Time()) || IsDefeated) {
+		if ((!(ActiveBScan[STRUCT_CHRONOSPHERE]) && !SuperWeapon[SPC_CHRONOSPHERE].Is_One_Time()) || IsDefeated) {
 
 			/*
 			**	Remove the chronosphere when there is no chronosphere facility.
@@ -1553,7 +1564,7 @@ void HouseClass::Super_Weapon_Handler(void)
 		**	If there is no chronosphere present, but there is a chronosphere
 		**	facility available, then make the chronosphere available as well.
 		*/
-		if ((ActiveBScan & STRUCTF_CHRONOSPHERE) &&
+		if (ActiveBScan[STRUCT_CHRONOSPHERE] &&
 //			(ActLike == HOUSE_GOOD || Session.Type != GAME_NORMAL) &&
 			(unsigned)Control.TechLevel >= BuildingTypeClass::As_Reference(STRUCT_CHRONOSPHERE).Level &&
 //			Control.TechLevel >= Rule.ChronoTechLevel &&
@@ -1584,7 +1595,7 @@ void HouseClass::Super_Weapon_Handler(void)
 	**	being destroyed is a good example of this.
 	*/
 	if (SuperWeapon[SPC_IRON_CURTAIN].Is_Present()) {
-		if ( (!(ActiveBScan & STRUCTF_IRON_CURTAIN) && !SuperWeapon[SPC_IRON_CURTAIN].Is_One_Time())  || IsDefeated) {
+		if ((!(ActiveBScan[STRUCT_IRON_CURTAIN]) && !SuperWeapon[SPC_IRON_CURTAIN].Is_One_Time()) || IsDefeated) {
 
 			/*
 			**	Remove the iron curtain when there is no iron curtain facility.
@@ -1605,7 +1616,7 @@ void HouseClass::Super_Weapon_Handler(void)
 		**	If there is no iron curtain present, but there is an iron curtain
 		**	facility available, then make the iron curtain available as well.
 		*/
-		if ((ActiveBScan & STRUCTF_IRON_CURTAIN) &&
+		if (ActiveBScan[STRUCT_IRON_CURTAIN] &&
 			(ActLike == HOUSE_USSR || ActLike == HOUSE_UKRAINE || Session.Type != GAME_NORMAL) &&
 			(IsHuman || IQ >= Rule.IQSuperWeapons)) {
 
@@ -1663,7 +1674,7 @@ void HouseClass::Super_Weapon_Handler(void)
 	**	being destroyed is a good example of this.
 	*/
 	if (SuperWeapon[SPC_NUCLEAR_BOMB].Is_Present()) {
-		if ( (!(ActiveBScan & STRUCTF_MSLO) && !SuperWeapon[SPC_NUCLEAR_BOMB].Is_One_Time()) || IsDefeated) {
+		if ((!ActiveBScan[STRUCT_MSLO] && !SuperWeapon[SPC_NUCLEAR_BOMB].Is_One_Time()) || IsDefeated) {
 
 			/*
 			**	Remove the nuke when there is no missile silo.
@@ -1693,7 +1704,7 @@ void HouseClass::Super_Weapon_Handler(void)
 		**	If there is no nuclear missile present, but there is a missile
 		**	silo available, then make the missile available as well.
 		*/
-		if ((ActiveBScan & STRUCTF_MSLO) &&
+		if (ActiveBScan[STRUCT_MSLO] &&
 			((ActLike != HOUSE_USSR && ActLike != HOUSE_UKRAINE) || Session.Type != GAME_NORMAL) &&
 			(IsHuman || IQ >= Rule.IQSuperWeapons)) {
 
@@ -1718,7 +1729,7 @@ void HouseClass::Super_Weapon_Handler(void)
 
 
 	if (SuperWeapon[SPC_SPY_MISSION].Is_Present()) {
-		if ((ActiveBScan & STRUCTF_AIRSTRIP) == 0) {
+		if (!ActiveBScan[STRUCT_AIRSTRIP]) {
 			if (SuperWeapon[SPC_SPY_MISSION].Remove()) {
 				if (this == PlayerPtr) Map.Column[1].Flag_To_Redraw();
 				IsRecalcNeeded = true;
@@ -1732,7 +1743,7 @@ void HouseClass::Super_Weapon_Handler(void)
 			}
 		}
 	} else {
-		if ((ActiveBScan & STRUCTF_AIRSTRIP) != 0 && !Scen.IsNoSpyPlane && Control.TechLevel >= Rule.SpyPlaneTechLevel) {
+		if (ActiveBScan[STRUCT_AIRSTRIP] && !Scen.IsNoSpyPlane && Control.TechLevel >= Rule.SpyPlaneTechLevel) {
 			SuperWeapon[SPC_SPY_MISSION].Enable(false, this == PlayerPtr, false);
 			// Add to Glyphx multiplayer sidebar. ST - 8/7/2019 10:13AM
 			if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
@@ -1749,7 +1760,7 @@ void HouseClass::Super_Weapon_Handler(void)
 	}
 
 	if (SuperWeapon[SPC_PARA_BOMB].Is_Present()) {
-		if ((ActiveBScan & STRUCTF_AIRSTRIP) == 0) {
+		if (!ActiveBScan[STRUCT_AIRSTRIP]) {
 			if (SuperWeapon[SPC_PARA_BOMB].Remove()) {
 				if (this == PlayerPtr) Map.Column[1].Flag_To_Redraw();
 				IsRecalcNeeded = true;
@@ -1760,7 +1771,7 @@ void HouseClass::Super_Weapon_Handler(void)
 			}
 		}
 	} else {
-		if ((ActiveBScan & STRUCTF_AIRSTRIP) != 0 && Control.TechLevel >= Rule.ParaBombTechLevel && Session.Type == GAME_NORMAL) {
+		if (ActiveBScan[STRUCT_AIRSTRIP] && Control.TechLevel >= Rule.ParaBombTechLevel && Session.Type == GAME_NORMAL) {
 			SuperWeapon[SPC_PARA_BOMB].Enable(false, this == PlayerPtr, false);
 			// Add to Glyphx multiplayer sidebar. ST - 8/7/2019 10:13AM
 			if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
@@ -1777,7 +1788,7 @@ void HouseClass::Super_Weapon_Handler(void)
 	}
 
 	if (SuperWeapon[SPC_PARA_INFANTRY].Is_Present()) {
-		if ((ActiveBScan & STRUCTF_AIRSTRIP) == 0) {
+		if (!ActiveBScan[STRUCT_AIRSTRIP]) {
 			if (SuperWeapon[SPC_PARA_INFANTRY].Remove()) {
 				if (this == PlayerPtr) Map.Column[1].Flag_To_Redraw();
 				IsRecalcNeeded = true;
@@ -1788,7 +1799,7 @@ void HouseClass::Super_Weapon_Handler(void)
 			}
 		}
 	} else {
-		if ((ActiveBScan & STRUCTF_AIRSTRIP) != 0 && Control.TechLevel >= Rule.ParaInfantryTechLevel) {
+		if (ActiveBScan[STRUCT_AIRSTRIP] && Control.TechLevel >= Rule.ParaInfantryTechLevel) {
 			SuperWeapon[SPC_PARA_INFANTRY].Enable(false, this == PlayerPtr, false);
 			// Add to Glyphx multiplayer sidebar. ST - 8/7/2019 10:13AM
 			if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
@@ -3031,6 +3042,7 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 	if(tech && tech->IsActive && (tech->What_Am_I() != RTTI_UNIT || *(UnitClass *)tech != UNIT_CHRONOTANK))
 #endif
 				if (!ChronalVortex.Is_Active() && Percent_Chance(Rule.VortexChance * 100)) {
+					
 					int x = Random_Pick(0, Map.MapCellWidth-1);
 					int y = Random_Pick(0, Map.MapCellHeight-1);
 					ChronalVortex.Appear(Cell_Coord(XY_Cell(Map.MapCellX + x, Map.MapCellY + y)));
@@ -3401,12 +3413,12 @@ void HouseClass::Detach(TARGET target, bool )
 bool HouseClass::Does_Enemy_Building_Exist(StructType btype) const
 {
 	assert(Houses.ID(this) == ID);
-
-	int bflag = 1L << btype;
+	if (btype == STRUCT_NONE)
+		return false;
+	//int bflag = 1L << btype;
 	for (HousesType index = HOUSE_FIRST; index < HOUSE_COUNT; index++) {
 		HouseClass * house = HouseClass::As_Pointer(index);
-
-		if (house && !Is_Ally(house) && (house->ActiveBScan & bflag) != 0) {
+		if (house && !Is_Ally(house) && house->ActiveBScan[btype]) {
 			return(true);
 		}
 	}
@@ -4854,7 +4866,7 @@ int HouseClass::Expert_AI(void)
 	if (Enemy != HOUSE_NONE) {
 		HouseClass * h = HouseClass::As_Pointer(Enemy);
 
-		if (h == NULL || !h->IsActive || h->IsDefeated || Is_Ally(h) || h->BScan == 0) {
+		if (h == NULL || !h->IsActive || h->IsDefeated || Is_Ally(h) || h->BScan.none()) {
 			Enemy = HOUSE_NONE;
 		}
 	}
@@ -4864,7 +4876,7 @@ int HouseClass::Expert_AI(void)
 	**	enemy that is closest is picked. However, don't pick an enemy if the
 	**	base has not been established yet.
 	*/
-	if (ActiveBScan && Center && Attack == 0) {
+	if (ActiveBScan.any() && Center && Attack == 0) {
 		int close = 0;
 		HousesType enemy = HOUSE_NONE;
 		int maxunit = 0;
@@ -5154,7 +5166,7 @@ UrgencyType HouseClass::Check_Build_Power(void) const
 		**	then consider power building a higher priority.
 		*/
 		if (State == STATE_THREATENED || State == STATE_ATTACKED) {
-			if (BScan | (STRUCTF_CHRONOSPHERE)) {
+			if (BScan[STRUCT_CHRONOSPHERE]) {
 				urgency = URGENCY_HIGH;
 			}
 		}
@@ -5229,7 +5241,7 @@ UrgencyType HouseClass::Check_Fire_Sale(void) const
 	**	If there are no more factories at all, then sell everything off because the game
 	**	is basically over at this point.
 	*/
-	if (State != STATE_ATTACKED && CurBuildings && !(ActiveBScan & (STRUCTF_TENT|STRUCTF_BARRACKS|STRUCTF_CONST|STRUCTF_AIRSTRIP|STRUCTF_WEAP|STRUCTF_HELIPAD))) {
+	if (State != STATE_ATTACKED && CurBuildings && !((ActiveBScan & shifty(STRUCTF_TENT|STRUCTF_BARRACKS|STRUCTF_CONST|STRUCTF_AIRSTRIP|STRUCTF_WEAP|STRUCTF_HELIPAD)).any())) {
 		return(URGENCY_CRITICAL);
 	}
 	return(URGENCY_NONE);
@@ -6693,7 +6705,7 @@ void HouseClass::Tracking_Add(TechnoClass const * techno)
 			CurBuildings++;
 			building = ((BuildingTypeClass const &)techno->Class_Of()).Type;
 			BQuantity[building]++;
-			BScan |= (1L << building);
+			BScan[building] = true;
 			if (Session.Type == GAME_INTERNET) {
 				BuildingTotals->Increment_Unit_Total(techno->Class_Of().ID);
 			}
@@ -6977,8 +6989,8 @@ void HouseClass::Recalc_Attributes(void)
 		HouseClass * house = Houses.Ptr(index);
 
 		if (house != NULL) {
-			house->BScan = 0;
-			house->ActiveBScan = 0;
+			house->BScan.reset();
+			house->ActiveBScan.reset();
 			house->IScan = 0;
 			house->ActiveIScan = 0;
 			house->UScan = 0;
@@ -7025,13 +7037,11 @@ void HouseClass::Recalc_Attributes(void)
 	}
 	for (index = 0; index < Buildings.Count(); index++) {
 		BuildingClass const * building = Buildings.Ptr(index);
-		if (building->Class->Type < 32) {
-			building->House->BScan |= (1L << building->Class->Type);
-			if (building->IsLocked && (Session.Type != GAME_NORMAL || !building->House->IsHuman || building->IsDiscoveredByPlayer)) {
-				if (!building->IsInLimbo) {
-					building->House->ActiveBScan |= (1L << building->Class->Type);
-					building->House->OldBScan |= (1L << building->Class->Type);
-				}
+		building->House->BScan[building->Class->Type] = true;
+		if (building->IsLocked && (Session.Type != GAME_NORMAL || !building->House->IsHuman || building->IsDiscoveredByPlayer)) {
+			if (!building->IsInLimbo) {
+				building->House->ActiveBScan[building->Class->Type] = true;
+				building->House->OldBScan[building->Class->Type] = true;
 			}
 		}
 	}

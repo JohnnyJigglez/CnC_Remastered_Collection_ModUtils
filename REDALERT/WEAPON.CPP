@@ -42,6 +42,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include	"function.h"
+#include <vector>
 //#include "WEAPON.H"
 //#include    "PROJECTILE.h"
 

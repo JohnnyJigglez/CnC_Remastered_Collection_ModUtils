@@ -77,7 +77,7 @@
  *   CCINIClass::Save -- Save the INI data to the file specified.                              *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-
+#include <bitset>
 #include	"function.h"
 #include    "ADATA.H"
 
@@ -1512,21 +1512,27 @@ bool CCINIClass::Put_TerrainType(char const * section, char const * entry, Terra
  * HISTORY:                                                                                    *
  *   07/11/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-long CCINIClass::Get_Buildings(char const * section, char const * entry, long defvalue) const
+std::bitset<128> CCINIClass::Get_Buildings(char const * section, char const * entry, std::bitset<128> defvalue) const
 {
 	char buffer[128];
-	long pre;
-
+	std::bitset<128> pre;
+	BuildingTypeClass* ptr = NULL;
+	StructType building = STRUCT_NONE;
+	char delim = ',';
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
 
 		pre = 0;
-		char * token = strtok(buffer, ",");
+		char * token = strtok(buffer, &delim);
 		while (token != NULL && *token != '\0') {
-			StructType building = BuildingTypeClass::As_Pointer(token)->As_Type();
-			if (building != STRUCT_NONE) {
-				pre |= (1L << building);
+			ptr = BuildingTypeClass::As_Pointer(token);
+			building = STRUCT_NONE;
+			if (ptr != NULL) {
+				building = ptr->As_Type();
 			}
-			token = strtok(NULL, ",");
+			if (building != STRUCT_NONE) {
+				pre[building] = true;
+			}
+			token = strtok(NULL, &delim);
 		}
 	} else {
 		pre = defvalue;

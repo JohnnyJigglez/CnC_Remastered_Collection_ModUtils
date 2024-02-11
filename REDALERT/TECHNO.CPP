@@ -6583,10 +6583,10 @@ TechnoTypeClass::TechnoTypeClass(
 	SightRange(0),
 	Cost(0),
 	Level(-1),
-	Prerequisite(STRUCTF_NONE),
 	Risk(0),Reward(0),
 	MaxSpeed(MPH_IMMOBILE),
 	Speed(speed),
+	Prerequisite(0),
 	MaxAmmo(-1),
 	Ownable(0),
 	CameoData(NULL),
@@ -6607,7 +6607,8 @@ TechnoTypeClass::TechnoTypeClass(
 	CustomOffsets(false),
 	DoRecoil(true)
 {
-	//char message[64];
+	//Prerequisite.resize(128, false);
+    //char message[64];
 	//sprintf(message, "Instantiated TECHNO %s .\n", ininame);
 	//WWDebugString(message);
 }
@@ -7022,6 +7023,23 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 		IsCloakable = ini.Get_Bool(Name(), "Cloakable", IsCloakable);
 		IsScanner = ini.Get_Bool(Name(), "Sensors", IsScanner);
 		Prerequisite = ini.Get_Buildings(Name(), "Prerequisite", Prerequisite);
+		/*if (ini.Get_String(Name(), "Prerequisite", "", buffer, sizeof(buffer))) {
+			char delim = ',';
+			char* token = strtok(buffer, &delim);
+			while (token != NULL){
+				if (strlen(token) > 1) {
+					char* tokenstore;
+					strcpy(tokenstore, token);
+					PrerequisiteNames.push_back(tokenstore);
+				}
+				token = strtok(NULL, &delim);
+			}
+		}
+		for (int index = 0; index < PrerequisiteNames.size(); index++) {
+			BuildingTypeClass* btc = BuildingTypeClass::As_Pointer(PrerequisiteNames.at(index));
+			if (btc != NULL)
+				Prerequisite[btc->As_Type()] = true;
+		}*/
 		SightRange = ini.Get_Int(Name(), "Sight", SightRange);
 		Level = ini.Get_Int(Name(), "TechLevel", Level);
 		MaxSpeed = MPHType(_Scale_To_256(ini.Get_Int(Name(), "Speed", fixed(MaxSpeed, 256) * 100)));

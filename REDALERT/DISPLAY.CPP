@@ -4378,7 +4378,7 @@ void DisplayClass::Sell_Mode_Control(int control)
 
 	if (mode != IsSellMode && !PendingObject) {
 		IsRepairMode = false;
-		if (mode && PlayerPtr->BScan) {
+		if (mode && PlayerPtr->BScan.any()) {
 			IsSellMode = true;
 			Unselect_All();
 		} else {
@@ -4425,7 +4425,7 @@ void DisplayClass::Repair_Mode_Control(int control)
 
 	if (mode != IsRepairMode && !PendingObject) {
 		IsSellMode = false;
-		if (mode && PlayerPtr->BScan) {
+		if (mode && PlayerPtr->Has_Buildings()) {
 			IsRepairMode = true;
 			Unselect_All();
 		} else {

@@ -874,6 +874,9 @@ TechnoTypeClass(RTTI_UNITTYPE,
 		AmmoRegenTime = 30;
 		IsV2RL = true;
 	}
+	char message[64];
+	sprintf(message, "Constructed Vehicle %s with ID %d.\n", ininame,ID);
+	WWDebugString(message);
 }
 
 /***********************************************************************************************
@@ -919,9 +922,7 @@ UnitTypeClass::UnitTypeClass(int utype, char const* ininame) :
 							0,
 							MISSION_HUNT)
 				    {
-						char message[64];
-						sprintf(message, "Instantiated custom Vehicle %s .\n", ininame);
-						WWDebugString(message);
+						
 					}
 
 

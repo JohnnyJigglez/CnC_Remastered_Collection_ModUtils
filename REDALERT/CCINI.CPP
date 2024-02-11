@@ -1511,22 +1511,25 @@ bool CCINIClass::Put_TerrainType(char const * section, char const * entry, Terra
  *                                                                                             *
  * HISTORY:                                                                                    *
  *   07/11/1996 JLB : Created.                                                                 *
+ *   02/11/2024 JJ : Will toss out building IDs that are > 0, to prevent crashes               *
  *=============================================================================================*/
 long CCINIClass::Get_Buildings(char const * section, char const * entry, long defvalue) const
 {
 	char buffer[128];
 	long pre;
-
+	char delim = ',';
+	BuildingTypeClass * btc = NULL;
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-
 		pre = 0;
-		char * token = strtok(buffer, ",");
+		char * token = strtok(buffer, &delim);
 		while (token != NULL && *token != '\0') {
-			StructType building = BuildingTypeClass::As_Pointer(token)->As_Type();
-			if (building != STRUCT_NONE) {
+			btc = BuildingTypeClass::As_Pointer(token);
+			StructType building = STRUCT_NONE;
+			if (btc != NULL)
+				building = btc->As_Type();
+			if ((32 > building) && (building > STRUCT_NONE))
 				pre |= (1L << building);
-			}
-			token = strtok(NULL, ",");
+			token = strtok(NULL, &delim);
 		}
 	} else {
 		pre = defvalue;

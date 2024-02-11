@@ -2872,7 +2872,9 @@ TechnoTypeClass(RTTI_BUILDINGTYPE,
 	Anims[BSTATE_AUX2].Start = 0;
 	Anims[BSTATE_AUX2].Count = 1;
 	Anims[BSTATE_AUX2].Rate = 0;
-
+	char message[64];
+	sprintf(message, "Constructed Building %s with ID: %d .\n", ininame, ID);
+	WWDebugString(message);
 	/*short width[BSIZE_COUNT] = {
 		1,
 		2,
@@ -4135,7 +4137,8 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 			Drain = -Power;
 			Power = 0;
 		}
-		
+		sprintf(message, "BTC.Read_INI parsed %s.\n", Name());
+		WWDebugString(message);
 		return(true);
 	}
 	return(false);

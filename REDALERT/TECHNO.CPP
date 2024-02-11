@@ -6979,8 +6979,8 @@ static inline int _Scale_To_256(int val)
 bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 {
 	if (ObjectTypeClass::Read_INI(ini)) {
-		char message[256];
-		sprintf(message, "TechnoTypeClass.Read_INI parsing %s ...\n", Name());
+		char message[128];
+		sprintf(message, "TTC.Read_INI parsing %s ...\n", Name());
 		WWDebugString(message);
 		//GlyphX_Debug_Print(message);
 #ifdef FIXIT_NAME_OVERRIDE
@@ -7103,7 +7103,7 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 			MZone = MZONE_WATER;
 		}
 		DoRecoil = ini.Get_Bool(Name(), "Recoils", DoRecoil);
-		sprintf(message, "TechnoTypeClass.Read_INI parsed %s.\n", Name());
+		sprintf(message, "TTC.Read_INI parsed %s.\n", Name());
 		WWDebugString(message);
 		return(true);
 	}

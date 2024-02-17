@@ -538,6 +538,7 @@ bool Read_Scenario(char * name)
 				Rule.IQ(ini);
 				Rule.Objects(ini);
 				Rule.Difficulty(ini);
+				Rule.GeneralLast(ini);
 				Rule.Dump();
 			}
 		}
@@ -2267,6 +2268,7 @@ bool Read_Scenario_INI(char * fname, bool )
 	Rule.IQ(RuleINI);
 	Rule.Objects(RuleINI);
 	Rule.Difficulty(RuleINI);
+	Rule.GeneralLast(RuleINI);
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98 - Except does this _change_ any rules, or just add to them? - Just adds.
 	Rule.General(AftermathINI);
 	Rule.Recharge(AftermathINI);
@@ -2277,6 +2279,7 @@ bool Read_Scenario_INI(char * fname, bool )
 	Rule.IQ(AftermathINI);
 	Rule.Objects(AftermathINI);
 	Rule.Difficulty(AftermathINI);
+	Rule.GeneralLast(AftermathINI);
 #endif
 
 	/*
@@ -2302,7 +2305,7 @@ bool Read_Scenario_INI(char * fname, bool )
 	Rule.IQ(ini);
 	Rule.Objects(ini);
 	Rule.Difficulty(ini);
-
+	Rule.GeneralLast(ini);
 	/*
 	**	- Fix a legacy bug with England and France country bonuses.
 	**	- Use ore growth and spread values from the special settings.

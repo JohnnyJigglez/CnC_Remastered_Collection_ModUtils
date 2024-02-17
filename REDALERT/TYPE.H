@@ -41,7 +41,114 @@
 class MapEditClass;
 class HouseClass;
 class WeaponTypeClass;
-
+/*
+*my new bifield struct with 256 bit capacity
+*/
+struct bitfield {
+	unsigned long long through63 = 0;
+	unsigned long long through127 = 0;
+	unsigned long long through191 = 0;
+	unsigned long long through255 = 0;
+	bool operator[](const int index) const {
+		if (index < 0)
+			return false;
+		if (index < 64)
+			return (through63 & (1LL << index));
+		if (index < 128)
+			return (through127 & (1LL << (index - 64)));
+		if (index < 192)
+			return (through191 & (1LL << (index - 128)));
+		if (index < 256)
+			return (through255 & (1LL << (index - 192)));
+		return false;
+	}
+	void bitfield::Set(short index) {
+		if (index < 0)
+			return;
+		if (index < 64)
+			through63 |= (1LL << index);
+		if (index < 128)
+			through127 |= (1LL << (index - 64));
+		if (index < 192)
+			through191 |= (1LL << (index - 128));
+		if (index < 256)
+			through255 |= (1LL << (index - 192));
+	}
+	void bitfield::Reset(void) {
+		through63 = 0;
+		through127 = 0;
+		through191 = 0;
+		through255 = 0;
+	}
+	bool bitfield::Any(void) const {
+		if (through63 != 0)
+			return true;
+		if (through127 != 0)
+			return true;
+		if (through191 != 0)
+			return true;
+		if (through255 != 0)
+			return true;
+		return false;
+	}
+	bitfield bitfield::operator&(const bitfield mask) const {
+		bitfield out;
+		out.through63 = through63 & mask.through63;
+		out.through127 = through127 & mask.through127;
+		out.through191 = through191 & mask.through191;
+		out.through255 = through255 & mask.through255;
+		return out;
+	}
+	bitfield bitfield::operator|(const bitfield mask) const {
+		bitfield out;
+		out.through63 = through63 | mask.through63;
+		out.through127 = through127 | mask.through127;
+		out.through191 = through191 | mask.through191;
+		out.through255 = through255 | mask.through255;
+		return out;
+	}
+	void bitfield::operator&=(const bitfield mask) {
+		through63 &= mask.through63;
+		through127 &= mask.through127;
+		through191 &= mask.through191;
+		through255 &= mask.through255;
+	}
+	void bitfield::operator|=(const bitfield mask) {
+		through63 |= mask.through63;
+		through127 |= mask.through127;
+		through191 |= mask.through191;
+		through255 |= mask.through255;
+	}
+	void operator=(const long mask) {
+		through63 = mask;
+	}
+	void operator|=(const long mask) {
+		through63 |= mask;
+	}
+	void operator&=(const long mask) {
+		through63 &= mask;
+	}
+	long operator|(const long mask) const {
+		return (through63 | mask);
+	}
+	long operator&(const long mask) const {
+		return (through63 & mask);
+	}
+	bool operator==(const bitfield mask) const {
+		if (through63 != mask.through63)
+			return false;
+		if (through127 != mask.through127)
+			return false;
+		if (through191 != mask.through191)
+			return false;
+		if (through255 != mask.through255)
+			return false;
+		return true;
+	}
+	operator bool() const {
+		return Any();
+	}
+};
 
 /***************************************************************************
 **	This is the abstract type class. It holds information common to all
@@ -96,6 +203,7 @@ class AbstractTypeClass
 
 		void Code_Pointers(void) {}
 		void Decode_Pointers(void) {}
+		static AbstractTypeClass* As_Pointer(char const* name);
 };
 
 
@@ -506,7 +614,7 @@ class TechnoTypeClass : public ObjectTypeClass
 		**	This specifies the building prerequisites required before an object
 		**	of this type can be produced.
 		*/
-		long Prerequisite;
+		bitfield Prerequisite;
 
 		/*
 		**	The risk and reward values are used to determine targets and paths
@@ -591,6 +699,17 @@ class TechnoTypeClass : public ObjectTypeClass
 		*/
 		int Points;
 
+		/*
+		**  DPS against each ArmorType for this techno
+		*/
+		int DPS[ARMOR_COUNT] = { 0,0,0,0,0 };
+
+		/*
+		**  DPS against each ArmorType per each ore cost of this techno
+		*   this can be very useful to the computer players when calculating what to build
+		*/
+		int DPS_Ore[ARMOR_COUNT] = { 0,0,0,0,0 };
+
 		//--------------------------------------------------------------------
 		TechnoTypeClass(NoInitClass const & x) : ObjectTypeClass(x) {}
 		TechnoTypeClass(
@@ -631,7 +750,6 @@ class TechnoTypeClass : public ObjectTypeClass
 		virtual int Time_To_Build(HousesType house) const;
 		virtual int Get_Ownable(void) const;
 		virtual bool Read_INI(CCINIClass & ini);
-
 		/*
 		**	This is a pointer to the wake shape (as needed by the gunboat).
 		*/
@@ -639,6 +757,8 @@ class TechnoTypeClass : public ObjectTypeClass
 		//static void const * TurretShapes;
 		//static void const * SamShapes;
 		//static void const * MGunShapes;
+		private:
+			void CalculateDPS(void);
 };
 
 
@@ -680,6 +800,11 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	This flag controls whether the building is should be treated like an ore silo for animation purposes
 		*/
 		unsigned IsStorage : 1;
+
+		/*
+		**	This flag controls whether the building is should be treated like an gap generator
+		*/
+		bool IsGapper : 1;
 
 		/*
 		**	If this building is a special wall type, such that it exists as a building
@@ -802,6 +927,7 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	an exception since their animation is not merely cosmetic.
 		*/
 		typedef struct {
+			//short ImagePoolIndex;
 			int	Start;			// Starting frame of animation.
 			int	Count;			// Number of frames in this animation.
 			int	Rate;				// Number of ticks to delay between each frame.

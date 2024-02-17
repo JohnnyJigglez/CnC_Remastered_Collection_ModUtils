@@ -366,9 +366,13 @@ class HouseClass {
 		**	accumulated over time, the "New" element contains the under-construction
 		**	version.
 		*/
-		unsigned long BScan;
-		unsigned long ActiveBScan;
-		unsigned long OldBScan;
+		
+		bitfield BScan;
+		bitfield ActiveBScan;
+		bitfield OldBScan;
+		//Bscan[1] = true;
+		/*
+		*/
 
 		/*
 		**	This is the last working scan bits for units. For every existing unit
@@ -376,30 +380,30 @@ class HouseClass {
 		**	the scan bits are being constructed, they are built into the "New" element
 		**	and then duplicated into the regular element at the end of every logic cycle.
 		*/
-		unsigned long UScan;
-		unsigned long ActiveUScan;
-		unsigned long OldUScan;
+		bitfield UScan;
+		bitfield ActiveUScan;
+		bitfield OldUScan;
 
 		/*
 		**	Infantry type existence bits. Similar to unit and building bits.
 		*/
-		unsigned long IScan;
-		unsigned long ActiveIScan;
-		unsigned long OldIScan;
+		bitfield IScan;
+		bitfield ActiveIScan;
+		bitfield OldIScan;
 
 		/*
 		**	Aircraft type existence bits. Similar to unit and building bits.
 		*/
-		unsigned long AScan;
-		unsigned long ActiveAScan;
-		unsigned long OldAScan;
+		bitfield AScan;
+		bitfield ActiveAScan;
+		bitfield OldAScan;
 
 		/*
 		**	Vessel type existence bits. Similar to unit and building bits.
 		*/
-		unsigned long VScan;
-		unsigned long ActiveVScan;
-		unsigned long OldVScan;
+		bitfield VScan;
+		bitfield ActiveVScan;
+		bitfield OldVScan;
 
 		/*
 		**	Record of gains and losses for this house during the course of the
@@ -576,7 +580,12 @@ class HouseClass {
 		**	Tracks number of each building type owned by this house. Even if the
 		**	building is in construction, it will be reflected in this total.
 		*/
-#ifdef FIXIT_ANTS
+		int BQuantity[256];
+		int UQuantity[256];
+		int	IQuantity[256];
+		int	AQuantity[256];
+		int	VQuantity[256];
+/*#ifdef FIXIT_ANTS
 		int BQuantity[STRUCT_MAX-3];
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 		int UQuantity[UNITT_MAX-3];
@@ -595,10 +604,10 @@ class HouseClass {
 #endif
 		int AQuantity[AIRCRAFT_MAX];
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
-		int VQuantity[VESSEL_RA_COUNT];
+		int VQuantity[VESSELT_MAX];
 #else
 		int VQuantity[VESSEL_COUNT];
-#endif
+#endif*/
 
 		/*
 		**	This timer keeps track of when an all out attack should be performed.
@@ -685,6 +694,8 @@ class HouseClass {
 		COORDINATE Find_Build_Location(BuildingClass * building) const;
 		BuildingClass * Find_Building(StructType type, ZoneType zone=ZONE_NONE) const;
 		char const * Name(void) const {return(Class->Name());}
+		bool Special_Prerequisite_Exists(SpecialWeaponType type) const;
+		bool IsSoviet(void) const;
 
 		// Added so the ally flags could be sent to client machines - 09 / 12 / 2019 JAS
 		unsigned Get_Ally_Flags();
@@ -718,14 +729,24 @@ class HouseClass {
 
 		bool Can_Build(ObjectTypeClass const * type, HousesType house) const;
 
-		int  Get_Quantity(AircraftType aircraft);
-		int  Get_Quantity(StructType building);
+		int Get_Quantity(AircraftType aircraft) const;
+		int Get_Quantity(StructType building) const;
+		int Get_Quantity(VesselType vessel) const;
+		int Get_Quantity(UnitType unit) const;
+		int Get_Quantity(InfantryType infantry) const;
+
+		/*
+		* Does house have any buildings?
+		*/
+		bool Has_Buildings(void) const {
+			return BScan.Any();
+		}
 		unsigned char const * Remap_Table(bool blushing=false, RemapType remap=REMAP_NORMAL) const;
 
 		TechnoTypeClass const * Suggest_New_Object(RTTIType objectype, bool kennel=false) const;
 		BuildingTypeClass const * Suggest_New_Building(void) const;
 		void Recalc_Center(void);
-		bool Does_Enemy_Building_Exist(StructType) const;
+		bool Does_Enemy_Building_Exist(StructType btype) const;
 		void Harvested(unsigned tiberium);
 		void Stole(unsigned worth);
 		long Available_Money(void) const;
@@ -769,7 +790,7 @@ class HouseClass {
 		bool AI_Lower_Power(UrgencyType urgency) const;
 
 		bool Can_Make_Money(void) const {
-			return(Available_Money() > 300 || (BScan & STRUCTF_REFINERY));
+			return((UScan[UNIT_HARVESTER] && BScan[STRUCT_REFINERY]) || Available_Money() > 300);
 		};
 
 		static void Init(void);
@@ -932,7 +953,7 @@ class HouseClass {
 #endif
 
 		int QuantityB(int index) {return(BQuantity[index]);}
-#ifdef FIXIT_CSII	//	checked - ajw 9/28/98
+/*#ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 		int QuantityU(int index) {
 			if(index >= UNIT_RA_COUNT) index -= UNIT_RA_COUNT;
 			return(UQuantity[index]);
@@ -946,12 +967,12 @@ class HouseClass {
 			if(index >= VESSEL_RA_COUNT) index -= VESSEL_RA_COUNT;
 			return(VQuantity[index]);
 		}
-#else
+#else*/
 		int QuantityU(int index) {return(UQuantity[index]);}
 		int QuantityI(int index) {return(IQuantity[index]);}
 		int QuantityA(int index) {return(AQuantity[index]);}
 		int QuantityV(int index) {return(VQuantity[index]);}
-#endif
+//#endif
 
 		/*
 		** Some additional padding in case we need to add data to the class and maintain backwards compatibility for save/load

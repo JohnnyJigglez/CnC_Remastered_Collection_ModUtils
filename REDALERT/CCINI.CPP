@@ -775,6 +775,20 @@ UnitType CCINIClass::Get_UnitType(char const * section, char const * entry, Unit
 	return(UnitTypeClass::As_Type(buffer));
 }
 
+AircraftType CCINIClass::Get_AircraftType(char const* section, char const* entry, AircraftType defvalue) const
+{
+	char buffer[64];
+	AircraftType mytype = defvalue;
+	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
+		if (buffer != NULL && sizeof(buffer) > 2) {
+			AircraftTypeClass * atc = AircraftTypeClass::As_Pointer(buffer);
+			if (atc != NULL)
+				mytype = atc->Type;
+		}
+	}
+	return(mytype);
+}
+
 
 bool CCINIClass::Put_UnitType(char const * section, char const * entry, UnitType value)
 {
@@ -1513,23 +1527,18 @@ bool CCINIClass::Put_TerrainType(char const * section, char const * entry, Terra
  *   07/11/1996 JLB : Created.                                                                 *
  *   02/11/2024 JJ : Will toss out building IDs that are > 0, to prevent crashes               *
  *=============================================================================================*/
-long CCINIClass::Get_Buildings(char const * section, char const * entry, long defvalue) const
+bitfield CCINIClass::Get_Buildings(char const * section, char const * entry, bitfield defvalue) const
 {
 	char buffer[128];
-	long pre;
-	char delim = ',';
+	bitfield pre;
 	BuildingTypeClass * btc = NULL;
 	if (Get_String(section, entry, "", buffer, sizeof(buffer))) {
-		pre = 0;
-		char * token = strtok(buffer, &delim);
+		char * token = strtok(buffer, ",");
 		while (token != NULL && *token != '\0') {
 			btc = BuildingTypeClass::As_Pointer(token);
-			StructType building = STRUCT_NONE;
-			if (btc != NULL)
-				building = btc->As_Type();
-			if ((32 > building) && (building > STRUCT_NONE))
-				pre |= (1L << building);
-			token = strtok(NULL, &delim);
+			if (btc != NULL) 
+				pre.Set(btc->ID);
+			token = strtok(NULL, ",");
 		}
 	} else {
 		pre = defvalue;

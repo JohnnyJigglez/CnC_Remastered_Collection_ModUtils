@@ -162,7 +162,7 @@ class TeamTypeClass : public AbstractTypeClass
 		void Draw_It(int index, int x, int y, int width, int height, bool selected, TextPrintType flags) const;
 		static char const * Name_From_Mission(TeamMissionType order);
 		static TeamMissionType Mission_From_Name(char const *name);
-		static TeamTypeClass const * Suggested_New_Team(HouseClass * house, long atypes, long utypes, long itypes, long vtypes, bool alerted);
+		static TeamTypeClass const * Suggested_New_Team(HouseClass * house, bitfield atypes, bitfield utypes, bitfield itypes, bitfield vtypes, bool alerted);
 		static TeamTypeClass * From_Name(char const * name);
 		bool Edit(void);
 #if defined(CHEAT_KEYS) || defined(SCENARIO_EDITOR)

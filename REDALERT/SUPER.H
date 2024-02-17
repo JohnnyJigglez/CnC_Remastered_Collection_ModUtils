@@ -59,6 +59,11 @@ class SuperClass {
 		//Needed access to recharge times for tooltips - 2019/08/14 Jason Scott 
 		int Get_Recharge_Time() const { return(RechargeTime); };
 
+		char * VoxRechargeData;
+		char * VoxChargingData;
+		char * VoxImpatientData;
+		char * VoxSuspendData;
+
 	private:
 		bool Recharge(bool player=false);
 
@@ -75,7 +80,7 @@ class SuperClass {
 		VoxType VoxImpatient;
 		VoxType VoxSuspend;
 		int RechargeTime;
-
+		
 		//Needed to make ANIMATION_STAGES public so the animation frame numbers could be turned into progress 
 		//percentages - 2019/08/07 Jason Scott 
 public:

@@ -1021,7 +1021,7 @@ void BuildingClass::AI(void)
 	** the power has just come on enough so they can scan.  Also, they need
 	** to un-jam if the power has just dropped off.
 	*/
-	if (*this == STRUCT_GAP) {
+	if (this->Class->IsGapper) {
 		if (Arm[0] == 0) {
 			IsJamming = false;
 			Arm[0] = TICKS_PER_MINUTE * Rule.GapRegenInterval + Random_Pick(1, TICKS_PER_SECOND);
@@ -1156,8 +1156,8 @@ bool BuildingClass::Unlimbo(COORDINATE coord, DirType dir)
 		**	Ensure that the owning house knows about the
 		**	new object.
 		*/
-		House->BScan |= (1L << Class->Type);
-		House->ActiveBScan |= (1L << Class->Type);
+		House->BScan.Set(Class->ID);
+		House->ActiveBScan.Set(Class->ID);
 
 		/*
 		**	Recalculate the center point of the house's base.
@@ -1366,7 +1366,7 @@ ResultType BuildingClass::Take_Damage(int & damage, int distance, const WarheadT
 				** Destruction of a gap generator will cause the cells it affects
 				** to stop being jammed.
 				*/
-				if (*this == STRUCT_GAP) {
+				if (this->Class->IsGapper) {
 					Remove_Gap_Effect();
 				}
 
@@ -3269,7 +3269,7 @@ bool BuildingClass::Captured(HouseClass * newowner)
 			Map.Flag_To_Redraw(false);
 		}
 
-		if (*this == STRUCT_GAP) {
+		if (this->Class->IsGapper) {
 			Remove_Gap_Effect();
 			IsJamming = false;
 			Arm[0] = 0;
@@ -3924,7 +3924,7 @@ int BuildingClass::Mission_Deconstruction(void)
 					** Selling off a gap generator will cause the cells it affects
 					** to stop being jammed.
 					*/
-					if (*this == STRUCT_GAP) {
+					if (this->Class->IsGapper) {
 						Remove_Gap_Effect();
 					}
 
@@ -6158,7 +6158,7 @@ void BuildingClass::Remove_Gap_Effect(void)
 	// and rejam any overlapping buildings' fields
 	for (int index = 0; index < Buildings.Count(); index++) {
 		BuildingClass *obj = Buildings.Ptr(index);
-		if (obj && !obj->IsInLimbo && obj->House == House && *obj == STRUCT_GAP && obj!=this) {
+		if (obj && !obj->IsInLimbo && obj->House == House && obj->Class->IsGapper && obj!=this) {
 			obj->IsJamming = false;
 			obj->Arm[0] = 0;
 //			Map.Jam_From(Coord_Cell(obj->Center_Coord()), Rule.GapShroudRadius, PlayerPtr);

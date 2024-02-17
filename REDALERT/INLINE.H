@@ -457,6 +457,20 @@ inline COORDINATE Cell_Coord(CELL cell)
 	return(coord.Coord);
 }
 
+inline int Lepton_Distance(COORDINATE coord1, COORDINATE coord2)
+{
+	int	diff1, diff2;
+
+	diff1 = Coord_Y(coord1) - Coord_Y(coord2);
+	if (diff1 < 0) diff1 = -diff1;
+	diff2 = Coord_X(coord1) - Coord_X(coord2);
+	if (diff2 < 0) diff2 = -diff2;
+	if (diff1 > diff2) {
+		return(diff1 + ((unsigned)diff2 / 2));
+	}
+	return(diff2 + ((unsigned)diff1 / 2));
+}
+
 
 /***********************************************************************************************
  * Coord_Snap -- Coerce coordinate to refer to center of a cell.                               *

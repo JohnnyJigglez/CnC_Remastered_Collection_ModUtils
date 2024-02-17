@@ -736,10 +736,10 @@ void Assert_Failure (char *expression, int line, char *file)
 
 	sprintf (assertbuf, "assert '%s' failed at line %d in module %s.\n", expression, line, file);
 
-	if (!MonoClass::Is_Enabled()) MonoClass::Enable();
+	//if (!MonoClass::Is_Enabled()) MonoClass::Enable();
 
-	Mono_Clear_Screen();
-	Mono_Printf("%s", assertbuf);
+	//Mono_Clear_Screen();
+	//Mono_Printf("%s", assertbuf);
 
 	WWDebugString(assertbuf);
 

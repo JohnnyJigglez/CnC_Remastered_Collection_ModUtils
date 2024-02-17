@@ -127,7 +127,9 @@ int const SpecialWeaponHelp[SPC_COUNT] = {
 	TXT_PARA_INFANTRY,
 	TXT_SPY_MISSION,
 	TXT_INVUL,
-	TXT_GPS_SATELLITE
+	TXT_GPS_SATELLITE,
+	TXT_ION_CANNON,
+	TXT_AIR_STRIKE,
 };
 char const * const SpecialWeaponFile[SPC_COUNT] = {
 	"SONR",

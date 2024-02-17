@@ -489,7 +489,7 @@ void BulletTypeClass::Dump(void) {
 		out += ("Anim=" + std::string(ptr->Anim == ANIM_NONE ? "none" : AnimTypeClass::As_Pointer(ptr->Anim)->Name()) + '\n');
 		out += ("BehavesLike=" + std::to_string(ptr->BehavesLike) + '\n');
 		out += ("High=" + std::to_string(ptr->IsHigh) + '\n');
-		out.c_str();
+		//out.c_str();
 		sprintf(message, out.c_str());
 		WWDebugString(message);
 		out = "";
@@ -498,7 +498,7 @@ void BulletTypeClass::Dump(void) {
 		out += ("Dropping=" + std::to_string(ptr->IsDropping) + '\n');
 		out += ("Inviso=" + std::to_string(ptr->IsInvisible) + '\n');
 		out += ("Proximity=" + std::to_string(ptr->IsProximityArmed) + '\n');
-		out.c_str();
+		//out.c_str();
 		sprintf(message, out.c_str());
 		WWDebugString(message);
 		out = "";
@@ -507,7 +507,7 @@ void BulletTypeClass::Dump(void) {
 		out += ("Rotates=" + std::to_string(ptr->IsFaceless) + '\n');
 		out += ("Inaccurate=" + std::to_string(ptr->IsInaccurate) + '\n');
 		out += ("Translucent=" + std::to_string(ptr->IsTranslucent) + '\n');
-		out.c_str();
+		//out.c_str();
 		sprintf(message, out.c_str());
 		WWDebugString(message);
 		out = "";
@@ -516,7 +516,7 @@ void BulletTypeClass::Dump(void) {
 		out += ("ASW=" + std::to_string(ptr->IsAntiSub) + '\n');
 		out += ("Degenerates=" + std::to_string(ptr->IsDegenerate) + '\n');
 		out += ("UnderWater=" + std::to_string(ptr->IsSubSurface) + '\n');
-		out.c_str();
+		//out.c_str();
 		sprintf(message, out.c_str());
 		WWDebugString(message);
 		out = "";

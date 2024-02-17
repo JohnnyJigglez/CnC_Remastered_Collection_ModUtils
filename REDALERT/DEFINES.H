@@ -791,7 +791,7 @@ typedef enum CrateType : unsigned char {
 	CRATE_TIMEQUAKE,
 	CRATE_INVULN,
 	CRATE_VORTEX,
-
+	CRATE_ION_BLAST,
 	CRATE_COUNT,
 	CRATE_FIRST=0
 } CrateType;
@@ -812,6 +812,8 @@ typedef enum SpecialWeaponType : char {
 	SPC_SPY_MISSION,			// Spy plane to take photo recon mission.
 	SPC_IRON_CURTAIN,			// Bestow invulnerability on a unit/building
 	SPC_GPS,						// give allies free unjammable radar.
+	SPC_ION_CANNON,
+	SPC_NAPALM_STRIKE,
 
 	SPC_COUNT,
 	SPC_FIRST=0,
@@ -1098,7 +1100,9 @@ typedef enum ActionType : unsigned char {
 	ACTION_NO_DEPLOY,
 	ACTION_NO_ENTER,
 	ACTION_NO_GREPAIR,
-	ACTION_TOGGLE_PRIMARY,	// Toggle the primary status of the factory.
+	ACTION_TOGGLE_PRIMARY,
+	ACTION_NAPALM,
+	ACTION_ION,	
 
 	ACTION_COUNT
 } ActionType;
@@ -2659,6 +2663,7 @@ typedef enum MouseType : unsigned char
 	MOUSE_NO_GREPAIR,
 	MOUSE_CHRONO_SELECT,
 	MOUSE_CHRONO_DEST,
+	MOUSE_ION_CANNON,
 
 	MOUSE_COUNT
 } MouseType;

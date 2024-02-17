@@ -94,7 +94,6 @@ int Modify_Damage(int damage, WarheadType warhead, ArmorType armor, int distance
 	}
 
 	WarheadTypeClass const * whead = WarheadTypeClass::As_Pointer(warhead);
-//	WarheadTypeClass const * whead = &Warheads[warhead];
 
 	damage = damage * whead->Modifier[armor];
 

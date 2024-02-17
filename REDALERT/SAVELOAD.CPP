@@ -952,6 +952,7 @@ bool Load_Game(const char *file_name)
 	Rule.IQ(RuleINI);
 	Rule.Objects(RuleINI);
 	Rule.Difficulty(RuleINI);
+	Rule.GeneralLast(RuleINI);
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98 - But does this incorporate *changes*? - NO.
 	Rule.General(AftermathINI);
 	Rule.Recharge(AftermathINI);
@@ -962,6 +963,7 @@ bool Load_Game(const char *file_name)
 	Rule.IQ(AftermathINI);
 	Rule.Objects(AftermathINI);
 	Rule.Difficulty(AftermathINI);
+	Rule.GeneralLast(AftermathINI);
 #endif
 
 	/*
@@ -977,6 +979,7 @@ bool Load_Game(const char *file_name)
 	Rule.IQ(ini);
 	Rule.Objects(ini);
 	Rule.Difficulty(ini);
+	Rule.GeneralLast(ini);
 #ifdef FIXIT_CSII	//	ajw - Added runtime check for Aftermath to skirmish mode.
 	if (load_net) {
 		bool readini = false;
@@ -1027,6 +1030,7 @@ if(Special.IsFromWChat || SpawnedFromWChat) {
 				Rule.IQ(mpini);
 				Rule.Objects(mpini);
 				Rule.Difficulty(mpini);
+				Rule.GeneralLast(mpini);
 				Rule.Dump();
 			}
 		}

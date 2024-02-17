@@ -142,6 +142,59 @@ static short const OComList[] = {1, REFRESH_EOL};
 static short const OList12[] = {0, REFRESH_EOL};
 static short const OListTmpl[] = {0, 1, 2, REFRESH_EOL};
 
+static const struct {
+	StructType	Class;			// Building class number.
+	BStateType	Stage;			// Animation sequence to assign animation range to.
+	int			Start;			// Starting frame number.
+	int			Length;			// Number of frames (-1 means use all frames).
+	int			Rate;				// Rate of animation.
+} _anims[] = {
+	{STRUCT_CHRONOSPHERE,	BSTATE_IDLE,	0, 4, 3},	// idling
+	{STRUCT_CHRONOSPHERE,	BSTATE_ACTIVE,	4, 16,3},	// charging up and activating
+	{STRUCT_MSLO,				BSTATE_IDLE,	0, 0, 0},
+	{STRUCT_MSLO,				BSTATE_ACTIVE,	0, 5, 2},	// door opening
+	{STRUCT_MSLO,				BSTATE_AUX1,	4, 1, 0},	// door held open
+	{STRUCT_MSLO,				BSTATE_AUX2,	5, 3, 2},	// door closing
+	{STRUCT_CAMOPILLBOX,		BSTATE_ACTIVE,	0,	2, 1},
+	{STRUCT_GAP,				BSTATE_IDLE,	0,	32,3},
+	{STRUCT_AIRSTRIP,			BSTATE_IDLE,	0,	0,	0},
+	{STRUCT_AIRSTRIP,			BSTATE_AUX1,	0,	8,	3},
+	{STRUCT_BARRACKS,			BSTATE_ACTIVE,	0,	10,3},
+	{STRUCT_BARRACKS,			BSTATE_IDLE,	0,	10,3},
+	{STRUCT_TENT,				BSTATE_ACTIVE,	0,	10,3},
+	{STRUCT_TENT,				BSTATE_IDLE,	0,	10,3},
+#ifdef FIXIT_ANTS
+		{STRUCT_QUEEN,				BSTATE_IDLE,	0,	10,3},
+#endif
+		{STRUCT_CONST,				BSTATE_ACTIVE,	0,	26,3},
+		{STRUCT_FAKECONST,		BSTATE_ACTIVE,	0,	26,3},
+		{STRUCT_HELIPAD,			BSTATE_ACTIVE,	0,	7,	4},
+		{STRUCT_HELIPAD,			BSTATE_IDLE,	0,	0,	0},
+		{STRUCT_HOSPITAL,			BSTATE_IDLE,	0,	4,	3},
+		{STRUCT_PUMP,				BSTATE_IDLE,	0,	14,4},
+		{STRUCT_REPAIR,			BSTATE_ACTIVE,	0,	7,	2},
+		{STRUCT_REPAIR,			BSTATE_IDLE,	0,	1,	0},
+		{STRUCT_V20,				BSTATE_IDLE,	0,	3,	3},
+		{STRUCT_V21,				BSTATE_IDLE,	0,	3,	3},
+		{STRUCT_V22,				BSTATE_IDLE,	0,	3,	3},
+		{STRUCT_V23,				BSTATE_IDLE,	0,	3,	3},
+		{STRUCT_WEAP,				BSTATE_ACTIVE,	0,	1,	0},
+		{STRUCT_WEAP,				BSTATE_IDLE,	0,	1,	0},
+		{STRUCT_FAKEWEAP,			BSTATE_ACTIVE,	0,	1,	0},
+		{STRUCT_FAKEWEAP,			BSTATE_IDLE,	0,	1,	0},
+		{STRUCT_IRON_CURTAIN,	BSTATE_ACTIVE,	0,	11,3},
+		{STRUCT_TESLA,				BSTATE_ACTIVE,	0,	10,2},
+		{STRUCT_AIRSTRIP,			BSTATE_IDLE,	0,	8,	3}
+};
+/*
+RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_ACTIVE;
+RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_IDLE;
+RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_AUX1;
+RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_AUX2;
+RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_CONST;
+RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_FULL;
+*/
+RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimFields[BSTATE_COUNT];
 
 /***************************************************************************
 */
@@ -2846,13 +2899,14 @@ TechnoTypeClass(RTTI_BUILDINGTYPE,
 	OccupyList(sizelist),
 	OverlapList(overlap),
 	BuildupData(0),
-	IsStorage(false)
+	IsStorage(false),
+	IsGapper(false)
 {
-	//char message[64];
-	//sprintf(message, "Instantiated BTC %s .\n", ininame);
-	//WWDebugString(message);
 	if (strcmpi(IniName, "SILO") == 0)
 		IsStorage = true;
+	if (strcmpi(IniName, "GAP") == 0)
+		IsGapper = true;
+
 	Anims[BSTATE_CONSTRUCTION].Start = 0;
 	Anims[BSTATE_CONSTRUCTION].Count = 1;
 	Anims[BSTATE_CONSTRUCTION].Rate = 0;
@@ -2872,33 +2926,26 @@ TechnoTypeClass(RTTI_BUILDINGTYPE,
 	Anims[BSTATE_AUX2].Start = 0;
 	Anims[BSTATE_AUX2].Count = 1;
 	Anims[BSTATE_AUX2].Rate = 0;
+	/*
+**	Install all the special animation sequences hardcoded for this building type.
+*/
+	for (unsigned short index = 0; index < sizeof(_anims) / sizeof(_anims[0]); index++) {
+		if (_anims[index].Class == ID) {
+			Anims[_anims[index].Stage].Start = _anims[index].Start;
+			Anims[_anims[index].Stage].Count = _anims[index].Length;
+			Anims[_anims[index].Stage].Rate = _anims[index].Rate;
+		}
+	}
+	AnimFields[BSTATE_ACTIVE] = { &Anims[BSTATE_ACTIVE],"AnimACTIVE" };
+	AnimFields[BSTATE_IDLE] = { &Anims[BSTATE_IDLE],"AnimIDLE" };
+	AnimFields[BSTATE_FULL] = { &Anims[BSTATE_FULL],"AnimFULL" };
+	AnimFields[BSTATE_AUX1] = { &Anims[BSTATE_AUX1],"AnimAUX1" };
+	AnimFields[BSTATE_AUX2] = { &Anims[BSTATE_AUX2],"AnimAUX2" };
+	AnimFields[BSTATE_CONSTRUCTION] = { &Anims[BSTATE_CONSTRUCTION],"AnimCONST" };
+
 	char message[64];
 	sprintf(message, "Constructed Building %s with ID: %d .\n", ininame, ID);
 	WWDebugString(message);
-	/*short width[BSIZE_COUNT] = {
-		1,
-		2,
-		1,
-		2,
-		2,
-		3,
-		3,
-		4,
-		5
-	};
-	short height[BSIZE_COUNT] = {
-		1,
-		1,
-		2,
-		2,
-		3,
-		2,
-		3,
-		2,
-		5
-	};*/
-	//SizeWidth = width[Size];
-	//SizeHeight = height[Size];
 }
 
 /***********************************************************************************************
@@ -3130,51 +3177,6 @@ void BuildingTypeClass::Init_Heap(void)
  *=============================================================================================*/
 void BuildingTypeClass::One_Time(void)
 {
-	static const struct {
-		StructType	Class;			// Building class number.
-		BStateType	Stage;			// Animation sequence to assign animation range to.
-		int			Start;			// Starting frame number.
-		int			Length;			// Number of frames (-1 means use all frames).
-		int			Rate;				// Rate of animation.
-	} _anims[] = {
-		{STRUCT_CHRONOSPHERE,	BSTATE_IDLE,	0, 4, 3},	// idling
-		{STRUCT_CHRONOSPHERE,	BSTATE_ACTIVE,	4, 16,3},	// charging up and activating
-		{STRUCT_MSLO,				BSTATE_IDLE,	0, 0, 0},
-		{STRUCT_MSLO,				BSTATE_ACTIVE,	0, 5, 2},	// door opening
-		{STRUCT_MSLO,				BSTATE_AUX1,	4, 1, 0},	// door held open
-		{STRUCT_MSLO,				BSTATE_AUX2,	5, 3, 2},	// door closing
-		{STRUCT_CAMOPILLBOX,		BSTATE_ACTIVE,	0,	2, 1},
-		{STRUCT_GAP,				BSTATE_IDLE,	0,	32,3},
-		{STRUCT_AIRSTRIP,			BSTATE_IDLE,	0,	0,	0},
-		{STRUCT_AIRSTRIP,			BSTATE_AUX1,	0,	8,	3},
-		{STRUCT_BARRACKS,			BSTATE_ACTIVE,	0,	10,3},
-		{STRUCT_BARRACKS,			BSTATE_IDLE,	0,	10,3},
-		{STRUCT_TENT,				BSTATE_ACTIVE,	0,	10,3},
-		{STRUCT_TENT,				BSTATE_IDLE,	0,	10,3},
-#ifdef FIXIT_ANTS
-		{STRUCT_QUEEN,				BSTATE_IDLE,	0,	10,3},
-#endif
-		{STRUCT_CONST,				BSTATE_ACTIVE,	0,	26,3},
-		{STRUCT_FAKECONST,		BSTATE_ACTIVE,	0,	26,3},
-		{STRUCT_HELIPAD,			BSTATE_ACTIVE,	0,	7,	4},
-		{STRUCT_HELIPAD,			BSTATE_IDLE,	0,	0,	0},
-		{STRUCT_HOSPITAL,			BSTATE_IDLE,	0,	4,	3},
-		{STRUCT_PUMP,				BSTATE_IDLE,	0,	14,4},
-		{STRUCT_REPAIR,			BSTATE_ACTIVE,	0,	7,	2},
-		{STRUCT_REPAIR,			BSTATE_IDLE,	0,	1,	0},
-		{STRUCT_V20,				BSTATE_IDLE,	0,	3,	3},
-		{STRUCT_V21,				BSTATE_IDLE,	0,	3,	3},
-		{STRUCT_V22,				BSTATE_IDLE,	0,	3,	3},
-		{STRUCT_V23,				BSTATE_IDLE,	0,	3,	3},
-		{STRUCT_WEAP,				BSTATE_ACTIVE,	0,	1,	0},
-		{STRUCT_WEAP,				BSTATE_IDLE,	0,	1,	0},
-		{STRUCT_FAKEWEAP,			BSTATE_ACTIVE,	0,	1,	0},
-		{STRUCT_FAKEWEAP,			BSTATE_IDLE,	0,	1,	0},
-		{STRUCT_IRON_CURTAIN,	BSTATE_ACTIVE,	0,	11,3},
-		{STRUCT_TESLA,				BSTATE_ACTIVE,	0,	10,2},
-		{STRUCT_AIRSTRIP,			BSTATE_IDLE,	0,	8,	3}
-	};
-
 	for (int sindex = 0; sindex < BuildingTypes.Count(); sindex++) {
 		char	fullname[_MAX_FNAME+_MAX_EXT];
 		char	buffer[_MAX_FNAME];
@@ -3236,13 +3238,6 @@ void BuildingTypeClass::One_Time(void)
 	WarFactoryOverlay = MFCD::Retrieve(fullname);
 	_makepath(fullname, NULL, NULL, (char const *)"LITNING",".SHP");
 	LightningShapes = MFCD::Retrieve(fullname);
-
-	/*
-	**	Install all the special animation sequences for the different building types.
-	*/
-	for (unsigned index = 0; index < (sizeof(_anims) / sizeof(_anims[0])); index++) {
-		As_Reference(_anims[index].Class).Init_Anim(_anims[index].Stage, _anims[index].Start, _anims[index].Length, _anims[index].Rate);
-	}
 
 }
 
@@ -3986,6 +3981,7 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		IsPowered = ini.Get_Bool(Name(), "Powered", IsPowered);
 		IsBibbed = ini.Get_Bool(Name(), "Bib", IsBibbed);
 		IsStorage = ini.Get_Bool(Name(), "StorageSilo", IsStorage);
+		IsGapper = ini.Get_Bool(Name(), "Gapper", IsGapper);
 		IsUnsellable = ini.Get_Bool(Name(), "Unsellable", IsUnsellable);
 		IsBase = ini.Get_Bool(Name(), "BaseNormal", IsBase);
 		Power = ini.Get_Int(Name(), "Power", (Power > 0) ? Power : -Drain);
@@ -3996,6 +3992,123 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		ToBuild = ini.Get_RTTIType(Name(), "Build", ToBuild);
 		ExitCoordinate = ini.Get_Coord(Name(), "ExitCoord", ExitCoordinate);
 		StartFace = (DirType)(ini.Get_Int(Name(), "InitialD", StartFace));
+		char delim[] = ",";
+		for (int index = 0; index < BSTATE_COUNT; index++)
+		{
+			if (ini.Get_String(Name(), AnimFields[index], "", buffer, sizeof(buffer))) {
+				char* token = strtok(buffer, delim);
+				if (token != NULL && strlen(token) > 2) {
+					//Anims[BSTATE_IDLE].ImagePoolIndex = AppendImage(token, NULL);
+					if ((token = strtok(NULL, delim)) != NULL)
+						Anims[index].Start = atoi(token);
+				}
+				else {
+					//Anims[BSTATE_IDLE].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+					Anims[index].Start = atoi(token);
+				}
+				if ((token = strtok(NULL, delim)) != NULL)
+					Anims[index].Count = atoi(token);
+				if ((token = strtok(NULL, delim)) != NULL)
+					Anims[index].Rate = atoi(token);
+			}
+		}/*
+		if (ini.Get_String(Name(), AnimControl_IDLE, "", buffer, sizeof(buffer))) {	
+			char* token = strtok(buffer, delim);
+			if (token != NULL && strlen(token) > 2) {
+				//Anims[BSTATE_IDLE].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, delim)) != NULL)
+					Anims[BSTATE_IDLE].Start = atoi(token);
+			}
+			else {
+				//Anims[BSTATE_IDLE].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_IDLE].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, delim)) != NULL)
+				Anims[BSTATE_IDLE].Count = atoi(token);
+			if ((token = strtok(NULL, delim)) != NULL)
+				Anims[BSTATE_IDLE].Rate = atoi(token);
+		}
+		if (ini.Get_String(Name(), AnimControl_CONST, "", buffer, sizeof(buffer))) {
+			char* token = strtok(buffer, delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_CONSTRUCTION].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, delim)) != NULL)
+					Anims[BSTATE_CONSTRUCTION].Start = atoi(token);
+			}
+			else {
+				//Anims[BSTATE_CONSTRUCTION].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_CONSTRUCTION].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, delim)) != NULL)
+				Anims[BSTATE_CONSTRUCTION].Count = atoi(token);
+			if ((token = strtok(NULL, delim)) != NULL)
+				Anims[BSTATE_CONSTRUCTION].Rate = atoi(token);
+		}
+		if (ini.Get_String(Name(), "AnimACTIVE", "", buffer, sizeof(buffer))) {
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_ACTIVE].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_ACTIVE].Start = atoi(token);
+			}
+			else {
+				//Anims[BSTATE_ACTIVE].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_ACTIVE].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_ACTIVE].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_ACTIVE].Rate = atoi(token);
+		}
+		if (ini.Get_String(Name(), "AnimFULL", "", buffer, sizeof(buffer))) {
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_FULL].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_FULL].Start = atoi(token);
+			}
+			else {
+				//Anims[BSTATE_FULL].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_FULL].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_FULL].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_FULL].Rate = atoi(token);
+		}
+		if (ini.Get_String(Name(), "AnimAUX1", "", buffer, sizeof(buffer))) {
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_AUX1].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_AUX1].Start = atoi(token);
+			}
+			else {
+				//Anims[BSTATE_AUX1].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_AUX1].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_AUX1].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_AUX1].Rate = atoi(token);
+		}
+		if (ini.Get_String(Name(), "AnimAUX2", "", buffer, sizeof(buffer))) {
+			char delim = ',';
+			char* token = strtok(buffer, &delim);
+			if (strlen(token) > 2) {
+				//Anims[BSTATE_AUX2].ImagePoolIndex = AppendImage(token, NULL);
+				if ((token = strtok(NULL, &delim)) != NULL)
+					Anims[BSTATE_AUX2].Start = atoi(token);
+			}
+			else {
+				//Anims[BSTATE_AUX2].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
+				Anims[BSTATE_AUX2].Start = atoi(token);
+			}
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_AUX2].Count = atoi(token);
+			if ((token = strtok(NULL, &delim)) != NULL)
+				Anims[BSTATE_AUX2].Rate = atoi(token);
+		}*/
 		if (ini.Get_String(Name(), "Size", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building (%d,%d) has Size : %s \n", Width(), Height(), buffer);
 			WWDebugString(message);

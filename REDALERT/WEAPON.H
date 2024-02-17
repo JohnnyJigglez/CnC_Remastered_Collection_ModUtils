@@ -188,6 +188,14 @@ class WeaponTypeClass
 		**	Override The lightning shape graphics with the projectile graphics
 		*/
 		bool OverrideZap;
+
+		/*
+		** DPS against each ArmorType for this weapon
+		*/
+		int DPS[ARMOR_COUNT] = { 0,0,0,0,0 };
+
+	private:
+		void CalculateDPS(void);
 };
 
 

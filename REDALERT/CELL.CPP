@@ -2349,10 +2349,10 @@ bool CellClass::Goodie_Check(FootClass * object)
 			**	Possibly force it to be an MCV if there is
 			**	sufficient money and no buildings left.
 			*/
-			if (	object->House->BScan == 0 &&
+			if (	!object->House->Has_Buildings() &&
 					object->House->Available_Money() > ( (BuildingTypeClass::As_Reference(STRUCT_REFINERY).Cost + BuildingTypeClass::As_Reference(STRUCT_POWER).Cost) * object->House->CostBias) &&
 					Session.Options.Bases &&
-					!(object->House->UScan & UNITF_MCV)) {
+					!object->House->UScan[UNIT_MCV]) {
 				powerup = CRATE_UNIT;
 				force_mcv = true;
 			}
@@ -2417,6 +2417,23 @@ bool CellClass::Goodie_Check(FootClass * object)
 				TimeQuake = true;
 				break;
 
+			case CRATE_ION_BLAST:
+				new AnimClass(ANIM_CRATE_EARTH, Cell_Coord());
+				if (object->House->SuperWeapon[SPC_ION_CANNON].Enable(true)) {
+					if (Session.Type == GAME_GLYPHX_MULTIPLAYER) {
+						if (object->House->IsHuman) {
+							Sidebar_Glyphx_Add(RTTI_SPECIAL, SPC_ION_CANNON, object->House);
+						}
+					}
+					else {
+						if (object->IsOwnedByPlayer) {
+							Map.Add(RTTI_SPECIAL, SPC_ION_CANNON);
+							Map.Column[1].Flag_To_Redraw();
+						}
+					}
+				}
+				break;
+
 			/*
 			**	Give the player money.
 			*/
@@ -2476,7 +2493,7 @@ crate_money:
 				**	If the player has a base and a refinery, but no harvester, then give him
 				**	a free one.
 				*/
-				if (utp == NULL && (object->House->BScan & STRUCTF_REFINERY) && !(object->House->UScan & UNITF_HARVESTER)) {
+				if (utp == NULL && object->House->BScan[STRUCT_REFINERY] && !object->House->UScan[UNIT_HARVESTER]) {
 					utp = &UnitTypeClass::As_Reference(UNIT_HARVESTER);
 				}
 

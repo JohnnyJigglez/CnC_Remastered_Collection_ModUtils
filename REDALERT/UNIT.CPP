@@ -986,8 +986,8 @@ bool UnitClass::Unlimbo(COORDINATE coord, DirType dir)
 		**	Ensure that the owning house knows about the
 		**	new object.
 		*/
-		House->UScan |= (1L << Class->Type);
-		House->ActiveUScan |= (1L << Class->Type);
+		House->UScan.Set(Class->ID);
+		House->ActiveUScan.Set(Class->ID);
 
 		/*
 		**	If it starts off the edge of the map, then it already starts cloaked.
@@ -2366,30 +2366,48 @@ bool UnitClass::Goto_Tiberium(int rad)
 					}
 
 					cell = center;
+					int bestdistance = MAP_CELL_H*512;
 					tiberium = Tiberium_Check(cell, corners[0][0], corners[0][1]);
+					int distance = Lepton_Distance(Cell_Coord(cell), this->House->Center);
 					if (tiberium > besttiberium) {
 						bestcell = cell;
 						besttiberium = tiberium;
+						bestdistance = distance;
 					}
 
 					cell = center;
 					tiberium = Tiberium_Check(cell, corners[1][0], corners[1][1]);
-					if (tiberium > besttiberium) {
+					distance = Lepton_Distance(Cell_Coord(cell), this->House->Center);
+					if (tiberium > 0 && (distance < bestdistance)) {
 						bestcell = cell;
+						bestdistance = distance;
+					}
+					else if (tiberium > besttiberium) {
+						//bestcell = cell;
 						besttiberium = tiberium;
 					}
 
 					cell = center;
 					tiberium = Tiberium_Check(cell, corners[2][0], corners[2][1]);
-					if (tiberium > besttiberium) {
+					distance = Lepton_Distance(Cell_Coord(cell), this->House->Center);
+					if (tiberium > 0 && (distance < bestdistance)) {
 						bestcell = cell;
+						bestdistance = distance;
+					}
+					else if (tiberium > besttiberium) {
+						//bestcell = cell;
 						besttiberium = tiberium;
 					}
 
 					cell = center;
 					tiberium = Tiberium_Check(cell, corners[3][0], corners[3][1]);
-					if (tiberium > besttiberium) {
+					distance = Lepton_Distance(Cell_Coord(cell), this->House->Center);
+					if (tiberium > 0 && (distance < bestdistance)) {
 						bestcell = cell;
+						bestdistance = distance;
+					}
+					if (tiberium > besttiberium) {
+						//bestcell = cell;
 						besttiberium = tiberium;
 					}
 				}
@@ -2934,7 +2952,7 @@ int UnitClass::Mission_Harvest(void)
 	/*
 	**	If there are no more refineries, then drop into guard mode.
 	*/
-	if (!(House->ActiveBScan & STRUCTF_REFINERY)) {
+	if (!House->ActiveBScan[STRUCT_REFINERY] && !Rule.HarvReturnsHome) {
 		Assign_Mission(MISSION_GUARD);
 		return(1);
 	}
@@ -3058,6 +3076,9 @@ int UnitClass::Mission_Harvest(void)
 					if (nearest != NULL) {
 						Assign_Destination(::As_Target(Nearby_Location(nearest)));
 					}
+					else if(Rule.HarvReturnsHome) {
+						Assign_Destination(::As_Target(House->Center));
+					}
 				}
 			}
 			break;
@@ -3077,7 +3098,7 @@ int UnitClass::Mission_Harvest(void)
 		*/
 		case GOINGTOIDLE:
 			if (IsUseless) {
-				if (House->ActiveBScan & STRUCTF_REPAIR) {
+				if (House->ActiveBScan[STRUCT_REPAIR]) {
 					Assign_Mission(MISSION_REPAIR);
 				} else {
 					Assign_Mission(MISSION_HUNT);
@@ -4199,7 +4220,7 @@ int UnitClass::Mission_Repair(void)
 	**	into idle state.
 	*/
 	if (nearest == NULL) {
-		if (!(House->ActiveBScan & STRUCTF_REFINERY)) {
+		if (!House->ActiveBScan[STRUCT_REFINERY]) {
 			Enter_Idle_Mode();
 		}
 	} else {

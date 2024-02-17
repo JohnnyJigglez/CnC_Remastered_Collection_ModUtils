@@ -58,29 +58,93 @@ class DifficultyClass
 };
 
 class RulesClass {
-	public:
+public:
 
-		RulesClass(void);
+	RulesClass(void);
 
-		bool Process(CCINIClass & file);
-		bool General(CCINIClass & ini);
-		bool MPlayer(CCINIClass & ini);
-		bool Recharge(CCINIClass & ini);
-		bool Heap_Maximums(CCINIClass & ini);
-		bool AI(CCINIClass & ini);
-		bool Powerups(CCINIClass & ini);
-		bool Land_Types(CCINIClass & ini);
-		bool Themes(CCINIClass & ini);
-		bool IQ(CCINIClass & ini);
-		bool Objects(CCINIClass & ini);
-		bool Difficulty(CCINIClass & ini);
-		static void Dump();
+	bool Process(CCINIClass& file);
+	bool General(CCINIClass& ini);
+	bool MPlayer(CCINIClass& ini);
+	bool Recharge(CCINIClass& ini);
+	bool Heap_Maximums(CCINIClass& ini);
+	bool AI(CCINIClass& ini);
+	bool Powerups(CCINIClass& ini);
+	bool Land_Types(CCINIClass& ini);
+	bool Themes(CCINIClass& ini);
+	bool IQ(CCINIClass& ini);
+	bool Objects(CCINIClass& ini);
+	bool Difficulty(CCINIClass& ini);
+	bool GeneralLast(CCINIClass& ini);
+	static void Dump();
 
+	template<typename T>
+	struct RulesField {
+		T var;
+		char str[32] = "\0";
+		
+		void operator=(T newvar) {
+			var = newvar;
+		}
+
+		operator T() {
+			return var;
+		}
+
+		operator char*() const {
+			return const_cast<char*>(str);
+		}
+	};
+
+		InfantryType AParaTrooperTypes[5] = { INFANTRY_E1,INFANTRY_E1,INFANTRY_E1,INFANTRY_E1,INFANTRY_E1 };
+		InfantryType SParaTrooperTypes[5] = { INFANTRY_E1,INFANTRY_E1,INFANTRY_E1,INFANTRY_E1,INFANTRY_E1 };
+		AircraftType AParabomber = AIRCRAFT_BADGER;
+		AircraftType SParabomber = AIRCRAFT_BADGER;
+		AircraftType AParadropper = AIRCRAFT_BADGER;
+		AircraftType SParadropper = AIRCRAFT_BADGER;
+		AircraftType ASpyplane = AIRCRAFT_U2;
+		AircraftType SSpyplane = AIRCRAFT_U2;
+		AircraftType AAirStriker = AIRCRAFT_BADGER;
+		AircraftType SAirStriker = AIRCRAFT_BADGER;
+
+		struct SuperWeaponPrerequisite {
+			RTTIType mytype = RTTI_NONE;
+			short myid = -1;
+		};
+
+		struct FactionalSuperWeaponPrerequisites {
+			SuperWeaponPrerequisite allies, soviets;
+		};
+
+		struct SuperWeaponRule {
+			FactionalSuperWeaponPrerequisites prereqs;
+			RulesField<FactionalSuperWeaponPrerequisites*> reqField = { &prereqs,"\0"};
+			char VoxRecharge[32] = "\0";
+			RulesField<char*> voxreadyField = {VoxRecharge,"\0"};
+			char VoxCharging[32] = "\0";
+			RulesField<char*> voxchargingField = { VoxCharging,"\0" };
+			char VoxImpatient[32] = "\0";
+			RulesField<char*> voximpatientField = { VoxImpatient,"\0" };
+			char VoxSuspend[32] = "\0";
+			RulesField<char*> voxsuspendField = { VoxSuspend,"\0" };
+			AircraftType aircraft = AIRCRAFT_NONE;
+			RulesField<AircraftType*> aircraftField = { &aircraft,"\0" };
+		};
+
+		SuperWeaponRule SuperWeaponRules[SPC_COUNT];
+
+		//RulesField<BinaryPrerequisite&> NukePrerequisite = { SuperWeaponRules[SPC_NUCLEAR_BOMB].prereqs,"NukeRequires" };
+		//RulesField<BinaryPrerequisite&> NukePrerequisite = { SuperWeaponRules[SPC_],"NukeRequires" };
+		/*field<SuperWeaponRule> SuperWeaponRules[SPC_NUCLEAR_BOMB] = {{RTTI_BUILDINGTYPE,RTTI_BUILDINGTYPE,STRUCT_MSLO,STRUCT_MSLO}, "NukeRequires"};
+		field<SuperWeaponRule> IonRequirements = { {RTTI_BUILDINGTYPE,RTTI_BUILDINGTYPE,STRUCT_NONE,STRUCT_NONE}, "IonRequires" };
+		field<SuperWeaponRule> NukeRequirements = { {RTTI_BUILDINGTYPE,RTTI_BUILDINGTYPE,STRUCT_AIRSTRIP,STRUCT_NONE}, "ParabombRequires" };
+		field<SuperWeaponRule> NukeRequirements = { {RTTI_BUILDINGTYPE,RTTI_BUILDINGTYPE,STRUCT_AIRSTRIP,STRUCT_NONE}, "ParabombRequires" };*/
 		/*
 		**	This specifies the turbo boost speed for missiles when they are fired upon
 		**	aircraft and the weapon is specified as having a turbo boost bonus.
 		*/
 		fixed TurboBoost;
+
+		bool HarvReturnsHome;
 
 		/*
 		**	This specifies the average number of minutes between each computer attack.
@@ -829,21 +893,6 @@ class RulesClass {
 		**	delay to get the effective build delay.
 		*/
 		int FactoryLimit;
-
-		/*
-		**	Weapon type array pointer should go here. Dynamic type.
-		*/
-
-
-		/*
-		**	Warhead type class array pointer should go here. Dynamic type.
-		*/
-
-
-		/*
-		**	Ground type and speed affect data should go here.
-		*/
-
 
 		/*
 		**	This is the delay between the time a C4 bomb is planted and the time it will

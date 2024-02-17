@@ -569,3 +569,4 @@
 #define TXT_THEME_WASTELND       	553	// Chaos
 #define TXT_CARRIER              	554	// H‚liport Mobile
 #define TXT_INSUFFICIENT_FUNDS      555
+#define TXT_ION_CANNON              556

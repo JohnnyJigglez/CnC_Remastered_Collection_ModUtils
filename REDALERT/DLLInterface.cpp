@@ -231,6 +231,7 @@ class DLLExportClass {
 
 		static void On_Sound_Effect(const HouseClass* player_ptr, int sound_effect_index, const char* extension, int variation, COORDINATE coord,const char * name=NULL);
 		static void On_Speech(const HouseClass* player_ptr, int speech_index);
+		static void On_Speech(const HouseClass* player_ptr, char const * speechininame);
 		static void On_Message(const HouseClass* player_ptr, const char* message, float timeout_seconds, EventCallbackMessageEnum message_type, int64 message_id);
 		static void On_Update_Map_Cell(int cell_x, int cell_y, const char* template_type_name);
 		static void On_Special_Weapon_Targetting(const HouseClass* player_ptr, SpecialWeaponType weapon_type);
@@ -545,6 +546,17 @@ void On_Speech(int speech_index, HouseClass *house)
 		DLLExportClass::On_Speech(house, speech_index);
 	}
 }
+void On_Speech(char const * soundininame, HouseClass* house)
+{
+	if (house == NULL) {
+		DLLExportClass::On_Speech(PlayerPtr, soundininame);
+	}
+	else
+	{
+		DLLExportClass::On_Speech(house, soundininame);
+	}
+}
+
 
 
 void On_Message(const char* message, float timeout_seconds, int64 id)
@@ -2493,6 +2505,41 @@ void DLLExportClass::On_Speech(const HouseClass* player_ptr, int speech_index)
 	{
 		strncpy(new_event.Speech.SpeechName, "BAD_SPEECH_INDEX", 16);
 	}
+
+	EventCallback(new_event);
+}
+
+/**************************************************************************************************
+* DLLExportClass::On_Speech -- Called when C&C wants to play a speech line
+*
+* In:
+*
+* Out:
+*
+*
+*
+* History: 2/20/2019 2:39PM - ST
+**************************************************************************************************/
+void DLLExportClass::On_Speech(const HouseClass* player_ptr, char const * soundininame)
+{
+	// player_ptr could be NULL
+
+	if (EventCallback == NULL || soundininame == NULL) {
+		return;
+	}
+	
+
+	EventCallbackStruct new_event;
+	new_event.EventType = CALLBACK_EVENT_SPEECH;
+	new_event.Speech.SpeechIndex = 0;
+
+	new_event.GlyphXPlayerID = 0;
+	if (player_ptr != NULL)
+	{
+		new_event.GlyphXPlayerID = Get_GlyphX_Player_ID(player_ptr);
+	}
+
+	strncpy(new_event.Speech.SpeechName, soundininame, 16);
 
 	EventCallback(new_event);
 }
@@ -4457,8 +4504,8 @@ bool DLLExportClass::Get_Sidebar_State(uint64 player_id, unsigned char *buffer_i
 		sidebar->PowerProduced = PlayerPtr->Power;
 		sidebar->PowerDrained = PlayerPtr->Drain;
 
-		sidebar->RepairBtnEnabled = PlayerPtr->BScan > 0;
-		sidebar->SellBtnEnabled = PlayerPtr->BScan > 0;
+		sidebar->RepairBtnEnabled = PlayerPtr->Has_Buildings();
+		sidebar->SellBtnEnabled = PlayerPtr->Has_Buildings();
 		sidebar->RadarMapActive = PlayerPtr->Radar == RADAR_ON;
 
 
@@ -4965,6 +5012,20 @@ void DLLExportClass::Convert_Special_Weapon_Type(SpecialWeaponType weapon_type, 
 			strncpy(weapon_name, "SW_GPS", 16);
 		}
 		break;
+	case SPC_ION_CANNON:
+		dll_weapon_type = SW_ION_CANNON;
+		if (weapon_name != NULL)
+		{
+			strncpy(weapon_name, "SW_Ion", 16);
+		}
+		break;
+	case SPC_NAPALM_STRIKE:
+		dll_weapon_type = SW_AIR_STRIKE;
+		if (weapon_name != NULL)
+		{
+			strncpy(weapon_name, "SW_AirStrike", 16);
+		}
+		break;
 	case SPC_CHRONO2:
 		dll_weapon_type = SW_CHRONOSPHERE_DESTINATION;
 		if (weapon_name != NULL)
@@ -4996,6 +5057,8 @@ void DLLExportClass::Fill_Sidebar_Entry_From_Special_Weapon(CNCSidebarEntryStruc
 	case SPC_PARA_INFANTRY:
 	case SPC_SPY_MISSION:
 	case SPC_IRON_CURTAIN:
+	case SPC_ION_CANNON:
+	case SPC_NAPALM_STRIKE:
 	case SPC_GPS:
 	case SPC_CHRONO2:
 		Convert_Special_Weapon_Type(weapon_type, sidebar_entry_out.SuperWeaponType, sidebar_entry_out.AssetName);

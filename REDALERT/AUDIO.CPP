@@ -294,6 +294,7 @@ struct SoundEffectNameStruct {
 extern void On_Sound_Effect(int sound_index, int variation, COORDINATE coord, int house,char const * name=NULL);
 // extern void On_Speech(int speech_index); MBL 02.06.2020
 extern void On_Speech(int speech_index, HouseClass *house);
+extern void On_Speech(char const * soundininame, HouseClass* house);
 extern void On_Ping(const HouseClass* player_ptr, COORDINATE coord);
 
 
@@ -733,6 +734,34 @@ void Speak(VoxType voice, HouseClass *house, COORDINATE coord)
 		Speak_AI();
 	}
 #endif
+}
+
+/***********************************************************************************************
+ * Speak -- Computer speaks to the player.                                                     *
+ *                                                                                             *
+ *    This routine is used to have the game computer (EVA) speak to the player.                *
+ *                                                                                             *
+ * INPUT:   voice -- The voice number to speak (see defines.h).                                *
+ *                                                                                             *
+ * OUTPUT:  Returns with the handle of the playing speech (-1 if no voice started).            *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   11/12/1994 JLB : Created.                                                                 *
+ *=============================================================================================*/
+void Speak(char const * soundininame, HouseClass* house, COORDINATE coord)
+{
+	// MBL 06.17.2019
+	if (soundininame == NULL)
+	{
+		return;
+	}
+
+	On_Speech(soundininame, house);
+	if (coord) {
+		On_Ping(house, coord);
+	}
 }
 
 

@@ -281,11 +281,44 @@ ExplosionSet4Threshold(90),
 ExplosionSet5Threshold(130),
 ExplosionSet3Threshold(150),
 InfantryTypeMax(50),
-AircraftTypeMax(50)
+AircraftTypeMax(50),
+HarvReturnsHome(false)
 {
 	strcpy(ExplodingEntityWarheadName, WarheadTypeName[WARHEAD_HE]);
 	strcpy(FlamingEntityWarheadName, WarheadTypeName[WARHEAD_FIRE]);
-	//strcpy(NukeWarheadName, WarheadTypeName[WARHEAD_NUKE]);
+	SuperWeaponRules[SPC_NUCLEAR_BOMB].prereqs.allies.mytype = RTTI_BUILDINGTYPE;
+	SuperWeaponRules[SPC_NUCLEAR_BOMB].prereqs.allies.myid = STRUCT_MSLO;
+	SuperWeaponRules[SPC_NUCLEAR_BOMB].prereqs.soviets.mytype = RTTI_BUILDINGTYPE;
+	SuperWeaponRules[SPC_NUCLEAR_BOMB].prereqs.soviets.myid = STRUCT_MSLO;
+	SuperWeaponRules[SPC_GPS].prereqs.allies.mytype = RTTI_BUILDINGTYPE;
+	SuperWeaponRules[SPC_GPS].prereqs.allies.myid = STRUCT_ADVANCED_TECH;
+	SuperWeaponRules[SPC_CHRONOSPHERE].prereqs.allies.mytype = RTTI_BUILDINGTYPE;
+	SuperWeaponRules[SPC_CHRONOSPHERE].prereqs.allies.myid = STRUCT_CHRONOSPHERE;
+	SuperWeaponRules[SPC_IRON_CURTAIN].prereqs.soviets.mytype = RTTI_BUILDINGTYPE;
+	SuperWeaponRules[SPC_IRON_CURTAIN].prereqs.soviets.myid = STRUCT_IRON_CURTAIN;
+	//SuperWeaponRules[SPC_PARA_BOMB].alliedtype = RTTI_BUILDINGTYPE;
+	//SuperWeaponRules[SPC_PARA_BOMB].alliedid = STRUCT_CHRONOSPHERE;
+	SuperWeaponRules[SPC_PARA_INFANTRY].prereqs.soviets.mytype = RTTI_BUILDINGTYPE;
+	SuperWeaponRules[SPC_PARA_INFANTRY].prereqs.soviets.myid = STRUCT_AIRSTRIP;
+	SuperWeaponRules[SPC_SPY_MISSION].prereqs.soviets.mytype = RTTI_BUILDINGTYPE;
+	SuperWeaponRules[SPC_SPY_MISSION].prereqs.soviets.myid = STRUCT_AIRSTRIP;
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].VoxCharging, "IONCHRG1");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].VoxRecharge, "IONREDY1");
+	strcpy(SuperWeaponRules[SPC_NAPALM_STRIKE].VoxRecharge, "AIRREDY1");
+	strcpy(SuperWeaponRules[SPC_NUCLEAR_BOMB].reqField.str, "NukeRequires");
+	strcpy(SuperWeaponRules[SPC_GPS].reqField.str, "GPSRequires");
+	strcpy(SuperWeaponRules[SPC_CHRONOSPHERE].reqField.str, "ChronoRequires");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].reqField.str, "IonRequires");
+	strcpy(SuperWeaponRules[SPC_NAPALM_STRIKE].reqField.str, "NapalmRequires");
+	strcpy(SuperWeaponRules[SPC_PARA_BOMB].reqField.str, "ParabombRequires");
+	strcpy(SuperWeaponRules[SPC_PARA_INFANTRY].reqField.str, "ParadropRequires");
+	strcpy(SuperWeaponRules[SPC_SONAR_PULSE].reqField.str, "SonarRequires");
+	strcpy(SuperWeaponRules[SPC_IRON_CURTAIN].reqField.str, "IronRequires");
+	strcpy(SuperWeaponRules[SPC_SPY_MISSION].reqField.str, "SpyplaneRequires");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].voxchargingField.str, "IonChargingSound");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].voxreadyField.str, "IonReadySound");
+	strcpy(SuperWeaponRules[SPC_NAPALM_STRIKE].voxreadyField.str, "NapalmReadySound");
+	
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 	NewUnitsEnabled = SecretUnitsEnabled = 0;
 	MTankDistance = 30;
@@ -370,7 +403,7 @@ bool RulesClass::Process(CCINIClass & ini)
 	IQ(ini);
 	Objects(ini);
 	Difficulty(ini);
-
+	GeneralLast(ini);
 	BEnd(BENCH_RULES);
 
 	return(true);
@@ -474,6 +507,7 @@ bool RulesClass::General(CCINIClass & ini)
 		IsScatter = ini.Get_Bool(GENERAL, "PlayerScatter", IsScatter);
 		IsSmartDefense = ini.Get_Bool(GENERAL, "PlayerReturnFire", IsSmartDefense);
 		IsAutoCrush = ini.Get_Bool(GENERAL, "PlayerAutoCrush", IsAutoCrush);
+		HarvReturnsHome = ini.Get_Bool(GENERAL, "HarvesterReturns", HarvReturnsHome);
 		IsNamed = ini.Get_Bool(GENERAL, "NamedCivilians", IsNamed);
 		IsTGrowth = ini.Get_Bool(GENERAL, "OreGrows", IsTGrowth);
 		IsTSpread = ini.Get_Bool(GENERAL, "OreSpreads", IsTSpread);
@@ -559,6 +593,165 @@ bool RulesClass::General(CCINIClass & ini)
 		//ChronalVortex.Set_Speed ( ini.Get_Int (GENERAL, "VortexSpeed", ChronalVortex.Get_Speed() ) );
 		//ChronalVortex.Set_Damage ( ini.Get_Int (GENERAL, "VortexDamage", ChronalVortex.Get_Damage() ) );
 
+		return(true);
+	}
+	return(false);
+}
+
+/***********************************************************************************************
+ * RulesClass::GeneralLast -- Process the general main game rules                              *
+ *                                                                                             *
+ *    This fetches the control constants uses for regular game processing. Any game behavior   *
+ *    controlling values that don't properly fit in any of the other catagories will be        *
+ *    stored here.                                                                             *
+ *                                                                                             *
+ * INPUT:   ini   -- Reference to the database to fetch the values from.                       *
+ *                                                                                             *
+ * OUTPUT:  bool; Was the general section found and processed?                                 *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   02/16/2024 JJ : Created.                                                                 *
+ *=============================================================================================*/
+bool RulesClass::GeneralLast(CCINIClass& ini)
+{
+	static char const* const GENERAL = "General";
+	char buffer[48];
+	/*static auto handlesuperreq = [](SuperWeaponRule& rule, char* inboundstring) {
+		char* token1 = strtok(inboundstring, ",");
+		char* token2 = strtok(NULL, ",");
+		short aID = rule.alliedid;
+		RTTIType aType = rule.alliedtype;
+		short sID = rule.sovietid;
+		RTTIType sType = rule.soviettype;
+		if (token1 == NULL && sizeof(buffer) > 2) {
+			strcpy(token1, inboundstring);
+		}
+		if (strcmpi(token1, "<none>") != 0)
+		{
+			AbstractTypeClass* allied = AbstractTypeClass::As_Pointer(token1);
+			if (allied != NULL) {
+				aID = allied->ID;
+				aType = allied->RTTI;
+				if (token2 == NULL) {//is this a single value
+					sID = aID;
+					sType = aType;
+				}
+			}
+			else 
+			{
+				if (token2 == NULL) {//is this a single value
+					sID = aID;
+					sType = aType;
+				}
+			}
+		}
+		if ((token2 != NULL) && strcmpi(token2, "<none>") != 0)
+		{
+			AbstractTypeClass* soviet = AbstractTypeClass::As_Pointer(token2);
+			if (soviet != NULL) {
+				sID = soviet->ID;
+				sType = soviet->RTTI;
+			}
+		}
+		rule.alliedid = aID;
+		rule.sovietid = sID;
+		rule.alliedtype = aType;
+		rule.soviettype = sType;
+	};*/
+	if (ini.Is_Present(GENERAL)) {
+		for (int index = 0; index < SPC_COUNT; index++) {
+
+			if (ini.Get_String(GENERAL, SuperWeaponRules[index].reqField, "", buffer, sizeof(buffer)) > 2)
+			{
+				char* token1 = strtok(buffer, ",");
+				char* token2 = strtok(NULL, ",");
+				FactionalSuperWeaponPrerequisites * parsed = SuperWeaponRules[index].reqField.var;
+				//parse = BinaryPrerequisite(SuperWeaponRules[index].reqField);
+				//short sID = BinaryPrerequisite(SuperWeaponRules[index].reqField);
+				//RTTIType sType = BinaryPrerequisite(SuperWeaponRules[index].reqField);
+				if (token1 == NULL && sizeof(buffer) > 2) {
+					strcpy(token1, buffer);
+				}
+				if (strcmpi(token1, "<none>") != 0)
+				{
+					AbstractTypeClass* allied = AbstractTypeClass::As_Pointer(token1);
+					if (allied != NULL) {
+						parsed->allies.myid = allied->ID;
+						parsed->allies.mytype = allied->RTTI;
+						if (token2 == NULL) {//is this a single value
+							parsed->soviets = parsed->allies;
+						}
+					}
+					else
+					{
+						if (token2 == NULL) {//is this a single value
+							parsed->soviets = parsed->allies;
+						}
+					}
+				}
+				if ((token2 != NULL) && strcmpi(token2, "<none>") != 0)
+				{
+					AbstractTypeClass* soviet = AbstractTypeClass::As_Pointer(token2);
+					if (soviet != NULL) {
+						parsed->soviets.myid = soviet->ID;
+						parsed->soviets.mytype = soviet->RTTI;
+					}
+				}
+				SuperWeaponRules[index].reqField = parsed;
+				//rule.sovietid = sID;
+			//	rule.alliedtype = aType;
+				//rule.soviettype = sType;
+			}
+			if (ini.Get_String(GENERAL, SuperWeaponRules[index].voxchargingField, SuperWeaponRules[index].VoxCharging, buffer, sizeof(buffer)) > 2)
+				strcpy(SuperWeaponRules[index].VoxCharging, buffer);
+			if (ini.Get_String(GENERAL, SuperWeaponRules[index].voximpatientField, SuperWeaponRules[index].VoxImpatient, buffer, sizeof(buffer)) > 2)
+				strcpy(SuperWeaponRules[index].VoxImpatient, buffer);
+			if (ini.Get_String(GENERAL, SuperWeaponRules[index].voxreadyField, SuperWeaponRules[index].VoxRecharge, buffer, sizeof(buffer)) > 2)
+				strcpy(SuperWeaponRules[index].VoxRecharge, buffer);
+			if (ini.Get_String(GENERAL, SuperWeaponRules[index].voxsuspendField, SuperWeaponRules[index].VoxSuspend, buffer, sizeof(buffer)) > 2)
+				strcpy(SuperWeaponRules[index].VoxSuspend, buffer);
+		}
+		//if (ini.Get_String(GENERAL, "NukeRequires", "", buffer, sizeof(buffer)) > 2)
+		//	handlesuperreq(SuperWeaponRules[SPC_NUCLEAR_BOMB], buffer);
+		/*if (ini.Get_String(GENERAL, NukePrerequisite, "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(NukePrerequisite, buffer);
+		if (ini.Get_String(GENERAL, "ParabombRequires", "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(SuperWeaponRules[SPC_PARA_BOMB], buffer);
+		if (ini.Get_String(GENERAL, "ParadropRequires", "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(SuperWeaponRules[SPC_PARA_INFANTRY], buffer);
+		if (ini.Get_String(GENERAL, "SpyplaneRequires", "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(SuperWeaponRules[SPC_SPY_MISSION], buffer);
+		if (ini.Get_String(GENERAL, "NapalmRequires", "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(SuperWeaponRules[SPC_NAPALM_STRIKE], buffer);
+		if (ini.Get_String(GENERAL, "IonRequires", "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(SuperWeaponRules[SPC_ION_CANNON], buffer);
+		if (ini.Get_String(GENERAL, "ChronoRequires", "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(SuperWeaponRules[SPC_CHRONOSPHERE], buffer);
+		if (ini.Get_String(GENERAL, "IronRequires", "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(SuperWeaponRules[SPC_IRON_CURTAIN], buffer);
+		if (ini.Get_String(GENERAL, "GPSRequires", "", buffer, sizeof(buffer)) > 2)
+			handlesuperreq(SuperWeaponRules[SPC_GPS], buffer);*/
+		/*/if (ini.Get_String(GENERAL, "IonChargingSound", "", buffer, sizeof(buffer)) > 2)
+			strcpy(SuperWeaponRules[SPC_ION_CANNON].VoxCharging, buffer);
+		if (ini.Get_String(GENERAL, "IonImpatientSound", "", buffer, sizeof(buffer)) > 2)
+			strcpy(SuperWeaponRules[SPC_ION_CANNON].VoxImpatient, buffer);
+		if (ini.Get_String(GENERAL, "IonReadySound", "", buffer, sizeof(buffer)) > 2)
+			strcpy(SuperWeaponRules[SPC_ION_CANNON].VoxRecharge, buffer);
+		if (ini.Get_String(GENERAL, "IonSuspendSound", "", buffer, sizeof(buffer)) > 2)
+			strcpy(SuperWeaponRules[SPC_ION_CANNON].VoxSuspend, buffer);
+		if (ini.Get_String(GENERAL, "NapalmReadySound", "", buffer, sizeof(buffer)) > 2)
+			strcpy(SuperWeaponRules[SPC_NAPALM_STRIKE].VoxRecharge, buffer);*/
+		//AParabomber = ini.Get_<decltype(AParabomber.var),AircraftTypeClass>(GENERAL, AParabomber.str, AParabomber);
+		//AParabomber = ini.Get_AircraftType(GENERAL, "ParabomberA", AParabomber);
+		//SParabomber = ini.Get_AircraftType(GENERAL, "ParabomberS", SParabomber);
+		//AParadropper = ini.Get_AircraftType(GENERAL, "ParadropperA", AParadropper);
+		//SParadropper = ini.Get_AircraftType(GENERAL, "ParadropperS", SParadropper);
+		//ASpyplane = ini.Get_AircraftType(GENERAL, "SpyplaneA", ASpyplane);
+		//SSpyplane = ini.Get_AircraftType(GENERAL, "SpyplaneS", SSpyplane);
+		//AAirStriker = ini.Get_AircraftType(GENERAL, "AirStrikerA", AAirStriker);
+		//SAirStriker = ini.Get_AircraftType(GENERAL, "AirStrikerS", SAirStriker);
 		return(true);
 	}
 	return(false);

@@ -209,5 +209,56 @@ int AbstractTypeClass::Get_Ownable(void) const
 	return(HOUSEF_ALLIES | HOUSEF_SOVIET | HOUSEF_OTHERS);
 }
 
+/***********************************************************************************************
+ * AbstractTypeClass::As_Pointer   -- Fetches pointer to the abstract type specified.          *
+ *                                                                                             *
+ *    This routine will fetch a reference to the AbstractTypeClass as indicated by the         *
+ *    building type number specified.                                                          *
+ *                                                                                             *
+ * INPUT:   type  -- The building type number to convert into a AbstractTypeClass reference.   *
+ *                                                                                             *
+ * OUTPUT:  Returns with a reference to the abstract type class as indicated by the            *
+ *          parameter.                                                                         *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   02/13/2024 JJ : Created.                                                                 *
+ *=============================================================================================*/
+AbstractTypeClass* AbstractTypeClass::As_Pointer(char const* name)
+{
+	if (name == NULL) return(NULL);
+
+	static AbstractTypeClass* tc = NULL;
+	
+	for (int index = 0; index < BuildingTypes.Count(); index++) {
+		tc = BuildingTypes.Ptr(index);
+		if (stricmp(tc->Name(), name) == 0)
+			return(tc);
+	}
+	for (int index = 0; index < UnitTypes.Count(); index++) {
+		tc = UnitTypes.Ptr(index);
+		if (stricmp(tc->Name(), name) == 0)
+			return(tc);
+	}
+	for (int index = 0; index < VesselTypes.Count(); index++) {
+		tc = VesselTypes.Ptr(index);
+		if (stricmp(tc->Name(), name) == 0)
+			return(tc);
+	}
+	for (int index = 0; index < InfantryTypes.Count(); index++) {
+		tc = InfantryTypes.Ptr(index);
+		if (stricmp(tc->Name(), name) == 0)
+			return(tc);
+	}
+	for (int index = 0; index < AircraftTypes.Count(); index++) {
+		tc = AircraftTypes.Ptr(index);
+		if (stricmp(tc->Name(), name) == 0)
+			return(tc);
+	}
+	return(NULL);
+}
+
+
 
 

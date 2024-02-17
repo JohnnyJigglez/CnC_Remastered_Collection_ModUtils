@@ -345,7 +345,8 @@ bool TEventClass::operator () (TDEventClass & td, TEventType event, HousesType h
 				//PG_TO_FIX
 				//warning C4293: '<<': shift count negative or too big, undefined behavior
 				//Indeed, STRUCTF_FAKEWEAP and STRUCTF_FAKECONST don't fit in the BScan bit range. ST - 5/9/2019
-				//if (hptr->BScan & (STRUCTF_FAKECONST|STRUCTF_FAKEWEAP)) return(false);
+				//Now they do, ST.   JJ -2/14/2024
+				if (hptr->BScan[STRUCT_FAKECONST] && hptr->BScan[STRUCT_FAKEWEAP]) return(false);
 				break;
 
 			/*
@@ -359,7 +360,7 @@ bool TEventClass::operator () (TDEventClass & td, TEventType event, HousesType h
 			**	Verify that the structure has been built.
 			*/
 			case TEVENT_BUILDING_EXISTS:
-				if ((hptr->ActiveBScan & (1 << Data.Structure)) == 0) return(false);
+				if (!hptr->ActiveBScan[Data.Structure]) return(false);
 //				if (hptr->Get_Quantity(Data.Structure) == 0) return(false);
 				break;
 

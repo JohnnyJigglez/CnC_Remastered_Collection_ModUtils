@@ -6583,7 +6583,6 @@ TechnoTypeClass::TechnoTypeClass(
 	SightRange(0),
 	Cost(0),
 	Level(-1),
-	Prerequisite(STRUCTF_NONE),
 	Risk(0),Reward(0),
 	MaxSpeed(MPH_IMMOBILE),
 	Speed(speed),
@@ -6958,6 +6957,46 @@ static inline int _Scale_To_256(int val)
 	return(val);
 }
 
+/***********************************************************************************************
+ * TechnoTypeClass::CalculateDPS -- Calculates the damage this techo does per second per ore   *
+ * per armortype.                                                                              *                                                                                         *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   2/13/2024 JJ : Created.                                                                   *
+ *=============================================================================================*/
+void TechnoTypeClass::CalculateDPS(void) {
+	if (!HasWeaponEquipped(0)) {
+		for (int index = 0; index < ARMOR_COUNT; index++)
+		{
+			DPS[index] = 0;
+		}
+		return;
+	}
+	for (int index = 0; index < ARMOR_COUNT; index++)
+	{
+		DPS[index] = PrimaryWeapon->DPS[index];
+	}
+	if (SecondaryWeapon != NULL)
+	{
+		for (int index = 0; index < ARMOR_COUNT; index++)
+		{
+			DPS[index] += SecondaryWeapon->DPS[index];
+		}
+	}
+	if (Cost > 0) {
+		for (int index = 0; index < ARMOR_COUNT; index++)
+		{
+			DPS_Ore[index] = round(DPS[index] / Cost);
+		}
+	}
+}
+
 
 /***********************************************************************************************
  * TechnoTypeClass::Read_INI -- Reads the techno type data from the INI database.              *
@@ -7103,6 +7142,7 @@ bool TechnoTypeClass::Read_INI(CCINIClass & ini)
 			MZone = MZONE_WATER;
 		}
 		DoRecoil = ini.Get_Bool(Name(), "Recoils", DoRecoil);
+		CalculateDPS();
 		sprintf(message, "TTC.Read_INI parsed %s.\n", Name());
 		WWDebugString(message);
 		return(true);

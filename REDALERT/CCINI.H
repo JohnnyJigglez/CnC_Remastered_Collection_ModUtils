@@ -42,6 +42,7 @@
 //#include    "PROJECTILE.h"
 //#include    "WEAPON.H"
 class TriggerTypeClass;
+struct bitfield;
 //class WeaponTypeClass; //added this because the compiler was spazzing out?
 //class AnimTypeClass; //added this because the compiler was spazzing out?
 //class WarheadTypeClass;
@@ -61,9 +62,24 @@ public:
 	int Load(Straw& file, bool withdigest);
 	int Save(FileClass& file, bool withdigest) const;
 	int Save(Pipe& pipe, bool withdigest) const;
+	/*template <typename T, class TC>
+	T Get_(char const* section, char const* entry, T defvalue) {
+		char buffer[32];
+		if (Get_String(section, entry, "", buffer, sizeof(buffer)))
+		{
+			if (buffer != NULL && sizeof(buffer) > 2)
+			{
+				TC * ptr = TC::As_Pointer(buffer);
+				if(ptr != NULL)
+					return ptr->Type;
+			}
+		}
+		return defvalue;
+	}*/
 
-	long Get_Buildings(char const* section, char const* entry, long defvalue) const;
+	bitfield Get_Buildings(char const* section, char const* entry, bitfield defvalue) const;
 	UnitType Get_UnitType(char const* section, char const* entry, UnitType defvalue) const;
+	AircraftType Get_AircraftType(char const* section, char const* entry, AircraftType defvalue) const;
 	//AnimType Get_AnimType(char const* section, char const* entry, AnimType defvalue) const;
 	//const AnimTypeClass * Get_Anim(char const* section, char const* entry) const;
 	RTTIType Get_RTTIType(char const* section, char const* entry, RTTIType defvalue) const;

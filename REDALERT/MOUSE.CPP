@@ -385,5 +385,6 @@ MouseClass::MouseStruct MouseClass::MouseControl[MOUSE_COUNT] = {
 
 	{97,	8,		3,		-1,	WD/2,	HT/2},	//	MOUSE_CHRONO_SELECT
 	{105,	8,		2,		-1,	WD/2,	HT/2},	//	MOUSE_CHRONO_DEST
+	{103,	16,	2,		-1,	WD/2,	HT/2},	//	MOUSE_ION_CANNON
 
 };

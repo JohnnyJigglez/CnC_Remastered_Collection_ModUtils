@@ -2634,9 +2634,9 @@ void AnimTypeClass::One_Time(void)
 			#ifndef NDEBUG
 				RawFileClass file(fullname);
 				if (file.Is_Available()) {
-					((void const *&)As_Reference((AnimType)index).ImageData) = Load_Alloc_Data(file);
+					anim->ImageData = Load_Alloc_Data(file);
 				} else {
-					((void const *&)As_Reference((AnimType)index).ImageData) = MFCD::Retrieve(fullname);
+					anim->ImageData = MFCD::Retrieve(fullname);
 				}
 			#else
 			anim->ImageData = MFCD::Retrieve(fullname);

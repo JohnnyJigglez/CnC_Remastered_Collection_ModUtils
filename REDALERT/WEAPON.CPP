@@ -157,7 +157,42 @@ void WeaponTypeClass::One_Time(void)
 			}
 #endif
 		}
-
+		weap->CalculateDPS();
+	}
+}
+/***********************************************************************************************
+ * WeaponTypeClass::CalculateDPS -- Calculates the damage this weapon does per second per      *
+ * armortype.                                                                                  *                                                                                         *
+ *                                                                                             *
+ * INPUT:   none                                                                               *
+ *                                                                                             *
+ * OUTPUT:  none                                                                               *
+ *                                                                                             *
+ * WARNINGS:   none                                                                            *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   2/13/2024 JJ : Created.                                                                   *
+ *=============================================================================================*/
+void WeaponTypeClass::CalculateDPS(void) {
+	if (WarheadPtr == NULL) {
+		for (int index = 0; index < ARMOR_COUNT; index++)
+		{
+			DPS[index] = 0;
+		}
+		return;
+	}
+	/*FullDPS is Total Damage / Total Seconds Delay
+	* Total Damage = Attack * Burst
+	* Total Seconds Delay = Total Ticks Delay / TICK PER SECOND
+	* Total Ticks Delay = Burst * BurstDelay * ROF
+	*/
+	float denom = (BurstDelay * ROF) / (int)TICKS_PER_SECOND;
+	if (denom <= 0)
+		denom = 1;
+	int FullDPS = round(Attack / denom);
+	for (int index = 0; index < ARMOR_COUNT; index++)
+	{
+		DPS[index] = round(WarheadPtr->Modifier[index] * FullDPS);
 	}
 }
 
@@ -361,6 +396,7 @@ bool WeaponTypeClass::Read_INI(CCINIClass & ini)
 		WarheadPtr = WarheadTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Warhead"), WarheadPtr);
 		Bullet = BulletTypeClass::findorcreate(ini, ini.Get_Value(Name(), "Projectile"), Bullet);
 		OverrideZap = ini.Get_Bool(Name(), "OverrideZap", OverrideZap);
+		CalculateDPS();//we don't care to check if anything actually changed because this calc is quick.
 		sprintf(message, "WeaponTypeClass.Read_INI parsed Weapon %s .\n", Name());
 		WWDebugString(message);
 		return(true);

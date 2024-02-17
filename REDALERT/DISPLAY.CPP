@@ -3225,6 +3225,12 @@ int DisplayClass::TacticalClass::Action(unsigned flags, KeyNumType & key)
 			if (Map.IsTargettingMode == SPC_CHRONOSPHERE) {
 				action = ACTION_CHRONOSPHERE;
 			}
+			if (Map.IsTargettingMode == SPC_ION_CANNON) {
+				action = ACTION_ION;
+			}
+			if (Map.IsTargettingMode == SPC_NAPALM_STRIKE) {
+				action = ACTION_NAPALM;
+			}
 
 			if (Map.IsTargettingMode == SPC_CHRONO2) {
 				action = ACTION_CHRONO2;
@@ -3603,7 +3609,10 @@ void DisplayClass::Mouse_Left_Up(CELL cell, bool shadow, ObjectClass * object, A
 			case ACTION_NUKE_BOMB:
 				Set_Default_Mouse(MOUSE_NUCLEAR_BOMB, wsmall);
 				break;
-
+			
+			case ACTION_ION:
+				Set_Default_Mouse(MOUSE_ION_CANNON, wsmall);
+				break;
 			case ACTION_AIR_STRIKE:
 			case ACTION_PARA_BOMB:
 			case ACTION_PARA_INFANTRY:
@@ -3757,6 +3766,9 @@ void DisplayClass::Mouse_Left_Up(CELL cell, bool shadow, ObjectClass * object, A
 
 			case ACTION_TOGGLE_PRIMARY:
 				Set_Default_Mouse(MOUSE_DEPLOY, wsmall);
+				break;
+			case ACTION_ION:
+				Set_Default_Mouse(MOUSE_ION_CANNON, wsmall);
 				break;
 
 			default:
@@ -4119,6 +4131,12 @@ void DisplayClass::Mouse_Left_Release(CELL cell, int x, int y, ObjectClass * obj
 				if (action == ACTION_CHRONO2) {
 					OutList.Add(EventClass(EventClass::SPECIAL_PLACE, SPC_CHRONO2, cell));
 				}
+				if (action == ACTION_ION) {
+					OutList.Add(EventClass(EventClass::SPECIAL_PLACE, SPC_ION_CANNON, cell));
+				}
+				if (action == ACTION_NAPALM) {
+					OutList.Add(EventClass(EventClass::SPECIAL_PLACE, SPC_NAPALM_STRIKE, cell));
+				}
 			}
 
 			IsTentative = false;
@@ -4378,7 +4396,7 @@ void DisplayClass::Sell_Mode_Control(int control)
 
 	if (mode != IsSellMode && !PendingObject) {
 		IsRepairMode = false;
-		if (mode && PlayerPtr->BScan) {
+		if (mode && PlayerPtr->Has_Buildings()) {
 			IsSellMode = true;
 			Unselect_All();
 		} else {
@@ -4425,7 +4443,7 @@ void DisplayClass::Repair_Mode_Control(int control)
 
 	if (mode != IsRepairMode && !PendingObject) {
 		IsSellMode = false;
-		if (mode && PlayerPtr->BScan) {
+		if (mode && PlayerPtr->Has_Buildings()) {
 			IsRepairMode = true;
 			Unselect_All();
 		} else {

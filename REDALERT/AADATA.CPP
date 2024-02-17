@@ -291,6 +291,9 @@ AircraftTypeClass::AircraftTypeClass(
 	//char * bob = LRotorDataName;
 	strcpy(LRotorDataName, "LROTOR");
 	strcpy(RRotorDataName, "RROTOR");
+	char message[64];
+	sprintf(message, "Instantiated Aircraft %s with ID: %d.\n", ininame,ID);
+	WWDebugString(message);
 	//LRotorDataName = "LROTOR";
 
 	//std::copy(LRotorTrueDataName, "LROTOR");
@@ -332,9 +335,6 @@ AircraftTypeClass::AircraftTypeClass(int aatype, char const* ininame) :
 		16,
 		MISSION_HUNT)
 {
-	char message[64];
-	sprintf(message, "Instantiated custom Aircraft %s .\n", ininame);
-	WWDebugString(message);
 }
 
 

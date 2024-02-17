@@ -76,7 +76,11 @@ SuperClass::SuperClass(int recharge, bool powered, VoxType charging, VoxType rea
 	VoxCharging(charging),
 	VoxImpatient(impatient),
 	VoxSuspend(suspend),
-	RechargeTime(recharge)
+	RechargeTime(recharge),
+	VoxChargingData(NULL),
+	VoxImpatientData(NULL),
+	VoxRechargeData(NULL),
+	VoxSuspendData(NULL)
 {
 }
 
@@ -210,7 +214,10 @@ bool SuperClass::Recharge(bool player)
 #endif
 
 		if (player) {
-			Speak(VoxCharging);
+			if (VoxChargingData != NULL && strlen(VoxChargingData) > 2)
+				Speak(VoxChargingData);
+			else
+				Speak(VoxCharging);
 		}
 		return(true);
 	}
@@ -280,7 +287,10 @@ bool SuperClass::AI(bool player)
 			if (Control == 0) {
 				IsReady = true;
 				if (player) {
-					Speak(VoxRecharge);
+					if(VoxRechargeData != NULL && strlen(VoxRechargeData) > 2)
+						Speak(VoxRechargeData);
+					else
+						Speak(VoxRecharge);
 				}
 				return(true);
 			} else {
@@ -350,9 +360,15 @@ int SuperClass::Anim_Stage(void) const
 void SuperClass::Impatient_Click(void) const
 {
 	if (!Control.Is_Active()) {
-		Speak(VoxSuspend);
+		if (VoxSuspendData != NULL && strlen(VoxSuspendData) > 2)
+			Speak(VoxSuspendData);
+		else
+			Speak(VoxSuspend);
 	} else {
-		Speak(VoxImpatient);
+		if (VoxImpatientData != NULL && strlen(VoxImpatientData) > 2)
+			Speak(VoxImpatientData);
+		else
+			Speak(VoxImpatient);
 	}
 }
 
@@ -382,7 +398,10 @@ void SuperClass::Forced_Charge(bool player)
 		Control = 0;
 //		IsSuspended = false;
 		if (player) {
-			Speak(VoxRecharge);
+			if (VoxRechargeData != NULL && strlen(VoxRechargeData) > 2)
+				Speak(VoxRechargeData);
+			else
+				Speak(VoxRecharge);
 		}
 	}
 }

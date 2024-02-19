@@ -497,7 +497,7 @@ bool SidebarGlyphxClass::StripClass::Recalc(void)
 	for (int index = 0; index < BuildableCount; index++) {
 		TechnoTypeClass const * tech = Fetch_Techno_Type(Buildables[index].BuildableType, Buildables[index].BuildableID);
 		if (tech) {
-			ok = tech->Who_Can_Build_Me(true, false, ParentSidebar->SidebarPlayerPtr->Class->House) != NULL;
+			ok = tech->Who_Can_Build_Me(true, true, ParentSidebar->SidebarPlayerPtr->Class->House) != NULL;
 		} else {
 			
 			if ((unsigned)Buildables[index].BuildableID < SPC_COUNT) {

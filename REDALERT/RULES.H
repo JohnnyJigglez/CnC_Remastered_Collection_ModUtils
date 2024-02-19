@@ -128,6 +128,9 @@ public:
 			RulesField<char*> voxsuspendField = { VoxSuspend,"\0" };
 			AircraftType aircraft = AIRCRAFT_NONE;
 			RulesField<AircraftType*> aircraftField = { &aircraft,"\0" };
+			AnimType Anim = ANIM_NONE;
+			RulesField<AnimType*> animField = { &Anim,"\0" };
+			RulesField<int> strengthField = { 0,"\0" };
 		};
 
 		SuperWeaponRule SuperWeaponRules[SPC_COUNT];

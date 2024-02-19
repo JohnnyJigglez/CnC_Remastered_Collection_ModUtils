@@ -225,70 +225,89 @@ void AnimClass::Draw_It(int x, int y, WindowNumberType window) const
 
 		IsTheaterShape = Class->IsTheater;
 
-		void const * shapefile = Get_Image_Data();
-		if (shapefile != NULL) {
-			void const * transtable = NULL;
-			int shapenum = Class->Start + Fetch_Stage();
-			void const * remap = NULL;
-			ShapeFlags_Type flags = SHAPE_CENTER|SHAPE_WIN_REL;
-			bool alt = false;
-			int width = 0;
-			int height = 0;
-
-			/*
-			**	Some animations require special fixups.
-			*/
-			switch (Class->Type()) {
-				case ANIM_ATOM_BLAST:
-					transtable = Map.UnitShadow;
-					break;
-
-				case ANIM_FLAG:
-					x += (ICON_PIXEL_W / 2) - 2;
-					y += (3 * ICON_PIXEL_H / 4) - Get_Build_Frame_Height(shapefile);
-					transtable = Map.UnitShadow;
-					alt = true;
-					break;
-
-				case ANIM_BEACON_VIRTUAL:
-					width = 29;
-					height = 39;
-					flags = flags | SHAPE_BOTTOM | SHAPE_COMPACT;
-					break;
-			}
-
-			/*
-			**	If the translucent table hasn't been determined yet, then check to see if it
-			**	should use the white or normal translucent tables.
-			*/
-			if (transtable == NULL && Class->IsWhiteTrans) transtable = DisplayClass::WhiteTranslucentTable;
-			if (transtable == NULL && Class->IsTranslucent) transtable = DisplayClass::TranslucentTable;
-
-			/*
-			**	Set the shape flags to properly take into account any fading or ghosting
-			**	table necessary.
-			*/
-			if (alt) {
-				flags = flags | SHAPE_FADING;
-				if (OwnerHouse != HOUSE_NONE) {
-					remap = HouseClass::As_Pointer(OwnerHouse)->Remap_Table(false);
-				} else {
-					remap = ColorRemaps[PCOLOR_GOLD].RemapTable;
-				}
-			}
-			if (transtable != NULL) flags = flags | SHAPE_GHOST;
-
-			/*
-			**	Draw the animation shape, but ignore legacy if beyond normal stage count.
-			*/
-			if ((window == WINDOW_VIRTUAL) || (Fetch_Stage() < Class->Stages)) {
-				// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
-				CC_Draw_Shape(this, shapefile, shapenum, x, y, window, flags, remap, transtable, DIR_N, Class->Scale*256, width, height);
+		void const* shapefile = Get_Image_Data();
+		void const* transtable = NULL;
+		int shapenum = Class->Start + Fetch_Stage();
+		void const* remap = NULL;
+		ShapeFlags_Type flags = SHAPE_CENTER | SHAPE_WIN_REL;
+		bool alt = false;
+		int width = 0;
+		int height = 0;
+		if (shapefile == NULL)
+		{
+			width = Class->Width;
+			height = Class->Height;
+			if (width == 0 || height == 0)
+			{
+				width = Class->Size;
+				height = Class->Size;
 			}
 		}
-		IsTheaterShape = false;
-		BEnd(BENCH_ANIMS);
+		else {
+			height = Get_Build_Frame_Height(shapefile);
+			width = Get_Build_Frame_Width(shapefile);
+		}
+		/*
+		**	Some animations require special fixups.
+		*/
+		if (Rule.SuperWeaponRules[SPC_ION_CANNON].Anim == Class->ID) {
+			if (window != WINDOW_VIRTUAL) {
+				y -= height >> 1;
+			}
+			else {
+				flags = flags | SHAPE_BOTTOM;
+			}
+			y += 12;
+		}
+		if (Rule.SuperWeaponRules[SPC_NUCLEAR_BOMB].Anim == Class->ID)
+			transtable = Map.UnitShadow;
+		switch (Class->Type()) {
+		case ANIM_FLAG:
+			x += (ICON_PIXEL_W / 2) - 2;
+			y += (3 * ICON_PIXEL_H / 4) - height;
+			transtable = Map.UnitShadow;
+			alt = true;
+			break;
+
+		case ANIM_BEACON_VIRTUAL:
+			width = 29;
+			height = 39;
+			flags = flags | SHAPE_BOTTOM | SHAPE_COMPACT;
+			break;
+		}
+
+		/*
+		**	If the translucent table hasn't been determined yet, then check to see if it
+		**	should use the white or normal translucent tables.
+		*/
+		if (transtable == NULL && Class->IsWhiteTrans) transtable = DisplayClass::WhiteTranslucentTable;
+		if (transtable == NULL && Class->IsTranslucent) transtable = DisplayClass::TranslucentTable;
+
+		/*
+		**	Set the shape flags to properly take into account any fading or ghosting
+		**	table necessary.
+		*/
+		if (alt) {
+			flags = flags | SHAPE_FADING;
+			if (OwnerHouse != HOUSE_NONE) {
+				remap = HouseClass::As_Pointer(OwnerHouse)->Remap_Table(false);
+			}
+			else {
+				remap = ColorRemaps[PCOLOR_GOLD].RemapTable;
+			}
+		}
+		if (transtable != NULL) flags = flags | SHAPE_GHOST;
+
+		/*
+		**	Draw the animation shape, but ignore legacy if beyond normal stage count.
+		*/
+		if ((window == WINDOW_VIRTUAL) || (Fetch_Stage() < Class->Stages)) {
+			// Add 'this' parameter to call new shape draw intercept. ST - 5/22/2019
+			CC_Draw_Shape(this, shapefile, shapenum, x, y, window, flags, remap, transtable, DIR_N, Class->Scale * 256, width, height, Class->Graphic_Name());
+		}
 	}
+	IsTheaterShape = false;
+	BEnd(BENCH_ANIMS);
 	if (render_virtual) {
 		AnimClass* virtual_anim = As_Animation(VirtualAnimTarget);
 		virtual_anim->Make_Visible();
@@ -1001,8 +1020,10 @@ void AnimClass::Start(void)
 	/*
 	**	Play the sound effect for this animation.
 	*/
-	Sound_Effect(Class->Sound, Coord);
-
+	//if(Class->SoundName != NULL && strlen(Class->SoundName) > 2)
+	//	Sound_Effect(Class->Sound, Coord);
+	//else
+		Sound_Effect(Class->Sound, Coord,1,HOUSE_NONE, Class->SoundName);
 	/*
 	**	If the stage where collateral effects occur is the first stage of the animation, then
 	**	perform this action now. Subsequent checks against this stage value starts with the

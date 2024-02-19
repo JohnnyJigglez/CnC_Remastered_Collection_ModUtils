@@ -302,21 +302,27 @@ HarvReturnsHome(false)
 	SuperWeaponRules[SPC_PARA_INFANTRY].prereqs.soviets.myid = STRUCT_AIRSTRIP;
 	SuperWeaponRules[SPC_SPY_MISSION].prereqs.soviets.mytype = RTTI_BUILDINGTYPE;
 	SuperWeaponRules[SPC_SPY_MISSION].prereqs.soviets.myid = STRUCT_AIRSTRIP;
+
 	strcpy(SuperWeaponRules[SPC_ION_CANNON].VoxCharging, "IONCHRG1");
 	strcpy(SuperWeaponRules[SPC_ION_CANNON].VoxRecharge, "IONREDY1");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].reqField.str, "IonRequires");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].voxchargingField.str, "IonChargingSound");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].voxreadyField.str, "IonReadySound");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].animField.str, "IonAnim");
+	strcpy(SuperWeaponRules[SPC_ION_CANNON].strengthField.str, "IonStrength");
+	SuperWeaponRules[SPC_NUCLEAR_BOMB].strengthField.var = 600;
+	strcpy(SuperWeaponRules[SPC_NUCLEAR_BOMB].animField.str, "NukeAnim");
+	SuperWeaponRules[SPC_NUCLEAR_BOMB].Anim = ANIM_ATOM_BLAST;
 	strcpy(SuperWeaponRules[SPC_NAPALM_STRIKE].VoxRecharge, "AIRREDY1");
 	strcpy(SuperWeaponRules[SPC_NUCLEAR_BOMB].reqField.str, "NukeRequires");
 	strcpy(SuperWeaponRules[SPC_GPS].reqField.str, "GPSRequires");
 	strcpy(SuperWeaponRules[SPC_CHRONOSPHERE].reqField.str, "ChronoRequires");
-	strcpy(SuperWeaponRules[SPC_ION_CANNON].reqField.str, "IonRequires");
 	strcpy(SuperWeaponRules[SPC_NAPALM_STRIKE].reqField.str, "NapalmRequires");
 	strcpy(SuperWeaponRules[SPC_PARA_BOMB].reqField.str, "ParabombRequires");
 	strcpy(SuperWeaponRules[SPC_PARA_INFANTRY].reqField.str, "ParadropRequires");
 	strcpy(SuperWeaponRules[SPC_SONAR_PULSE].reqField.str, "SonarRequires");
 	strcpy(SuperWeaponRules[SPC_IRON_CURTAIN].reqField.str, "IronRequires");
 	strcpy(SuperWeaponRules[SPC_SPY_MISSION].reqField.str, "SpyplaneRequires");
-	strcpy(SuperWeaponRules[SPC_ION_CANNON].voxchargingField.str, "IonChargingSound");
-	strcpy(SuperWeaponRules[SPC_ION_CANNON].voxreadyField.str, "IonReadySound");
 	strcpy(SuperWeaponRules[SPC_NAPALM_STRIKE].voxreadyField.str, "NapalmReadySound");
 	
 #ifdef FIXIT_CSII	//	checked - ajw 9/28/98
@@ -618,48 +624,7 @@ bool RulesClass::GeneralLast(CCINIClass& ini)
 {
 	static char const* const GENERAL = "General";
 	char buffer[48];
-	/*static auto handlesuperreq = [](SuperWeaponRule& rule, char* inboundstring) {
-		char* token1 = strtok(inboundstring, ",");
-		char* token2 = strtok(NULL, ",");
-		short aID = rule.alliedid;
-		RTTIType aType = rule.alliedtype;
-		short sID = rule.sovietid;
-		RTTIType sType = rule.soviettype;
-		if (token1 == NULL && sizeof(buffer) > 2) {
-			strcpy(token1, inboundstring);
-		}
-		if (strcmpi(token1, "<none>") != 0)
-		{
-			AbstractTypeClass* allied = AbstractTypeClass::As_Pointer(token1);
-			if (allied != NULL) {
-				aID = allied->ID;
-				aType = allied->RTTI;
-				if (token2 == NULL) {//is this a single value
-					sID = aID;
-					sType = aType;
-				}
-			}
-			else 
-			{
-				if (token2 == NULL) {//is this a single value
-					sID = aID;
-					sType = aType;
-				}
-			}
-		}
-		if ((token2 != NULL) && strcmpi(token2, "<none>") != 0)
-		{
-			AbstractTypeClass* soviet = AbstractTypeClass::As_Pointer(token2);
-			if (soviet != NULL) {
-				sID = soviet->ID;
-				sType = soviet->RTTI;
-			}
-		}
-		rule.alliedid = aID;
-		rule.sovietid = sID;
-		rule.alliedtype = aType;
-		rule.soviettype = sType;
-	};*/
+	char defaultstring[32] = "";
 	if (ini.Is_Present(GENERAL)) {
 		for (int index = 0; index < SPC_COUNT; index++) {
 
@@ -712,6 +677,13 @@ bool RulesClass::GeneralLast(CCINIClass& ini)
 				strcpy(SuperWeaponRules[index].VoxRecharge, buffer);
 			if (ini.Get_String(GENERAL, SuperWeaponRules[index].voxsuspendField, SuperWeaponRules[index].VoxSuspend, buffer, sizeof(buffer)) > 2)
 				strcpy(SuperWeaponRules[index].VoxSuspend, buffer);
+			if (SuperWeaponRules[index].Anim != ANIM_NONE)
+				strcpy(defaultstring, AnimTypeClass::As_Reference(SuperWeaponRules[index].Anim).IniName);
+			else
+				strcpy(defaultstring, "");
+			if (ini.Get_String(GENERAL, SuperWeaponRules[index].animField, defaultstring, buffer, sizeof(buffer)) > 2)
+				SuperWeaponRules[index].Anim = AnimTypeClass::findorcreate(ini,buffer,ANIM_NONE);
+			SuperWeaponRules[index].strengthField = ini.Get_Int(GENERAL, SuperWeaponRules[index].strengthField, SuperWeaponRules[index].strengthField);
 		}
 		//if (ini.Get_String(GENERAL, "NukeRequires", "", buffer, sizeof(buffer)) > 2)
 		//	handlesuperreq(SuperWeaponRules[SPC_NUCLEAR_BOMB], buffer);

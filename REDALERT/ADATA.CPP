@@ -2355,7 +2355,9 @@ ObjectTypeClass(RTTI_ANIMTYPE,
 	ChainTo(chainto),
 	VirtualStages(virtualstages),
 	VirtualName(virtualname),
-	VirtualAnim(virtualanim)
+	VirtualAnim(virtualanim),
+	Width(0),
+	Height(0)
 {
 	Scale = (scale / 0x0100) * 1.0f;
 	char message[64];
@@ -2908,16 +2910,14 @@ bool AnimTypeClass::Read_INI(CCINIClass& ini)
 		LoopEnd = ini.Get_Short(Name(), "LoopEnd", LoopEnd);
 		Stages = ini.Get_Short(Name(), "Stages", Stages);
 		Loops = ini.Get_Short(Name(), "Loops", Loops);
-		Sound = ini.Get_VocType(Name(), "Sound", Sound);
+		Width = ini.Get_Short(Name(), "Width", Loops);
+		Height = ini.Get_Short(Name(), "Height", Loops);
 		char buffer[_MAX_FNAME];
-		//const AnimTypeClass* ptr = NULL;
+		if (ini.Get_String(Name(), "Sound", "", buffer, sizeof(buffer)) > 2) {
+			if (strcmpi(buffer, "<none>") != 0 && (Sound = ini.Get_VocType(Name(), "Sound", VOC_NONE)) == VOC_NONE)
+				strcpy(SoundName, buffer);
+		}
 		ChainTo = findorcreate(ini, ini.Get_Value(Name(), "ChainTo"), ChainTo);
-		/*if (ini.Get_String(Name(), "ChainTo", "", buffer, sizeof(buffer))) {
-			Chainto_findorcreate(ini, buffer, ANIM_NONE);
-			ptr = AnimTypeClass::As_Pointer(buffer);
-			if (ptr)
-				ChainTo = ptr->Type();
-		}*/
 		VirtualStages = ini.Get_Short(Name(), "VirtualStages", VirtualStages);
 		//VirtualScale = ini.Get_Float(Name(), "Scale", VirtualScale);
 		if (ini.Get_String(Name(), "VirtualName", "", buffer, sizeof(buffer))) {
@@ -2927,11 +2927,7 @@ bool AnimTypeClass::Read_INI(CCINIClass& ini)
 			}
 		}
 		VirtualAnim = findorcreate(ini, ini.Get_Value(Name(), "VirtualAnim"), VirtualAnim);
-		/*if (ini.Get_String(Name(), "VirtualAnim", "", buffer, sizeof(buffer))) {
-			ptr = AnimTypeClass::As_Pointer(buffer);
-			if (ptr)
-				VirtualAnim = ptr->Type();
-		}*/
+
 		NextAnim = findorcreate(ini, ini.Get_Value(Name(), "NextAnim"), NextAnim);
 		sprintf(message, "AnimTypeClass.Read_INI parsed %s .\n", Name());
 		WWDebugString(message);

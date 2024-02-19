@@ -56,9 +56,19 @@
  *   BuildingTypeClass::operator delete -- Deletes a building type object from the special heap*
  *   BuildingTypeClass::operator new -- Allocates a building type object from the special heap.*
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
+#include <string>
 #include	"function.h"
+//using std::string;
 
+void BuildingTypeClass::AnimControlType::to_string(char * buffer) {
+	std::string out = std::string("AnimationControl Start:" + std::to_string(Start));
+	out.append(", Count:" + std::to_string(Count));
+	out.append(", Rate:" + std::to_string(Rate));
+	strcpy(buffer, out.data());
+}
+
+
+//AnimControlType Anims[BSTATE_COUNT];
 
 #define FATSHIP
 
@@ -194,7 +204,10 @@ RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_AUX2;
 RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_CONST;
 RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimControl_FULL;
 */
-RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimFields[BSTATE_COUNT];
+
+//RulesClass::RulesField<BuildingTypeClass::AnimControlType*> AnimFields[BSTATE_COUNT];
+
+
 
 /***************************************************************************
 */
@@ -2906,7 +2919,7 @@ TechnoTypeClass(RTTI_BUILDINGTYPE,
 		IsStorage = true;
 	if (strcmpi(IniName, "GAP") == 0)
 		IsGapper = true;
-
+	/*
 	Anims[BSTATE_CONSTRUCTION].Start = 0;
 	Anims[BSTATE_CONSTRUCTION].Count = 1;
 	Anims[BSTATE_CONSTRUCTION].Rate = 0;
@@ -2926,6 +2939,13 @@ TechnoTypeClass(RTTI_BUILDINGTYPE,
 	Anims[BSTATE_AUX2].Start = 0;
 	Anims[BSTATE_AUX2].Count = 1;
 	Anims[BSTATE_AUX2].Rate = 0;
+	*/
+	AnimFields[BSTATE_ACTIVE] = { &Anims[BSTATE_ACTIVE],"AnimACTIVE" };
+	AnimFields[BSTATE_IDLE] = { &Anims[BSTATE_IDLE],"AnimIDLE" };
+	AnimFields[BSTATE_FULL] = { &Anims[BSTATE_FULL],"AnimFULL" };
+	AnimFields[BSTATE_AUX1] = { &Anims[BSTATE_AUX1],"AnimAUX1" };
+	AnimFields[BSTATE_AUX2] = { &Anims[BSTATE_AUX2],"AnimAUX2" };
+	AnimFields[BSTATE_CONSTRUCTION] = { &Anims[BSTATE_CONSTRUCTION],"AnimCONST" };
 	/*
 **	Install all the special animation sequences hardcoded for this building type.
 */
@@ -2936,12 +2956,7 @@ TechnoTypeClass(RTTI_BUILDINGTYPE,
 			Anims[_anims[index].Stage].Rate = _anims[index].Rate;
 		}
 	}
-	AnimFields[BSTATE_ACTIVE] = { &Anims[BSTATE_ACTIVE],"AnimACTIVE" };
-	AnimFields[BSTATE_IDLE] = { &Anims[BSTATE_IDLE],"AnimIDLE" };
-	AnimFields[BSTATE_FULL] = { &Anims[BSTATE_FULL],"AnimFULL" };
-	AnimFields[BSTATE_AUX1] = { &Anims[BSTATE_AUX1],"AnimAUX1" };
-	AnimFields[BSTATE_AUX2] = { &Anims[BSTATE_AUX2],"AnimAUX2" };
-	AnimFields[BSTATE_CONSTRUCTION] = { &Anims[BSTATE_CONSTRUCTION],"AnimCONST" };
+	
 
 	char message[64];
 	sprintf(message, "Constructed Building %s with ID: %d .\n", ininame, ID);
@@ -3952,7 +3967,6 @@ bool BuildingTypeClass::Flush_For_Placement(CELL cell, HouseClass * house)  cons
 	return(again);
 }
 
-
 /***********************************************************************************************
  * BuildingTypeClass::Read_INI -- Fetch building type data from the INI database.              *
  *                                                                                             *
@@ -3992,131 +4006,31 @@ bool BuildingTypeClass::Read_INI(CCINIClass & ini)
 		ToBuild = ini.Get_RTTIType(Name(), "Build", ToBuild);
 		ExitCoordinate = ini.Get_Coord(Name(), "ExitCoord", ExitCoordinate);
 		StartFace = (DirType)(ini.Get_Int(Name(), "InitialD", StartFace));
-		char delim[] = ",";
 		for (int index = 0; index < BSTATE_COUNT; index++)
 		{
-			if (ini.Get_String(Name(), AnimFields[index], "", buffer, sizeof(buffer))) {
-				char* token = strtok(buffer, delim);
-				if (token != NULL && strlen(token) > 2) {
-					//Anims[BSTATE_IDLE].ImagePoolIndex = AppendImage(token, NULL);
-					if ((token = strtok(NULL, delim)) != NULL)
-						Anims[index].Start = atoi(token);
+			if (ini.Get_String(Name(), AnimFields[index], "", buffer, sizeof(buffer)) > 2) {
+				char* token1 = strtok(buffer, COMMA_DELIM);
+				char* token2 = strtok(NULL, COMMA_DELIM);
+				char* token3 = strtok(NULL, COMMA_DELIM);
+				if(token1 != NULL && token2 != NULL && token3 != NULL)
+				{
+					Anims[index].Start = atoi(token1);
+					Anims[index].Count = atoi(token2);
+					Anims[index].Rate = atoi(token3);
 				}
-				else {
-					//Anims[BSTATE_IDLE].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
-					Anims[index].Start = atoi(token);
-				}
-				if ((token = strtok(NULL, delim)) != NULL)
-					Anims[index].Count = atoi(token);
-				if ((token = strtok(NULL, delim)) != NULL)
-					Anims[index].Rate = atoi(token);
+				Anims[index].to_string(buffer);
+				sprintf(message, "BTC.Read_INI: State: %d %s \n",index, buffer);
+				WWDebugString(message);
 			}
-		}/*
-		if (ini.Get_String(Name(), AnimControl_IDLE, "", buffer, sizeof(buffer))) {	
-			char* token = strtok(buffer, delim);
-			if (token != NULL && strlen(token) > 2) {
-				//Anims[BSTATE_IDLE].ImagePoolIndex = AppendImage(token, NULL);
-				if ((token = strtok(NULL, delim)) != NULL)
-					Anims[BSTATE_IDLE].Start = atoi(token);
-			}
-			else {
-				//Anims[BSTATE_IDLE].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
-				Anims[BSTATE_IDLE].Start = atoi(token);
-			}
-			if ((token = strtok(NULL, delim)) != NULL)
-				Anims[BSTATE_IDLE].Count = atoi(token);
-			if ((token = strtok(NULL, delim)) != NULL)
-				Anims[BSTATE_IDLE].Rate = atoi(token);
 		}
-		if (ini.Get_String(Name(), AnimControl_CONST, "", buffer, sizeof(buffer))) {
-			char* token = strtok(buffer, delim);
-			if (strlen(token) > 2) {
-				//Anims[BSTATE_CONSTRUCTION].ImagePoolIndex = AppendImage(token, NULL);
-				if ((token = strtok(NULL, delim)) != NULL)
-					Anims[BSTATE_CONSTRUCTION].Start = atoi(token);
-			}
-			else {
-				//Anims[BSTATE_CONSTRUCTION].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
-				Anims[BSTATE_CONSTRUCTION].Start = atoi(token);
-			}
-			if ((token = strtok(NULL, delim)) != NULL)
-				Anims[BSTATE_CONSTRUCTION].Count = atoi(token);
-			if ((token = strtok(NULL, delim)) != NULL)
-				Anims[BSTATE_CONSTRUCTION].Rate = atoi(token);
-		}
-		if (ini.Get_String(Name(), "AnimACTIVE", "", buffer, sizeof(buffer))) {
-			char* token = strtok(buffer, &delim);
-			if (strlen(token) > 2) {
-				//Anims[BSTATE_ACTIVE].ImagePoolIndex = AppendImage(token, NULL);
-				if ((token = strtok(NULL, &delim)) != NULL)
-					Anims[BSTATE_ACTIVE].Start = atoi(token);
-			}
-			else {
-				//Anims[BSTATE_ACTIVE].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
-				Anims[BSTATE_ACTIVE].Start = atoi(token);
-			}
-			if ((token = strtok(NULL, &delim)) != NULL)
-				Anims[BSTATE_ACTIVE].Count = atoi(token);
-			if ((token = strtok(NULL, &delim)) != NULL)
-				Anims[BSTATE_ACTIVE].Rate = atoi(token);
-		}
-		if (ini.Get_String(Name(), "AnimFULL", "", buffer, sizeof(buffer))) {
-			char* token = strtok(buffer, &delim);
-			if (strlen(token) > 2) {
-				//Anims[BSTATE_FULL].ImagePoolIndex = AppendImage(token, NULL);
-				if ((token = strtok(NULL, &delim)) != NULL)
-					Anims[BSTATE_FULL].Start = atoi(token);
-			}
-			else {
-				//Anims[BSTATE_FULL].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
-				Anims[BSTATE_FULL].Start = atoi(token);
-			}
-			if ((token = strtok(NULL, &delim)) != NULL)
-				Anims[BSTATE_FULL].Count = atoi(token);
-			if ((token = strtok(NULL, &delim)) != NULL)
-				Anims[BSTATE_FULL].Rate = atoi(token);
-		}
-		if (ini.Get_String(Name(), "AnimAUX1", "", buffer, sizeof(buffer))) {
-			char* token = strtok(buffer, &delim);
-			if (strlen(token) > 2) {
-				//Anims[BSTATE_AUX1].ImagePoolIndex = AppendImage(token, NULL);
-				if ((token = strtok(NULL, &delim)) != NULL)
-					Anims[BSTATE_AUX1].Start = atoi(token);
-			}
-			else {
-				//Anims[BSTATE_AUX1].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
-				Anims[BSTATE_AUX1].Start = atoi(token);
-			}
-			if ((token = strtok(NULL, &delim)) != NULL)
-				Anims[BSTATE_AUX1].Count = atoi(token);
-			if ((token = strtok(NULL, &delim)) != NULL)
-				Anims[BSTATE_AUX1].Rate = atoi(token);
-		}
-		if (ini.Get_String(Name(), "AnimAUX2", "", buffer, sizeof(buffer))) {
-			char delim = ',';
-			char* token = strtok(buffer, &delim);
-			if (strlen(token) > 2) {
-				//Anims[BSTATE_AUX2].ImagePoolIndex = AppendImage(token, NULL);
-				if ((token = strtok(NULL, &delim)) != NULL)
-					Anims[BSTATE_AUX2].Start = atoi(token);
-			}
-			else {
-				//Anims[BSTATE_AUX2].ImagePoolIndex = -1; //-1 means we should use the IniName when caching data.
-				Anims[BSTATE_AUX2].Start = atoi(token);
-			}
-			if ((token = strtok(NULL, &delim)) != NULL)
-				Anims[BSTATE_AUX2].Count = atoi(token);
-			if ((token = strtok(NULL, &delim)) != NULL)
-				Anims[BSTATE_AUX2].Rate = atoi(token);
-		}*/
 		if (ini.Get_String(Name(), "Size", "", buffer, sizeof(buffer))) {
 			sprintf(message, "BTC.Read_INI Building (%d,%d) has Size : %s \n", Width(), Height(), buffer);
 			WWDebugString(message);
 			short size[2];
-			char* token = strtok(buffer, ",");
+			char* token = strtok(buffer, COMMA_DELIM);
 			if (token != NULL) {
 				size[0] = atoi(token);
-				token = strtok(NULL, ",");
+				token = strtok(NULL, COMMA_DELIM);
 				if (token != NULL)
 					size[1] = atoi(token);
 			}

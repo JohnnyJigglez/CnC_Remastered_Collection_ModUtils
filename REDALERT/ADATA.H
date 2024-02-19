@@ -153,14 +153,17 @@ public:
 	**	This is the normal loop count for this animation. Usually this is one, but
 	**	for some animations, it may be larger.
 	*/
-	//short Loops;
 	int Loops;
+
+	short Width;
+	short Height;
 
 	/*
 	**	This is the sound effect to play when this animation starts. Usually, this
 	**	applies to explosion animations.
 	*/
 	VocType Sound;
+	char SoundName[16];
 
 	/*
 	**	If the animation is to launch into another animation, then

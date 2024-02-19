@@ -662,7 +662,7 @@ DebugUnlockBuildables(false)
 	new (&SuperWeapon[SPC_SPY_MISSION]) SuperClass(TICKS_PER_MINUTE * Rule.SpyTime, false, VOX_NONE, VOX_SPY_PLANE, VOX_NOT_READY, VOX_NOT_READY);
 	new (&SuperWeapon[SPC_IRON_CURTAIN]) SuperClass(TICKS_PER_MINUTE * Rule.IronCurtainTime, true, VOX_IRON_CHARGING, VOX_IRON_READY, VOX_NOT_READY, VOX_INSUFFICIENT_POWER);
 	new (&SuperWeapon[SPC_GPS]) SuperClass(TICKS_PER_MINUTE * Rule.GPSTime, true, VOX_NONE, VOX_NONE, VOX_NOT_READY, VOX_INSUFFICIENT_POWER);
-	new (&SuperWeapon[SPC_ION_CANNON]) SuperClass(TICKS_PER_MINUTE * Rule.NukeTime, true, VOX_NONE, VOX_NONE, VOX_NOT_READY, VOX_INSUFFICIENT_POWER);
+	new (&SuperWeapon[SPC_ION_CANNON]) SuperClass(TICKS_PER_MINUTE * 1, true, VOX_NONE, VOX_NONE, VOX_NOT_READY, VOX_INSUFFICIENT_POWER);
 	new (&SuperWeapon[SPC_NAPALM_STRIKE]) SuperClass(TICKS_PER_MINUTE * Rule.ParaBombTime, false, VOX_NONE, VOX_NONE, VOX_NOT_READY, VOX_INSUFFICIENT_POWER);
 	SuperWeapon[SPC_ION_CANNON].VoxChargingData = Rule.SuperWeaponRules[SPC_ION_CANNON].VoxCharging;
 	SuperWeapon[SPC_ION_CANNON].VoxImpatientData = Rule.SuperWeaponRules[SPC_ION_CANNON].VoxImpatient;
@@ -1266,7 +1266,7 @@ void HouseClass::AI(void)
 #else
 				if (building && building->House == PlayerPtr) {
 #endif
-					if (*building == STRUCT_RADAR /* || *building == STRUCT_EYE */) {
+					if (building->Class->Type == STRUCT_RADAR /* || *building == STRUCT_EYE */) {
 						if (!building->IsJammed) {
 							jammed = false;
 							break;
@@ -1335,20 +1335,24 @@ void HouseClass::AI(void)
 	if (PlayerPtr == this && IsRecalcNeeded) {
 		IsRecalcNeeded = false;
 		Map.Recalc();
-
 		/*
 		**	This placement might affect any prerequisite requirements for construction
 		**	lists. Update the buildable options accordingly.
 		*/
 		for (int index = 0; index < Buildings.Count(); index++) {
 			BuildingClass * building = Buildings.Ptr(index);
-			if (building && building->Strength > 0 && building->Owner() == Class->House && building->Mission != MISSION_DECONSTRUCTION && building->MissionQueue != MISSION_DECONSTRUCTION) {
+			if (building && (building->Strength > 0) && (building->Owner() == Class->House) && (building->Mission != MISSION_DECONSTRUCTION) && (building->MissionQueue != MISSION_DECONSTRUCTION)) {
 
 				if (PlayerPtr == building->House) {
 					building->Update_Buildables();
 				}
 			}
 		}
+		/*
+		* Added because I broke something in EMC v26 such that requisite entities were available
+		* in the sidebar after the prereq building was destroyed/sold.
+		*/
+		Sidebar_Glyphx_Recalc(this);
 
 		Recalculate_Placement_Distances();
 		Check_Pertinent_Structures();
@@ -2810,10 +2814,9 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 	switch (id) {
 		case SPC_ION_CANNON:
 			if (SuperWeapon[SPC_ION_CANNON].Is_Ready()) {
-				//anim = new AnimClass(ANIM_ION_CANNON, Cell_Coord(cell));
+				anim = new AnimClass(Rule.SuperWeaponRules[SPC_ION_CANNON].Anim, Cell_Coord(cell));
 				for (int index = 0; index < Logic.Count(); index++) {
 					ObjectClass* obj = Logic[index];
-
 					if (obj && obj->Is_Techno() && obj->Owner() == this->Class->House && !obj->IsInLimbo) {
 						backup = (TechnoClass*)obj;
 						if (obj->What_Am_I() == RTTI_BUILDING) {
@@ -2824,9 +2827,9 @@ bool HouseClass::Place_Special_Blast(SpecialWeaponType id, CELL cell)
 				}
 				if (!launchsite)
 					launchsite = (BuildingClass*)backup;
-				Explosion_Damage(cell, 600, launchsite, WarheadTypeClass::As_Pointer("HE"));
-				//if (anim) anim->Set_Owner(Class->House);
-				
+				Explosion_Damage(Cell_Coord(cell), Rule.SuperWeaponRules[SPC_ION_CANNON].strengthField, launchsite, WarheadTypeClass::As_Pointer("Super"));
+				if (anim)
+					anim->Set_Owner(Class->House);
 				SuperWeapon[SPC_ION_CANNON].Discharged(this == PlayerPtr);
 				if (this == PlayerPtr) {
 					Map.Column[1].Flag_To_Redraw();
@@ -5870,7 +5873,7 @@ int HouseClass::AI_Building(void)
 			if (Can_Build(b, ActLike) && (money > b->Cost_Of() || hasincome)) {
 				choiceptr = BuildChoice.Alloc();
 				if (choiceptr != NULL) {
-					*choiceptr = BuildChoiceClass(BQuantity[STRUCT_REFINERY] == 0 ? URGENCY_HIGH : URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass(BQuantity[STRUCT_REFINERY] == 0 ? URGENCY_HIGH : URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			}
 		}
@@ -5885,14 +5888,14 @@ int HouseClass::AI_Building(void)
 			if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 				choiceptr = BuildChoice.Alloc();
 				if (choiceptr != NULL) {
-					*choiceptr = BuildChoiceClass(current > 0 ? URGENCY_LOW : URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass(current > 0 ? URGENCY_LOW : URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			} else {
 				b = &BuildingTypeClass::As_Reference(STRUCT_TENT);
 				if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 					choiceptr = BuildChoice.Alloc();
 					if (choiceptr != NULL) {
-						*choiceptr = BuildChoiceClass(current > 0 ? URGENCY_LOW : URGENCY_MEDIUM, b->Type);
+						*choiceptr = BuildChoiceClass(current > 0 ? URGENCY_LOW : URGENCY_MEDIUM, (StructType)b->ID);
 					}
 				}
 			}
@@ -5907,7 +5910,7 @@ int HouseClass::AI_Building(void)
 			if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 				choiceptr = BuildChoice.Alloc();
 				if (choiceptr != NULL) {
-					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			}
 		}
@@ -5921,7 +5924,7 @@ int HouseClass::AI_Building(void)
 			if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 				choiceptr = BuildChoice.Alloc();
 				if (choiceptr != NULL) {
-					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			}
 		}
@@ -5936,7 +5939,7 @@ int HouseClass::AI_Building(void)
 			if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 				choiceptr = BuildChoice.Alloc();
 				if (choiceptr != NULL) {
-					*choiceptr = BuildChoiceClass(current > 0 ? URGENCY_LOW : URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass(current > 0 ? URGENCY_LOW : URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			}
 		}
@@ -5950,7 +5953,7 @@ int HouseClass::AI_Building(void)
 			if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 				choiceptr = BuildChoice.Alloc();
 				if (choiceptr != NULL) {
-					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			} else {
 				if (Percent_Chance(50)) {
@@ -5958,7 +5961,7 @@ int HouseClass::AI_Building(void)
 					if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 						choiceptr = BuildChoice.Alloc();
 						if (choiceptr != NULL) {
-							*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, b->Type);
+							*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, (StructType)b->ID);
 						}
 					}
 				} else {
@@ -5966,7 +5969,7 @@ int HouseClass::AI_Building(void)
 					if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 						choiceptr = BuildChoice.Alloc();
 						if (choiceptr != NULL) {
-							*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, b->Type);
+							*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, (StructType)b->ID);
 						}
 					}
 				}
@@ -5985,14 +5988,14 @@ int HouseClass::AI_Building(void)
 			*/
 			bool airthreat = false;
 			int threat_quantity = 0;
-			if (enemy != NULL && enemy->AScan.Any()) {
+			if (enemy != NULL && enemy->AScan) {
 				airthreat = true;
 				threat_quantity = enemy->CurAircraft;
 			}
 			if (!airthreat) {
 				for (HousesType house = HOUSE_FIRST; house < HOUSE_COUNT; house++) {
 					HouseClass * h = HouseClass::As_Pointer(house);
-					if (h != NULL && !Is_Ally(house) && h->AScan.Any()) {
+					if (h != NULL && !Is_Ally(house) && h->AScan) {
 						airthreat = true;
 						break;
 					}
@@ -6006,7 +6009,7 @@ int HouseClass::AI_Building(void)
 					if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 						choiceptr = BuildChoice.Alloc();
 						if (choiceptr != NULL) {
-							*choiceptr = BuildChoiceClass(URGENCY_HIGH, b->Type);
+							*choiceptr = BuildChoiceClass(URGENCY_HIGH, (StructType)b->ID);
 						}
 					}
 				}
@@ -6015,14 +6018,14 @@ int HouseClass::AI_Building(void)
 				if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 					choiceptr = BuildChoice.Alloc();
 					if (choiceptr != NULL) {
-						*choiceptr = BuildChoiceClass((current < (unsigned)threat_quantity) ? URGENCY_HIGH : URGENCY_MEDIUM, b->Type);
+						*choiceptr = BuildChoiceClass((current < (unsigned)threat_quantity) ? URGENCY_HIGH : URGENCY_MEDIUM, (StructType)b->ID);
 					}
 				} else {
 					b = &BuildingTypeClass::As_Reference(STRUCT_AAGUN);
 					if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome)) {
 						choiceptr = BuildChoice.Alloc();
 						if (choiceptr != NULL) {
-							*choiceptr = BuildChoiceClass((current < (unsigned)threat_quantity) ? URGENCY_HIGH : URGENCY_MEDIUM, b->Type);
+							*choiceptr = BuildChoiceClass((current < (unsigned)threat_quantity) ? URGENCY_HIGH : URGENCY_MEDIUM, (StructType)b->ID);
 						}
 					}
 				}
@@ -6038,7 +6041,7 @@ int HouseClass::AI_Building(void)
 			if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome) && Power_Fraction() >= 1) {
 				choiceptr = BuildChoice.Alloc();
 				if (choiceptr != NULL) {
-					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			}
 		}
@@ -6052,14 +6055,14 @@ int HouseClass::AI_Building(void)
 			if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome) && Power_Fraction() >= 1) {
 				choiceptr = BuildChoice.Alloc();
 				if (choiceptr != NULL) {
-					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			} else {
 				b = &BuildingTypeClass::As_Reference(STRUCT_SOVIET_TECH);
 				if (Can_Build(b, ActLike) && (b->Cost_Of() < money || hasincome) && Power_Fraction() >= 1) {
 					choiceptr = BuildChoice.Alloc();
 					if (choiceptr != NULL) {
-						*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, b->Type);
+						*choiceptr = BuildChoiceClass(URGENCY_MEDIUM, (StructType)b->ID);
 					}
 				}
 			}
@@ -6079,7 +6082,7 @@ int HouseClass::AI_Building(void)
 						threat_quantity = enemy->CurAircraft;
 					}
 
-					*choiceptr = BuildChoiceClass((CurAircraft < (unsigned)threat_quantity) ? URGENCY_HIGH : URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass((CurAircraft < (unsigned)threat_quantity) ? URGENCY_HIGH : URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			}
 		}
@@ -6098,7 +6101,7 @@ int HouseClass::AI_Building(void)
 						threat_quantity = enemy->CurAircraft;
 					}
 
-					*choiceptr = BuildChoiceClass((CurAircraft < (unsigned)threat_quantity) ? URGENCY_HIGH : URGENCY_MEDIUM, b->Type);
+					*choiceptr = BuildChoiceClass((CurAircraft < (unsigned)threat_quantity) ? URGENCY_HIGH : URGENCY_MEDIUM, (StructType)b->ID);
 				}
 			}
 		}
@@ -6730,46 +6733,46 @@ void HouseClass::Tracking_Remove(TechnoClass const * techno)
 {
 	assert(Houses.ID(this) == ID);
 
-	int type;
+	//int type;
 
 	switch (techno->What_Am_I()) {
 		case RTTI_BUILDING:
 			CurBuildings--;
-			BQuantity[((BuildingTypeClass const &)techno->Class_Of()).Type]--;
+			BQuantity[((BuildingTypeClass const &)techno->Class_Of()).ID]--;
 			break;
 
 		case RTTI_AIRCRAFT:
 			CurAircraft--;
-			AQuantity[((AircraftTypeClass const &)techno->Class_Of()).Type]--;
+			AQuantity[((AircraftTypeClass const &)techno->Class_Of()).ID]--;
 			break;
 
 		case RTTI_INFANTRY:
 			CurInfantry--;
 			if (!((InfantryClass *)techno)->IsTechnician) {
-				type = ((InfantryTypeClass const &)techno->Class_Of()).Type;
+				//type = ((InfantryTypeClass const &)techno->Class_Of()).Type;
 //#ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 //				if (type >= INFANTRY_RA_COUNT) type -= INFANTRY_RA_COUNT;
 //#endif
-				IQuantity[type]--;
+				IQuantity[((InfantryTypeClass const&)techno->Class_Of()).ID]--;
 			}
 			break;
 
 		case RTTI_UNIT:
 			CurUnits--;
-			type = ((UnitTypeClass const &)techno->Class_Of()).Type;
+			//type = ((UnitTypeClass const &)techno->Class_Of()).Type;
 //#ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 //			if (type >= UNIT_RA_COUNT) type -= UNIT_RA_COUNT;
 //#endif
-			UQuantity[type]--;
+			UQuantity[((UnitTypeClass const&)techno->Class_Of()).ID]--;
 			break;
 
 		case RTTI_VESSEL:
 			CurVessels--;
-			type = ((VesselTypeClass const &)techno->Class_Of()).Type;
+			//type = ((VesselTypeClass const &)techno->Class_Of()).Type;
 //#ifdef FIXIT_CSII	//	checked - ajw 9/28/98
 //			if (type >= VESSEL_RA_COUNT) type -= VESSEL_RA_COUNT;
 //#endif
-			VQuantity[type]--;
+			VQuantity[((VesselTypeClass const&)techno->Class_Of()).ID]--;
 			break;
 
 		default:
@@ -7094,6 +7097,7 @@ void HouseClass::Recalc_Attributes(void)
 		HouseClass * house = Houses.Ptr(index);
 
 		if (house != NULL) {
+			house->BScan.Reset();
 			house->ActiveBScan.Reset();
 			house->IScan.Reset();
 			house->ActiveIScan.Reset();
@@ -7110,12 +7114,15 @@ void HouseClass::Recalc_Attributes(void)
 	**	A second pass through the sentient objects is required so that the appropriate scan
 	**	bits will be set for the owner house.
 	*/
+	short id = 0;
 	for (index = 0; index < Units.Count(); index++) {
 		UnitClass const * unit = Units.Ptr(index);
-		unit->House->UScan.Set(unit->Class->ID);
+		id = unit->Class->ID;
+		unit->House->UScan.Set(id);
 		if (unit->IsLocked && (Session.Type != GAME_NORMAL || !unit->House->IsHuman || unit->IsDiscoveredByPlayer)) {
 			if (!unit->IsInLimbo) {
-				unit->House->ActiveUScan.Set(unit->Class->ID);
+				unit->House->ActiveUScan.Set(id);
+				unit->House->OldUScan.Set(id);
 			}
 		}
 	}
@@ -7141,6 +7148,7 @@ void HouseClass::Recalc_Attributes(void)
 	}
 	for (index = 0; index < Buildings.Count(); index++) {
 		BuildingClass const * building = Buildings.Ptr(index);
+			
 			building->House->BScan.Set(building->Class->ID);
 			if (building->IsLocked && (Session.Type != GAME_NORMAL || !building->House->IsHuman || building->IsDiscoveredByPlayer)) {
 				if (!building->IsInLimbo) {
@@ -7301,7 +7309,7 @@ TARGET HouseClass::Find_Juicy_Target(COORDINATE coord) const
  * HISTORY:                                                                                    *
  *   07/09/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-int  HouseClass::Get_Quantity(AircraftType aircraft) const
+int  HouseClass::Get_Quantity(AircraftType aircraft)
 {
 	return(AQuantity[aircraft]);
 }
@@ -7477,7 +7485,7 @@ int HouseClass::Factory_Count(RTTIType rtti) const
  * HISTORY:                                                                                    *
  *   07/09/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-int  HouseClass::Get_Quantity(StructType building) const
+int  HouseClass::Get_Quantity(StructType building)
 {
 	return(BQuantity[building]);
 }

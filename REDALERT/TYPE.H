@@ -37,7 +37,7 @@
 
 #include	"mission.h"
 #include	"target.h"
-
+//#include <string>
 class MapEditClass;
 class HouseClass;
 class WeaponTypeClass;
@@ -53,26 +53,26 @@ struct bitfield {
 		if (index < 0)
 			return false;
 		if (index < 64)
-			return (through63 & (1LL << index));
+			return (through63 & (1ULL << index));
 		if (index < 128)
-			return (through127 & (1LL << (index - 64)));
+			return (through127 & (1ULL << (index - 64)));
 		if (index < 192)
-			return (through191 & (1LL << (index - 128)));
+			return (through191 & (1ULL << (index - 128)));
 		if (index < 256)
-			return (through255 & (1LL << (index - 192)));
+			return (through255 & (1ULL << (index - 192)));
 		return false;
 	}
 	void bitfield::Set(short index) {
 		if (index < 0)
 			return;
 		if (index < 64)
-			through63 |= (1LL << index);
+			through63 |= (1ULL << index);
 		if (index < 128)
-			through127 |= (1LL << (index - 64));
+			through127 |= (1ULL << (index - 64));
 		if (index < 192)
-			through191 |= (1LL << (index - 128));
+			through191 |= (1ULL << (index - 128));
 		if (index < 256)
-			through255 |= (1LL << (index - 192));
+			through255 |= (1ULL << (index - 192));
 	}
 	void bitfield::Reset(void) {
 		through63 = 0;
@@ -926,13 +926,14 @@ class BuildingTypeClass : public TechnoTypeClass {
 		**	control the appearance of all normal buildings. Turrets and SAM sites are
 		**	an exception since their animation is not merely cosmetic.
 		*/
-		typedef struct {
-			//short ImagePoolIndex;
-			int	Start;			// Starting frame of animation.
-			int	Count;			// Number of frames in this animation.
-			int	Rate;				// Number of ticks to delay between each frame.
-		} AnimControlType;
+		struct AnimControlType {
+				int	Start = 0;		// Starting frame of animation.
+				int	Count = 1;			// Number of frames in this animation.
+				int	Rate = 0;			// Number of ticks to delay between each frame.
+				void to_string(char * buffer) ;
+		};
 		AnimControlType Anims[BSTATE_COUNT];
+		
 
 		/*
 		**	These point to the overlay imagery for this object type. Since the shape imagery
@@ -1028,7 +1029,7 @@ class BuildingTypeClass : public TechnoTypeClass {
 		static void const * WarFactoryOverlay;
 
 	private:
-
+		RulesClass::RulesField<AnimControlType*> AnimFields[BSTATE_COUNT];
 		/*
 		**	This is a pointer to a list of offsets (from the upper left corner) that
 		**	are used to indicate the building's "footprint". This footprint is used

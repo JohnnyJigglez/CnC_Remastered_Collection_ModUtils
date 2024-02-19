@@ -366,13 +366,9 @@ class HouseClass {
 		**	accumulated over time, the "New" element contains the under-construction
 		**	version.
 		*/
-		
 		bitfield BScan;
 		bitfield ActiveBScan;
 		bitfield OldBScan;
-		//Bscan[1] = true;
-		/*
-		*/
 
 		/*
 		**	This is the last working scan bits for units. For every existing unit
@@ -729,11 +725,11 @@ class HouseClass {
 
 		bool Can_Build(ObjectTypeClass const * type, HousesType house) const;
 
-		int Get_Quantity(AircraftType aircraft) const;
-		int Get_Quantity(StructType building) const;
-		int Get_Quantity(VesselType vessel) const;
-		int Get_Quantity(UnitType unit) const;
-		int Get_Quantity(InfantryType infantry) const;
+		int Get_Quantity(AircraftType aircraft);
+		int Get_Quantity(StructType building);
+		int Get_Quantity(VesselType vessel);
+		int Get_Quantity(UnitType unit);
+		int Get_Quantity(InfantryType infantry);
 
 		/*
 		* Does house have any buildings?
